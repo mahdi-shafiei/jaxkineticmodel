@@ -66,16 +66,18 @@ def main():
         for i in range(np.shape(parameter_sets)[0]):
             parameter_dict=parameter_sets.iloc[i,:]
             model=Bioprocess(parameter_dict=parameter_dict)
-            trainer=Trainer(model,data,loss_func_targets=[0,1],max_iter=args.max_iter,err_thresh=args.error_thresh,gpu=args.gpu)
+            trainer=Trainer(model,data,loss_func_targets=[0,1],max_iter=args.max_iter,err_thresh=args.error_thresh,gpu=args.gpu,lr=args.lr)
             lpi=trainer.train()
             loss_per_iteration.append(lpi)
     else:
+        print(os.cpu_count())
         a=time.time()
         ## Values do not save properly yet
+        print(args.lr)
         def task(parameter_dict,loss_dict,index):
             #Required for multiprocessing
             model=Bioprocess(parameter_dict=parameter_dict)
-            trainer=Trainer(model,data,loss_func_targets=[0,1],max_iter=args.max_iter,err_thresh=args.error_thresh,gpu=args.gpu)
+            trainer=Trainer(model,data,loss_func_targets=[0,1],max_iter=args.max_iter,err_thresh=args.error_thresh,gpu=args.gpu,lr=args.lr)
             lpi=trainer.train()
             loss_dict[index]=lpi #replace with a MP.Value object?
             return loss_dict
@@ -99,18 +101,9 @@ def main():
                 lpi = loss_dict[i]
                 loss_per_iteration.append(lpi)
             
-    print(loss_per_iteration)
     loss_per_iteration=np.array(loss_per_iteration)
-    # loss_per_iteration=np.reshape(loss_per_iteration,newshape=(np.shape(loss_per_iteration)[0],np.shape(loss_per_iteration)[2]))
-    # print(np.shape(loss_per_iteration))
-    for i in range(np.shape(loss_per_iteration)[0]):
-        plt.plot(loss_per_iteration[i,:],label=i)
-    
-    plt.ylim((0,5))
-    # plt.legend()
-    plt.show()
-    b=time.time()
-    print(b-a)
+    loss_per_iteration=pd.DataFrame(loss_per_iteration)
+    loss_per_iteration.to_csv(args.output_dir+"loss_per_iteration.csv")
 
 if __name__=="__main__":
     main()
