@@ -42,14 +42,16 @@ class Trainer:
         #data: a pandas dataframe, where rows are metabolites and columns are the timepoints
 
         super(Trainer,self).__init__()
-
-        #switch between GPU and CPU
-        if gpu==False and torch.cuda.is_available()==False:
-            print("Using cpu")
-            self.device=torch.device("cpu")
-        else:
-            self.device=torch.device(f"cuda:{gpu}")
-            print("Using gpu")
+        
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device=device
+        # #switch between GPU and CPU
+        # if gpu==False and torch.cuda.is_available()==False:
+        #     print("Using cpu")
+        #     self.device=torch.device("cpu")
+        # else:
+        #     self.device=torch.device(f"cuda:{device}")
+        #     print("Using gpu")
         
         #The pytorch kinetic model
         self.ode=model

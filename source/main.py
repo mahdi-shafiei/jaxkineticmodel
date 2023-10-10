@@ -5,10 +5,12 @@ import pandas as pd
 import os
 import torch
 import datetime
-import torch.multiprocessing as mp
-
+# import torch.multiprocessing as mp
+import time
 import sys
 from trainer import Trainer
+from multiprocessing import Process,Pool,Queue,Manager,Value
+
 
 sys.path.append("../batch_bioprocess/")
 from torch.distributions.uniform import Uniform
@@ -29,9 +31,9 @@ import matplotlib.pyplot as plt
 # load a model object: I 
 # do not think we should pass this through the cmd,
 # let it for now just be in main
-
-
 # Parse arguments similar to polyODE
+
+
 
 def main():
     parser=argparse.ArgumentParser()
@@ -45,7 +47,7 @@ def main():
     parser.add_argument("-g",'--gpu',type=bool,default=False, help="Use GPU or not")
     parser.add_argument('-j',"--jobs",type=int,default=-1,help="the number of parallel jobs")
     parser.add_argument("-o","--output_dir",type=str,required=False,default="../results/",help="Directory to save all results in")
-    parser.add_argument("-w","--work_dir",type=str,default="Batch_Bioprocess/.",help="Working directory")
+    parser.add_argument("-w","--work_dir",type=str,default="../batch_bioprocess/.",help="Working directory")
     args=parser.parse_args()
 
 
@@ -53,34 +55,62 @@ def main():
     os.chdir(os.path.expandvars(args.work_dir))
     data=pd.read_csv(args.file,index_col=0)
     print('Target data from', args.file)
-
+    print("GPU available? ", torch.cuda.is_available())
 
     # Load parameter sets
     parameter_sets=pd.read_csv(args.parameter_sets,index_col=0)
 
     if world_size<=0:
-        print("run parameter sets sequentially")
+        a=time.time()
         loss_per_iteration=[]
         for i in range(np.shape(parameter_sets)[0]):
             parameter_dict=parameter_sets.iloc[i,:]
             model=Bioprocess(parameter_dict=parameter_dict)
-            trainer=Trainer(model,data,loss_func_targets=[0,1],max_iter=args.max_iter,err_thresh=args.error_thresh)
+            trainer=Trainer(model,data,loss_func_targets=[0,1],max_iter=args.max_iter,err_thresh=args.error_thresh,gpu=args.gpu)
             lpi=trainer.train()
             loss_per_iteration.append(lpi)
-        
     else:
-        pass
-        ### Parallelization still needed to be done
-        
+        a=time.time()
+        ## Values do not save properly yet
+        def task(parameter_dict,loss_dict,index):
+            #Required for multiprocessing
+            model=Bioprocess(parameter_dict=parameter_dict)
+            trainer=Trainer(model,data,loss_func_targets=[0,1],max_iter=args.max_iter,err_thresh=args.error_thresh,gpu=args.gpu)
+            lpi=trainer.train()
+            loss_dict[index]=lpi #replace with a MP.Value object?
+            return loss_dict
+        #https://superfastpython.com/multiprocessing-return-value-from-process/
+        loss_per_iteration=[]
+        with Manager() as manager:
+            loss_dict=manager.dict()
+            parameter_sets=[dict(parameter_sets.iloc[i,:]) for i in range(np.shape(parameter_sets)[0])]
 
+            processes = []
+            for i,parameter_set in enumerate(parameter_sets):
+                process = Process(target=task, args=(parameter_set, loss_dict, i))
+                processes.append(process)
+                process.start()
+            
+            for process in processes:
+                process.join()
 
-    loss_per_iteration=pd.DataFrame(loss_per_iteration)
-    loss_per_iteration.to_csv(str(args.output_dir)+"06_10_2023.csv")
-
+            # Collect the lpi values from the loss_dict
+            for i in range(np.shape(parameter_sets)[0]):
+                lpi = loss_dict[i]
+                loss_per_iteration.append(lpi)
+            
+    print(loss_per_iteration)
+    loss_per_iteration=np.array(loss_per_iteration)
+    # loss_per_iteration=np.reshape(loss_per_iteration,newshape=(np.shape(loss_per_iteration)[0],np.shape(loss_per_iteration)[2]))
+    # print(np.shape(loss_per_iteration))
+    for i in range(np.shape(loss_per_iteration)[0]):
+        plt.plot(loss_per_iteration[i,:],label=i)
     
-    
-    # plt.plot(loss_per_iteration)
-    # plt.show()
+    plt.ylim((0,5))
+    # plt.legend()
+    plt.show()
+    b=time.time()
+    print(b-a)
 
 if __name__=="__main__":
     main()
