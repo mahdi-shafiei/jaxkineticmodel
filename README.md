@@ -1,9 +1,9 @@
 # glycolysis
 To run models, following arguments can be passed through the command line
 
--n --model_name (required): used to construct the metabolite dictionary that is passed as an argument to the kinetic model
+`-n --model_name (required)`: used to construct the metabolite dictionary that is passed as an argument to the kinetic model
 
--f --file (required): the file with time series data (a N metabolites by T timepoints matrix).
+`-f --file (required)`: the file with time series data (a N metabolites by T timepoints matrix).
 
 -p --parameter_sets (required): Parameter sets that are used as an initial guess. Multiple parameter initializations can be run either sequentially or parallel.
 
@@ -29,4 +29,4 @@ To run models, following arguments can be passed through the command line
 `python main.py -n bioprocess -f "rawdata_batch_bioprocess.csv" -p "Batch_Bioprocess_parametersets.csv" -w "../batch_bioprocess/."  -m 100`
 
 ### Example for running MAPK signalling:
-
+`python main.py -n mapk -f "rawdata_mapk_signalling.csv" -p "mapk_parametersets.csv" -w "../mapk_signalling/" -m 100`
