@@ -64,6 +64,7 @@ class Trainer:
         self.lr=lr
         self.rtol=rtol
         self.atol=atol
+        
 
     def train(self):
         ## Performs the training 
@@ -88,6 +89,7 @@ class Trainer:
             y_scale=torch.ones(len(self.tensor_concentrations[0,:]))
             t_scale=y_scale
             scale=y_scale
+
         self.y_scale=y_scale
         self.scale=scale
         #The optimizer and scheduler used for minimizing the loss function()
@@ -101,16 +103,18 @@ class Trainer:
             2) We could modify it such that concentrations can not be negative
             3) Conservation constraints coulds also be added of metabolites could be added"""
             indices=self.loss_func_targets
-
             #initial values
-            tensor_c0=self.tensor_concentrations[0]#[0,:]
-            tensor_c0=tensor_c0.reshape(shape=(1,len(tensor_c0)))
+            
+            tensor_c0=self.tensor_concentrations[0,:]
+
+            # tensor_c0=tensor_c0.reshape(shape=(len(tensor_c0)))
 
             target=self.tensor_concentrations
+
      
             try:
-                predicted_c =odeint_adjoint(func=self.ode, y0=tensor_c0, t=self.tensor_timepoints,method="scipy_solver",options={"solver":CVODE},atol=self.atol,rtol=self.rtol)           
-                predicted_c=predicted_c[:,0,:] #seems like a mistake somewhere in the script
+                predicted_c =odeint_adjoint(func=self.ode, y0=tensor_c0, t=self.tensor_timepoints)#,method="scipy_solver",options={"solver":CVODE},atol=self.atol,rtol=self.rtol)    
+                predicted_c=predicted_c[:,:] #seems like a mistake somewhere in the script
 
                 target=(1/self.scaling)*target[None,:][0] #scales the equations according to paper (see comment above)
                 predicted_c=(1/self.scaling)*predicted_c[None,:][0]
@@ -120,7 +124,6 @@ class Trainer:
             except RuntimeWarning as ex:
                 print(ex.args[0]) #potentially add extra argument
                 pass
-                
 
             return ls
         
@@ -129,13 +132,16 @@ class Trainer:
         for i in range(self.max_iter):
             scheduler_step=True
             optimizer.zero_grad()
+
             loss=loss_func()
             get_loss_per_iteration.append(loss.detach().numpy())
             print('Iter '+str(i)," Loss "+str(loss.item()))
             if loss<self.err_thresh:
                 print("Reached Error Threshold. Break")
                 break
-            loss.backward()
+
+            
+            loss.backward()  #loss.backward
             optimizer.step()
         return get_loss_per_iteration
             

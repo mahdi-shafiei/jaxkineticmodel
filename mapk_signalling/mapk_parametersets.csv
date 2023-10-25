@@ -1,0 +1,2 @@
+,p_receptor_Vmax,p_receptor_Km,p_receptor_Ki,p_phosphatase1_Vmax,p_phosphatase1_Km,p_MAPKKKP_kcat,p_MAPKKKP_Km,p_phosphatase2_Vmax,p_phosphatase2_Km,p_MAPKK_Kcat,p_MAPKK_Km,p_phosphatase3_Vmax,p_phosphatase3_Km
+0,50.0,50.0,0.3,0.25,8.0,0.025,15.0,0.75,15.0,0.03,15.0,0.5,15.0
