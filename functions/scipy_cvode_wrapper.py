@@ -41,7 +41,7 @@ class CVODE(OdeSolver):
         sim.verbosity=50
         sim.maxsteps=20000
         sim.report_continuously=True
-        sim.time_limit=30
+        sim.time_limit=40
 
 
         self.sim=sim

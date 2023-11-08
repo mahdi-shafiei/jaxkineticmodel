@@ -99,21 +99,35 @@ def main():
             elif args.model_name=="mapk":
                 model=MAPK_Signalling(fluxes,metabolites=metabolites)
 
-
             
             trainer=Trainer(model,data,loss_func_targets=lfc,max_iter=args.max_iter,err_thresh=args.error_thresh,gpu=args.gpu,lr=args.lr)
-            lpi=trainer.train()
-            loss_per_iteration.append(lpi)
+            try:
+                lpi=trainer.train()
+                loss_per_iteration.append(lpi)
+            except: 
+                print("cannot solve ODEs, continue")
+                continue
     else:
-        a=time.time()
+
         ## Values do not save properly yet
         def task(parameter_dict,loss_dict,index):
             #Required for multiprocessing
-            model=Bioprocess(parameter_dict=parameter_dict)
-            trainer=Trainer(model,data,loss_func_targets=[0,1],max_iter=args.max_iter,err_thresh=args.error_thresh,gpu=args.gpu,lr=args.lr)
-            lpi=trainer.train()
-            loss_dict[index]=lpi #replace with a MP.Value object?
+            if args.model_name=="bioprocess":
+                fluxes=create_fluxes(parameter_dict)
+                model=Bioprocess(fluxes,metabolites=metabolites)
+            elif args.model_name=="mapk":
+                fluxes=create_fluxes(parameter_dict)
+                model=MAPK_Signalling(fluxes,metabolites=metabolites)
+            # model=Bioprocess(parameter_dict=parameter_dict)
+            trainer=Trainer(model,data,loss_func_targets=lfc,max_iter=args.max_iter,err_thresh=args.error_thresh,gpu=args.gpu,lr=args.lr)
+            try:
+                lpi=trainer.train()
+                loss_dict[index]=lpi #replace with a MP.Value object?
+            except:
+                print("cannot solve ODEs, continue")
+                loss_dict[index]=None
             return loss_dict
+        
         #https://superfastpython.com/multiprocessing-return-value-from-process/
         loss_per_iteration=[]
         with Manager() as manager:
@@ -128,12 +142,14 @@ def main():
             
             for process in processes:
                 process.join()
-
+            
             # Collect the lpi values from the loss_dict
             for i in range(np.shape(parameter_sets)[0]):
                 lpi = loss_dict[i]
                 loss_per_iteration.append(lpi)
-            
+
+
+    # print(params)
     loss_per_iteration=np.array(loss_per_iteration)
     loss_per_iteration=pd.DataFrame(loss_per_iteration)
     loss_per_iteration.to_csv(args.output_dir+"loss_per_iteration.csv")
