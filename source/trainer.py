@@ -113,7 +113,7 @@ class Trainer:
 
      
             try:
-                predicted_c =odeint_adjoint(func=self.ode, y0=tensor_c0, t=self.tensor_timepoints)#,method="scipy_solver",options={"solver":CVODE},atol=self.atol,rtol=self.rtol)    
+                predicted_c =odeint_adjoint(func=self.ode, y0=tensor_c0, t=self.tensor_timepoints,method="scipy_solver",options={"solver":CVODE},atol=self.atol,rtol=self.rtol)    
                 predicted_c=predicted_c[:,:] #seems like a mistake somewhere in the script
 
                 target=(1/self.scaling)*target[None,:][0] #scales the equations according to paper (see comment above)

@@ -212,12 +212,8 @@ class Torch_MA_Irrev(torch.nn.Module):
         else:
             self.k_fwd = k_fwd
 
-    def calculate(self, substrate):
-        if len(substrate)==1:
-            f=self.k_fwd * substrate
-        else:
-            f=self.k_fwd * torch.prod(substrate)
-        return f
+    def calculate(self, substrate): 
+        return self.k_fwd * substrate
     
 
 class Torch_Hill_Irreversible(torch.nn.Module):
