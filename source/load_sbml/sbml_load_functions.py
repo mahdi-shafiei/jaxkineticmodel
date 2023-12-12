@@ -11,6 +11,7 @@ def load_sbml_model(file_path):
     model=document.getModel()
     print("Number of species:",model.getNumSpecies())
     print("Number of reactions:",model.getNumReactions())
+    print("Number of constant boundary metabolites",model.getNumSpeciesWithBoundaryCondition())
     return model
 
 
@@ -24,9 +25,11 @@ def get_initial_conditions(model):
     initial_concentration_dict={}
     for i in range(len(species)):
         specimen=species[i]
+
         #there are also non-stationary boundary conditions, deal with this later. 
         if specimen.getConstant() and specimen.getBoundaryCondition():
-            print("Specimen ",specimen.id, " is a constant boundary condition")
+            continue
+            # print("Constant Boundary Specimen ",specimen.id)
         else:   
             initial_concentration_dict[species[i].id]=specimen.initial_concentration
     return initial_concentration_dict
@@ -37,6 +40,8 @@ def get_model_parameters(model):
     
     Values of dictionary keys that are nan are later checked and filled in the get_parameters_for_evaluation function()
     """
+
+    #Global parameters
     parameter_dict={}
     params=model.getListOfParameters()
     for i in range(len(params)):
@@ -45,7 +50,17 @@ def get_model_parameters(model):
     #compartments are added to the parameter_dict because they are need in the evaluation
     for i in range(len(compartments)):
         parameter_dict[compartments[i].id]=torch.Tensor([compartments[i].size])
-    
+
+    #Local parameters (if existing)
+    for i in range(len(model.reactions)):
+        reaction=model.reactions[i]
+        id=reaction.id
+        r=reaction.getKineticLaw()
+        for i in range(len(r.getListOfParameters())):
+            key=id+"_"+r.getListOfParameters()[i].id
+            value=torch.Tensor([r.getListOfParameters()[i].value])
+            parameter_dict[key]=value
+
     #If species is a boundary, this should be added to the parameter_dict, since it does
     #not have a rate law
     species=model.getListOfSpecies()
@@ -116,8 +131,17 @@ def get_stoichiometry_for_species(model, species_id):
                 reactions_info[reaction.getId()] = stoichiometry
     return reactions_info
 
-def get_parameters_for_evaluation(string_rate_law,parameter_dict):
+def get_parameters_for_evaluation(reaction,parameter_dict):
     """retrieve parameters that are used for evaluating the expression"""
+    
+    #retrieve parameters
+    id=reaction.id
+    
+    kinetic_law=reaction.getKineticLaw()  
+    klaw_math=kinetic_law.math
+    string_rate_law=libsbml.formulaToString(klaw_math)
+# ey=id+"_"+r.getListOfParameters()[i].id
+    #parse string
     operators_to_remove = ["+","-" ,"*","/","^","(",")",","]
     temp=string_rate_law
     for i in operators_to_remove:
@@ -127,10 +151,19 @@ def get_parameters_for_evaluation(string_rate_law,parameter_dict):
     keys=[]
     for i in splitted_rate_law:
         i=i.strip()
+        
         if i in parameter_dict:
             keys.append(i)
-        #perhaps we need to add substrates, products, and modifiers later
-    return keys
+        k=reaction.id+"_"+i
+        if k in parameter_dict:
+            keys.append(k)
+        #perhaps we need to add substrates, products, and modifiers later    
+    #add local parameters that are necessary for flux calculations
+
+    local_parameter_dict={key: parameter_dict[key] for key in keys}
+    #replace key value with a different key
+    local_parameter_dict={key.replace(reaction.id+"_",""): value for key, value in local_parameter_dict.items()}
+    return local_parameter_dict
 
 def evaluate_piecewise_expression(expression,t):
     """Evaluate a piecewise expression. This function is very specific to
@@ -157,7 +190,7 @@ def evaluate_piecewise_expression(expression,t):
             expression_eval=values[i+1]
     return torch.Tensor([expression_eval])
 
-def fill_in_assignment_rules(subset_parameters):
+def fill_in_assignment_rules(model,subset_parameters):
     """for the dictionary specific for a flux, fill in any value that is defined by some assignment rule
     Now this function only takes piecewise functions, but for other expressions it might be enough to do an evaluation of the rule. Worries for later.
     """

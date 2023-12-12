@@ -29,12 +29,16 @@ class torch_SBML_kinetic_model(torch.nn.Module):
         for i in self.metabolite_names:
             temp=get_stoichiometry_for_species(model,i)
             self.stoich[i]=temp
+        if len(self.stoich)!=len(self.metabolite_names):
+            print("mismatch between metabolites and rows (metabolites) of stoichiometry")
 
     def calculate_fluxes(self,_,concentrations):
         for i in self.fluxes:
             self.fluxes[i].parameter_dict["t"]=torch.Tensor([_])
             # self.fluxes[i].evaluation_dictionary["n"]=torch.Tensor([485])
             self.fluxes[i].value=self.fluxes[i].calculate(concentrations)
+            
+            
 
 
     def forward(self,_,conc_in):

@@ -33,19 +33,42 @@ class CVodeWrapperODESolver(metaclass=abc.ABCMeta):
 
             return torch.tensor(self.y0)[None].to(self.device, self.dtype)    
         t = t.detach().cpu().numpy()
-        print(t[0])
-        mod = Explicit_Problem(self.func, self.y0, t[0])
-        sim=CVode(mod)
-        sim.rtol=self.rtol
-        sim.atol=self.atol
-        sim.verbosity=50
-        sim.maxsteps=2000
-        sim.time_limit=120
+        
+        #assimulo has a different way of doing backward ode solves, so this needs to be accounted for
+        if t[0]>=t[-1]:
+            mod=Explicit_Problem(self.func,self.y0,t[-1])
+            sim=CVode(mod)
+            sim.backward=True
+            sim.rtol=self.rtol
+            sim.atol=self.atol
+            sim.verbosity=50
+            sim.maxsteps=10000
+            sim.time_limit=600
+            sim.linear_solver = 'SPGMR'
+            sol=sim.simulate(tfinal=t[0],ncp=0,ncp_list=t)
+            
+            sol = torch.tensor(sol[1]).to(self.device, self.dtype)
+            print(sol.size())
+            sol = sol.reshape(-1, *self.shape)
+        if t[0]<=t[-1]:
+            mod = Explicit_Problem(self.func, self.y0, t[0])
+            #print("t in integrate",t)
+            sim=CVode(mod)
+            #print("is backward)",sim.backward)
+            #if t[0]<=0.0:
+            #    sim.backward=True
+            sim.rtol=self.rtol
+            sim.atol=self.atol
+            sim.verbosity=50
+            sim.maxsteps=10000
+            sim.time_limit=600
+            sim.linear_solver = 'SPGMR'
+            #sim.norm="EUCLIDEAN"
+            sol=sim.simulate(tfinal=t[-1],ncp=0,ncp_list=t)
 
-        sol=sim.simulate(tfinal=t[-1],ncp=0,ncp_list=t)
 
-        sol = torch.tensor(sol[1]).to(self.device, self.dtype)
-        sol = sol.reshape(-1, *self.shape)
+            sol = torch.tensor(sol[1]).to(self.device, self.dtype)
+            sol = sol.reshape(-1, *self.shape)
         
         return sol
     

@@ -9,13 +9,15 @@ class torch_SBML_rate_law(torch.nn.Module):
 
         self.species=get_reaction_species(sbml_reaction)
         self.string_rate_law=get_string_expression(sbml_reaction)
-        subset_keys=get_parameters_for_evaluation(string_rate_law=self.string_rate_law,
+        local_parameters=get_parameters_for_evaluation(reaction=sbml_reaction,
                                                       parameter_dict=parameter_dict)
-        subset_parameters = {key: parameter_dict[key] for key in subset_keys}
-        subset_parameters['t']=torch.Tensor([0])#required because we need to add t in the beginning
+        
+        
+        # subset_parameters = {key: parameter_dict[key] for key in subset_keys}
+        local_parameters['t']=torch.Tensor([0])#required because we need to add t in the beginning
         # subset_parameters=fill_in_assignment_rules(subset_parameters)
-
-        self.parameter_dict=subset_parameters
+        self.parameter_dict=local_parameters
+        # self.parameter_dict=subset_parameters
         # self.parameter_dict['tanh']=torch.tanh #this is super ugly but it works
         self.metabolite_names=metabolite_names
         self.evaluation=compile(self.string_rate_law,"<string>","eval")
@@ -29,4 +31,5 @@ class torch_SBML_rate_law(torch.nn.Module):
         eval_dict=self.parameter_dict
         eval_dict={**eval_dict,**m}
         v=eval(self.evaluation,eval_dict)
+
         return torch.Tensor([v])
