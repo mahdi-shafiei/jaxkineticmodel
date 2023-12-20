@@ -90,19 +90,20 @@ class Trainer:
     def train(self):
         ## Performs the training 
         #time_points to evaluate
-        
         time_points=self.data.columns.to_list()
         time_points=[float(i) for i in time_points]
         self.tensor_timepoints=torch.tensor(time_points,dtype=torch.float64,requires_grad=False)
-        
+
         #Concentrations to train on
         self.metabolite_names=self.data.index.to_list()
         self.tensor_concentrations=torch.tensor(np.array(self.data.T),dtype=torch.float64,requires_grad=False)
         # self.tensor_concentrations=self.tensor_concentrations.reshape(shape(1,np.shape(data)[0]))
-
+        # print(np.shape(self.tensor_concentrations))
         #The optimizer and scheduler used for minimizing the loss function()
+
         optimizer = optim.AdamW(self.ode.parameters(), lr=self.lr)
-        
+
+        # print(optimizer.parameters())
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min')
         
         def loss_func():
@@ -120,9 +121,6 @@ class Trainer:
                 # print("shape target", np.shape(target))
                 predicted_c =odeint_adjoint(func=self.ode, y0=tensor_c0, t=self.tensor_timepoints,
                                             atol=self.atol,rtol=self.rtol,method="cvode")
-                # print(predicted_c)
-                # print(np.shape(predicted_c))
-                # print("shape prediction ", predicted_c.size())
                 predicted_c=predicted_c[:,:] #seems like a mistake somewhere in the script
                 target=(1/self.yscale)*target[None,:][0] #scales the equations according to paper (see comment above)
                 predicted_c=(1/self.yscale)*predicted_c[None,:][0]
@@ -132,7 +130,9 @@ class Trainer:
             except RuntimeWarning as ex:
                 print(ex.args[0]) #potentially add extra argument
                 pass
+        
             return ls
+        
         
         #training process
         try:
@@ -142,20 +142,24 @@ class Trainer:
                 scheduler_step=True
                 optimizer.zero_grad()
                 loss=loss_func()
+
                 self.get_loss_per_iteration.append(loss.detach().numpy())
                 print('Iter '+str(i)," Loss "+str(loss.item()))
                 if loss<self.err_thresh:
                     print("Reached Error Threshold. Break")
                     break
+                
 
                 loss.backward()  #loss.backward
+
+
                 # print("Before optimization:", list(self.ode.parameters())[0])
                 optimizer.step()
                 if scheduler_step:
                     scheduler.step(loss)
                 
-        except:
-            #means failed
+        except Exception as e:
+            print(e)
             self.get_loss_per_iteration.append(-1)
             print("Numerical integration problem")
 

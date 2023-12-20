@@ -1,6 +1,8 @@
 from torchdiffeq import odeint_adjoint,odeint
 import libsbml
 import torch
+import numpy as np
+from torch import nn
 
 def load_sbml_model(file_path):
     """loading model from file_path"""
@@ -13,8 +15,6 @@ def load_sbml_model(file_path):
     print("Number of reactions:",model.getNumReactions())
     print("Number of constant boundary metabolites",model.getNumSpeciesWithBoundaryCondition())
     return model
-
-
 
 def get_initial_conditions(model):
     """Retrieves the species initial concentrations 
@@ -36,30 +36,38 @@ def get_initial_conditions(model):
 
 def get_model_parameters(model):
     """retrieves parameters from the loaded sbml model. 
-    These will be passed to the Torch Kinetic mechanism class.
+    These will be passed to the Torch Kinetic mechanism class. And that will be passed to torch_sbml_kinetic_model (similar to the other structures)
     
     Values of dictionary keys that are nan are later checked and filled in the get_parameters_for_evaluation function()
-    """
 
-    #Global parameters
+
+    Returns:
+    - parameter_dict (learnable)
+    - compartment_dict (nont learnable)
+    - boundary_dict (not learnable)
+    """
+    #Global parameters in sbml
     parameter_dict={}
+    boundary_dict={}
+    compartment_dict={}
     params=model.getListOfParameters()
     for i in range(len(params)):
-        parameter_dict[params[i].id]=torch.Tensor([params[i].value])
+        parameter_dict[params[i].id]=params[i].value
     compartments=model.getListOfCompartments()
-    #compartments are added to the parameter_dict because they are need in the evaluation
-    for i in range(len(compartments)):
-        parameter_dict[compartments[i].id]=torch.Tensor([compartments[i].size])
-
-    #Local parameters (if existing)
+    
+    #Local parameters (if existing, not every sbml model has locally (reaction defined) parameters)
     for i in range(len(model.reactions)):
         reaction=model.reactions[i]
         id=reaction.id
         r=reaction.getKineticLaw()
         for i in range(len(r.getListOfParameters())):
             key=id+"_"+r.getListOfParameters()[i].id
-            value=torch.Tensor([r.getListOfParameters()[i].value])
+            value=r.getListOfParameters()[i].value
             parameter_dict[key]=value
+
+    #compartments are added to the parameter_dict because they are need in the evaluation. Shouldnt be learnable
+    for i in range(len(compartments)):
+        compartment_dict[compartments[i].id]=compartments[i].size
 
     #If species is a boundary, this should be added to the parameter_dict, since it does
     #not have a rate law
@@ -67,8 +75,8 @@ def get_model_parameters(model):
     for i in range(len(species)):
         specimen=species[i]
         if specimen.getConstant() and specimen.getBoundaryCondition():
-            parameter_dict[specimen.id]=torch.Tensor([specimen.initial_concentration])
-    return parameter_dict
+            boundary_dict[specimen.id]=specimen.initial_concentration
+    return parameter_dict,boundary_dict,compartment_dict
 
 #this function might not be required.
 def get_reaction_species(reaction):
@@ -133,7 +141,6 @@ def get_stoichiometry_for_species(model, species_id):
 
 def get_parameters_for_evaluation(reaction,parameter_dict):
     """retrieve parameters that are used for evaluating the expression"""
-    
     #retrieve parameters
     id=reaction.id
     
@@ -159,7 +166,6 @@ def get_parameters_for_evaluation(reaction,parameter_dict):
             keys.append(k)
         #perhaps we need to add substrates, products, and modifiers later    
     #add local parameters that are necessary for flux calculations
-
     local_parameter_dict={key: parameter_dict[key] for key in keys}
     #replace key value with a different key
     local_parameter_dict={key.replace(reaction.id+"_",""): value for key, value in local_parameter_dict.items()}
@@ -202,3 +208,122 @@ def fill_in_assignment_rules(model,subset_parameters):
             value=evaluate_piecewise_expression(string_assignment_law,t)
             subset_parameters[i]=value
     return subset_parameters
+
+
+# class torch_SBML_rate_law(torch.nn.Module):  
+#     def __init__(self,
+#             sbml_reaction,
+#             parameter_dict,
+#             metabolite_names):
+#         super(torch_SBML_rate_law, self).__init__()
+
+#         self.species=get_reaction_species(sbml_reaction)
+#         self.string_rate_law=get_string_expression(sbml_reaction)
+#         local_parameters=get_parameters_for_evaluation(reaction=sbml_reaction,
+#                                                       parameter_dict=parameter_dict)
+        
+
+#         self.parameter_dict=torch.nn.ParameterDict(local_parameters)
+#         # print(self.parameter_dict)
+#         self.metabolite_names=metabolite_names
+#         self.evaluation=compile(self.string_rate_law,"<string>","eval")
+
+#     def calculate(self,concentrations):
+#         ## This will be done slightly different. Instead of subsetting substrates, products, modifiers
+#         #Add all of them and let the eval function sort it out. This makes it simpler to code
+#         # However, then we have to pass everything in the forward pass
+#         temp_dict=dict(zip(self.metabolite_names,concentrations))
+#         m={i:torch.Tensor([temp_dict[i]]) for i in self.species if i in self.metabolite_names} #this is buggy?
+#         eval_dict=self.parameter_dict
+#         eval_dict={**eval_dict,**m}
+#         v=eval(self.evaluation,eval_dict)
+
+#         return torch.Tensor([v])
+
+
+
+
+# class torch_SBML_kinetic_model(torch.nn.Module):
+#     def __init__(self,
+#                  model,
+#                  parameter_dict):
+#         super(torch_SBML_kinetic_model,self).__init__()
+#         self.metabolite_names=list(get_initial_conditions(model).keys())
+
+#         #sanity check: model parameter keys should all be unique
+#         if len(parameter_dict)!=len(np.unique(list(parameter_dict.keys()))):
+#             print("number of parameters not unique")
+#         # self.parameter_dict=torch.nn.ParameterDict(parameter_dict)
+#         print(parameter_dict)
+        
+#         #set up fluxes
+#         fluxes={}
+#         for i in range(model.getNumReactions()):
+#             v=torch_SBML_rate_law(model.reactions[i],parameter_dict=self.parameter_dict,metabolite_names=self.metabolite_names)
+#             fluxes[model.reactions[i].id]=v
+#         self.fluxes=fluxes
+
+#         #get stoichiometric info
+#         self.stoich={}
+#         for i in self.metabolite_names:
+#             temp=get_stoichiometry_for_species(model,i)
+#             self.stoich[i]=temp
+#         if len(self.stoich)!=len(self.metabolite_names):
+#             print("mismatch between metabolites and rows (metabolites) of stoichiometry")
+
+#     def calculate_fluxes(self,_,concentrations):
+#         for i in self.fluxes:
+#             self.fluxes[i].parameter_dict["t"]=torch.Tensor([_])
+#             # self.fluxes[i].evaluation_dictionary["n"]=torch.Tensor([485])
+#             self.fluxes[i].value=self.fluxes[i].calculate(concentrations)
+               
+
+#     def forward(self,_,conc_in):
+
+#         self.calculate_fluxes(_,conc_in)
+#         dXdt=torch.Tensor([])
+#         for k,i in enumerate(self.metabolite_names):
+#             if len(self.stoich[i])!=0: #check whether stoichiometry is not empty (e.g. it is a modifier)
+#                 x=sum([self.fluxes[j].value*self.stoich[i][j] for j in self.stoich[i]])
+#             else:
+#                 x=torch.Tensor([0])
+#             dXdt=torch.cat([dXdt,x],dim=0)
+#         return dXdt
+    
+
+class torch_SBML_kinetic_model(torch.nn.Module):
+    def __init__(self,
+                 model,
+                 fluxes): #metabolites might not be necessary.
+        super(torch_SBML_kinetic_model,self).__init__()
+        self.fluxes=nn.ParameterDict(fluxes)
+        self.metabolite_names=list(get_initial_conditions(model).keys())
+        n_parameters=len(list(self.fluxes.parameters()))
+
+        #get stoichiometric info
+        self.stoich={}
+        for i in self.metabolite_names:
+            temp=get_stoichiometry_for_species(model,i)
+            self.stoich[i]=temp
+        if len(self.stoich)!=len(self.metabolite_names):
+            print("mismatch between metabolites and rows (metabolites) of stoichiometry")
+
+
+
+    def calculate_fluxes(self,_,concentrations):
+        for i in self.fluxes:
+            # self.fluxes[i].named_parameters["t"]=torch.Tensor([_])
+            # self.fluxes[i].evaluation_dictionary["n"]=torch.Tensor([485])
+            self.fluxes[i].value=self.fluxes[i].calculate(concentrations)
+        # # self.parameter_dict=torch.nn.ParameterDict(parameter_dict)
+        # print(parameter_dict)
+    def forward(self,_,conc_in):
+        self.calculate_fluxes(_,conc_in)
+        dXdt=torch.Tensor([])
+        for k,i in enumerate(self.metabolite_names):
+            if len(self.stoich[i])!=0: #check whether stoichiometry is not empty (e.g. it is a modifier)
+                x=sum([self.fluxes[j].value*self.stoich[i][j] for j in self.stoich[i]])
+            else:
+                x=torch.Tensor([0])
+            dXdt=torch.cat([dXdt,x],dim=0)
+        return dXdt

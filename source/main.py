@@ -1,5 +1,8 @@
-import argparse
+### Main script, but I only really use the cluster_ scripts 
+###
 
+
+import argparse
 import numpy as np
 import pandas as pd
 import os
@@ -11,19 +14,15 @@ import sys
 from trainer import Trainer
 from multiprocessing import Process,Pool,Queue,Manager,Value
 
-
-
 from kinetic_mechanisms.KineticMechanisms import *
 from kinetic_mechanisms.KineticModifiers import *
 from kinetic_mechanisms.KineticMechanismsCustom import *
-
 
 from torch.distributions.uniform import Uniform
 
 # sys.path.insert(1,"../mapk_signalling/")
 
 # from map_signalling_model import MAPK_Signalling
-
 import matplotlib.pyplot as plt
 
 

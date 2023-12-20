@@ -1,3 +1,7 @@
+
+import torch
+from torch import nn
+
 class Monod_Model(torch.nn.Module):
     def __init__(self,fluxes,metabolites):
         super(Monod_Model,self).__init__()
@@ -35,4 +39,7 @@ class Monod_Model(torch.nn.Module):
         PYR=self.fluxes['r_PL'].value - ((conc_in[self.metabolites['X']]*self.fluxes['mu_P'].value)/Yxp)-self.fluxes['r_AP'].value
 
         X=conc_in[self.metabolites['X']]*(self.fluxes['mu_A'].value+self.fluxes['mu_P'].value+self.fluxes['mu_L'].value-K_e)
-        return torch.cat([LACT,ACT,PYR,X],dim=0)
+        # print(LACT.requires_grad,ACT.requires_grad,PYR.requires_grad, X.requires_grad)
+        dXdt=torch.cat([LACT,ACT,PYR,X],dim=0)
+
+        return dXdt

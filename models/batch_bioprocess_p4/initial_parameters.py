@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 #true={"v":-0.3,"p_Ks":0.01,"p_a":-1.6,"p_ms":-0.01}
-size=200
+size=400
 param1=np.random.uniform(low=-0.5,high=-0.1,size=size)
 param2=np.random.uniform(low=0.000,high=0.1,size=size)
 param3=np.random.uniform(low=-1.8,high=-1.4,size=size)
