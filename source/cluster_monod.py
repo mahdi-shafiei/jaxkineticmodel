@@ -60,6 +60,7 @@ def main():
     optimized_parameters=[]
     for i in range(np.shape(parameter_sets)[0]):
         parameter_dict=dict(parameter_sets.iloc[i,:])
+        # print(parameter_dict)
 
         # print(parameter_dict)
         fluxes=create_fluxes(parameter_dict)
@@ -67,8 +68,10 @@ def main():
 
         
         trainer=Trainer(model,data,loss_func_targets=loss_function_metabolites,
-                        max_iter=max_iter,err_thresh=error_thresh,gpu=gpu,lr=lr,scaling=False) #remove scaling here and add as additional step
-        trainer.scale_data_and_loss(scaling=False) 
+                        max_iter=max_iter,err_thresh=error_thresh,
+                        gpu=gpu,lr=lr,scaling=False,rtol=1e-7,atol=1e-4) #remove scaling here and add as additional step
+        trainer.scale_data_and_loss(scaling=False)
+         
 
         try:
             trainer.train()

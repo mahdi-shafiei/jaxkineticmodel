@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 
 import torch
 from torch import optim
-from torchdiffeq import odeint_adjoint as odeint
 
 # MM with Keq
 

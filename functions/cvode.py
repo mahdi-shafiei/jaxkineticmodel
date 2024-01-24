@@ -3,8 +3,8 @@ import torch
 from assimulo.solvers import CVode
 from assimulo.problem import Explicit_Problem
 
-from scipy.integrate import solve_ivp
 from .misc import _handle_unused_kwargs
+import numpy as np
 
 
 ### torchdiffeq cvode
@@ -27,49 +27,25 @@ class CVodeWrapperODESolver(metaclass=abc.ABCMeta):
         self.solver = "cvode"
         self.func = convert_func_to_numpy(func, self.shape, self.device, self.dtype)
 
+
     def integrate(self, t):
-
         if t.numel() == 1:
-
             return torch.tensor(self.y0)[None].to(self.device, self.dtype)    
         t = t.detach().cpu().numpy()
-        
-        #assimulo has a different way of doing backward ode solves, so this needs to be accounted for
-        if t[0]>=t[-1]:
-            mod=Explicit_Problem(self.func,self.y0,t[-1])
-            sim=CVode(mod)
-            sim.backward=True
-            sim.rtol=self.rtol
-            sim.atol=self.atol
-            sim.verbosity=50
-            sim.maxsteps=10000
-            sim.time_limit=600
-            sim.linear_solver = 'SPGMR'
-            sol=sim.simulate(tfinal=t[0],ncp=0,ncp_list=t)
-            
-            sol = torch.tensor(sol[1]).to(self.device, self.dtype)
-            print(sol.size())
-            sol = sol.reshape(-1, *self.shape)
-        if t[0]<=t[-1]:
-            mod = Explicit_Problem(self.func, self.y0, t[0])
-            #print("t in integrate",t)
-            sim=CVode(mod)
-            #print("is backward)",sim.backward)
-            #if t[0]<=0.0:
-            #    sim.backward=True
-            sim.rtol=self.rtol
-            sim.atol=self.atol
-            sim.verbosity=50
-            sim.maxsteps=10000
-            sim.time_limit=600
-            sim.linear_solver = 'SPGMR'
-            #sim.norm="EUCLIDEAN"
-            sol=sim.simulate(tfinal=t[-1],ncp=0,ncp_list=t)
 
 
-            sol = torch.tensor(sol[1]).to(self.device, self.dtype)
-            sol = sol.reshape(-1, *self.shape)
-        
+        mod = Explicit_Problem(self.func, self.y0, np.min(t))
+        sim=CVode(mod)
+
+        sim.rtol=self.rtol
+        sim.atol=self.atol
+        sim.verbosity=50
+        sim.maxsteps=10000
+        sim.time_limit=600
+        sim.linear_solver = 'SPGMR'
+        t,y=sim.simulate(tfinal=np.max(t),ncp=0,ncp_list=list(t))  
+        sol = torch.tensor(y).to(self.device, self.dtype)
+        sol = sol.reshape(-1, *self.shape)
         return sol
     
     @classmethod

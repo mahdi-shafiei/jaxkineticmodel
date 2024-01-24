@@ -215,6 +215,7 @@ class Torch_MA_Irrev(torch.nn.Module):
     def calculate(self, substrate):
         return self.k_fwd * substrate
 
+        
 
 class Torch_Hill_Irreversible(torch.nn.Module):
     def __init__(self,

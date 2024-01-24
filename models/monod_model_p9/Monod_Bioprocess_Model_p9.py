@@ -18,28 +18,16 @@ class Monod_Model(torch.nn.Module):
     
     def forward(self,_,conc_in):
         self.calculate_fluxes(conc_in)
-
         # Additional parameters needed
         Yxl=torch.Tensor([17.0])
         Yxa=torch.Tensor([11.1])
         Yxp=torch.Tensor([16.7])
         K_e=torch.Tensor([0.013])
 
-        # if _<7.1: #Enforce lag-time
-        #     LACT=torch.Tensor([0.0])
-        #     ACT=torch.Tensor([0.0])
-        #     PYR=torch.Tensor([0.0])
-        #     X=torch.Tensor([0.0])
-        # elif _>=7.1:
         LACT=((-(conc_in[self.metabolites['X']] * self.fluxes['mu_L'].value) /Yxl)-
                 self.fluxes['r_PL'].value-self.fluxes['r_AL'].value)
-        
         ACT=(self.fluxes['r_AL'].value+ self.fluxes['r_AP'].value - (conc_in[self.metabolites['X']]*self.fluxes['mu_A'].value)/Yxa)
-        
         PYR=self.fluxes['r_PL'].value - ((conc_in[self.metabolites['X']]*self.fluxes['mu_P'].value)/Yxp)-self.fluxes['r_AP'].value
-
         X=conc_in[self.metabolites['X']]*(self.fluxes['mu_A'].value+self.fluxes['mu_P'].value+self.fluxes['mu_L'].value-K_e)
-        # print(LACT.requires_grad,ACT.requires_grad,PYR.requires_grad, X.requires_grad)
         dXdt=torch.cat([LACT,ACT,PYR,X],dim=0)
-
         return dXdt
