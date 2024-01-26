@@ -15,73 +15,89 @@ from kinetic_mechanisms.KineticMechanismsCustom import *
 from torch.distributions.uniform import Uniform
 import matplotlib.pyplot as plt
 from torch import nn
-import torchdiffeq
+# import torchdiffeq
 import re as re 
 from parameter_initializations.sampling_methods import uniform_sampling,latinhypercube_sampling
-from load_sbml.create_fluxes_sbml import *
-from load_sbml.load_sbml_model import *
+
+sys.path.append("../functions/load_sbml/")
+from create_fluxes_sbml import *
+from load_sbml_model import *
 import numpy as np
 import libsbml
 
 
+def main():
+    parser=argparse.ArgumentParser()
+    parser.add_argument('-n',"--name",type=str,required=True,help="Name of the training process that is used to save the file")
+    parser.add_argument('-m',"--model",type=str,required=True,help="SBML model and name")
+    parser.add_argument('-p',"--parameter_sets",type=str,required=True,help="Parameter set file")
+    parser.add_argument('-d',"--data",type=str,required=True,help="time series data (NxT dataframe) used to fit")
+    parser.add_argument('-o',"--output_dir",type=str,required=True,help="output directory for loss per iteration and the optimized parameters")
 
-
-model_name="../models/SBML_models/BIOMD0000000458_url.xml"
-data_name="../data/rawdata_BIOMD0000000458_url.csv"
-
-model=load_sbml_model(model_name)
-initial_concentration_dict=get_initial_conditions(model)
-# worker_ode=torch_SBML_kinetic_model(model,parameter_dict=parameters)
-parameters,boundaries,compartments=get_model_parameters(model)
-parameter_sets=pd.DataFrame(pd.Series(parameters)).T
-print(parameter_sets)
-
-# parameter_sets['PSA_kcatC']=parameter_sets['PSA_kcatC']*0.5
-
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
-data=pd.read_csv(data_name,index_col=0)
-
-
-indices=np.arange(0,len(initial_concentration_dict),1)
-metabolites_names=list(initial_concentration_dict.keys())
-metabolites=dict(zip(metabolites_names,indices))
-loss_function_metabolites=indices
-
-error_thresh=0.01
-max_iter=1500
-gpu=False
-lr=1e-5
-a=time.time()
-# print(parameters)
-loss_per_iteration=[]
-optimized_parameters=[]
-for i in range(np.shape(parameter_sets)[0]):
-    parameter_dict=dict(parameter_sets.iloc[i,:])
-
-    #this is necessary for some reason
-    # parameter_dict={key:torch.tensor([value],dtype=torch.float64,requires_grad=True) for key,value in parameter_dict.items()}
-    fluxes=create_fluxes(parameter_dict,boundaries,compartments,model)
-    model=torch_SBML_kinetic_model(model,fluxes=fluxes).to(device)
-
-
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    args=parser.parse_args()
+    data=pd.read_csv(args.data,index_col=0)
     
-    trainer=Trainer(model,data,loss_func_targets=loss_function_metabolites,
-                    max_iter=max_iter,err_thresh=error_thresh,gpu=gpu,lr=lr,scaling=False) #remove scaling here and add as additional step
+    metabolites_names=data.index.to_list()
+    
+    #this is slightly different from the other models,
+    model=load_sbml_model(args.model)
+    initial_concentration_dict=get_initial_conditions(model)
+    
+    _,boundaries,compartments=get_model_parameters(model)
 
-    trainer.scale_data_and_loss(scaling=False) 
+    indices=np.arange(0,len(initial_concentration_dict),1)
+    metabolites_names=list(initial_concentration_dict.keys())
+    metabolites=dict(zip(metabolites_names,indices))
+    loss_function_metabolites=indices
 
-    # try:
+    parameter_sets=pd.read_csv(args.parameter_sets,index_col=0)
 
-    trainer.train()
-    loss_per_iteration.append(trainer.get_loss_per_iteration)
-    optimized_parameters.append(list(trainer.ode.parameters()))
+    #for now I will keep these constant between scripts. Make them into parameters to pass
+    error_thresh=0.0001
+    max_iter=1500
+    lr=1e-3
 
-    #     print("cannot solve ODEs, continue")
-    #     continue
+    # print(parameters)
+    loss_per_iteration=[]
+    optimized_parameters=[]
+    for i in range(np.shape(parameter_sets)[0]):
+        parameter_dict=dict(parameter_sets.iloc[i,:])
 
-print(optimized_parameters)
-b=time.time()
-print(b-a)
+        #this is necessary for some reason
+        # parameter_dict={key:torch.tensor([value],dtype=torch.float64,requires_grad=True) for key,value in parameter_dict.items()}
+        fluxes=create_fluxes(parameter_dict,boundaries,compartments,model)
+        model=torch_SBML_kinetic_model(model,fluxes=fluxes).to(device)
+
+        try:        
+            trainer=Trainer(model,data,loss_func_targets=loss_function_metabolites,
+                            max_iter=max_iter,err_thresh=error_thresh,gpu=False,lr=lr,scaling=False) 
+            trainer.scale_data_and_loss(scaling=False) 
+            trainer.train()        
+            loss_per_iteration.append(trainer.get_loss_per_iteration)
+            optimized_parameters.append(list(trainer.ode.parameters()))
+        except:
+            print("cannot solve ODEs, continue")
+            continue
+
+
+    param_match=re.findall("_[a-z]*_\d*.csv",args.parameter_sets)    
+    param_match=param_match[0].strip(".csv")
+
+
+    output_dir=args.output_dir
+    output_filename_loss=output_dir+args.name+"_loss_per_iteration"+param_match+".csv"
+    output_filename_optim_params=output_dir+args.name+"_optim_param"+param_match+".csv"
+
+    # loss_dictionary=dict(zip(index,loss_per_iteration))
+    # # loss_per_iteration=np.array(loss_per_iteration,dtype=object).reshape(np.shape(loss_per_iteration)[0],-1)
+    loss_per_iteration=pd.DataFrame(loss_per_iteration).T
+    loss_per_iteration.to_csv(output_filename_loss)
+    names_parameters=list(parameter_sets.iloc[0,:].keys())
+
+    optimized_parameters=pd.DataFrame(torch.Tensor(optimized_parameters).detach().numpy(),columns=names_parameters)
+    optimized_parameters=pd.DataFrame(optimized_parameters).T
+    optimized_parameters.to_csv(output_filename_optim_params)
+
+if __name__=="__main__":
+    main()

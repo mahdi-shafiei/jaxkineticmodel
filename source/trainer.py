@@ -123,7 +123,7 @@ class Trainer:
             try:
                 # print("shape target", np.shape(target))
                 predicted_c =odeint_symplectic_adjoint(func=self.ode, y0=tensor_c0, t=self.tensor_timepoints,
-                                            atol=self.atol,rtol=self.rtol,method="rk4")
+                                            atol=self.atol,rtol=self.rtol,method="dopri8")
                                            # ) #adjoint_options={ "norm" : "seminorm" })
                 
                 predicted_c=predicted_c*self.scale
