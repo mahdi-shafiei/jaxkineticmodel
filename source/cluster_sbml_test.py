@@ -51,11 +51,13 @@ def main():
     metabolites=dict(zip(metabolites_names,indices))
     loss_function_metabolites=indices
 
+
+
     parameter_sets=pd.read_csv(args.parameter_sets,index_col=0)
 
     #for now I will keep these constant between scripts. Make them into parameters to pass
-    error_thresh=0.0001
-    max_iter=1500
+    error_thresh=0.001
+    max_iter=3000
     lr=1e-3
 
     # print(parameters)
@@ -67,12 +69,11 @@ def main():
         #this is necessary for some reason
         # parameter_dict={key:torch.tensor([value],dtype=torch.float64,requires_grad=True) for key,value in parameter_dict.items()}
         fluxes=create_fluxes(parameter_dict,boundaries,compartments,model)
-        model=torch_SBML_kinetic_model(model,fluxes=fluxes).to(device)
-
+        model_n=torch_SBML_kinetic_model(model,fluxes=fluxes).to(device)
         try:        
-            trainer=Trainer(model,data,loss_func_targets=loss_function_metabolites,
-                            max_iter=max_iter,err_thresh=error_thresh,gpu=False,lr=lr,scaling=False) 
-            trainer.scale_data_and_loss(scaling=False) 
+            trainer=Trainer(model_n,data,loss_func_targets=loss_function_metabolites,
+                            max_iter=max_iter,err_thresh=error_thresh,lr=lr,scaling=True,rtol=1e-4,atol=1e-6) 
+
             trainer.train()        
             loss_per_iteration.append(trainer.get_loss_per_iteration)
             optimized_parameters.append(list(trainer.ode.parameters()))
@@ -93,8 +94,12 @@ def main():
     # # loss_per_iteration=np.array(loss_per_iteration,dtype=object).reshape(np.shape(loss_per_iteration)[0],-1)
     loss_per_iteration=pd.DataFrame(loss_per_iteration).T
     loss_per_iteration.to_csv(output_filename_loss)
-    names_parameters=list(parameter_sets.iloc[0,:].keys())
 
+    names_parameters=[]
+    for name, param in model_n.named_parameters():
+        if param.requires_grad:
+            names_parameters.append(name)
+            
     optimized_parameters=pd.DataFrame(torch.Tensor(optimized_parameters).detach().numpy(),columns=names_parameters)
     optimized_parameters=pd.DataFrame(optimized_parameters).T
     optimized_parameters.to_csv(output_filename_optim_params)

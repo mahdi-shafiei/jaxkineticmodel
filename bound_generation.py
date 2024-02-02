@@ -8,7 +8,7 @@
 from functions.load_sbml.load_sbml_model import *
 import pandas as pd
 
-name="simple_sbml.xml"
+name="BIOMD0000000507_url.xml"
 model=load_sbml_model("models/SBML_models/"+name)
 
 parameters,boundaries,compartments=get_model_parameters(model)
@@ -17,6 +17,10 @@ parameters,boundaries,compartments=get_model_parameters(model)
 lb={}
 ub={}
 for i in parameters:
+    if i==0:
+        i=0.0001
+        lb[i]=parameters[i]*0.5
+        ub[i]=parameters[i]*2
     lb[i]=parameters[i]*0.5
     ub[i]=parameters[i]*2
 

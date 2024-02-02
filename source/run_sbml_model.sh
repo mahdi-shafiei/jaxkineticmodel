@@ -1,12 +1,12 @@
 
 # Bash script for the sbml model clustering
-directory_path="../parameter_initializations/simple_sbml_initializations/lhs/"
-bounds_file="../parameter_initializations/simple_sbml_initializations/simple_sbml_bounds.csv"
+directory_path="../parameter_initializations/BIOMD0000000507_initializations/lhs/"
+bounds_file="../parameter_initializations/BIOMD0000000507_initializations/BIOMD0000000507_url_bounds.csv"
 method="lhs"
-model="../models/SBML_models/simple_sbml.xml"
-name="simple_sbml_run1" 
-output_dir="../results/simple_sbml/lhs/"
-data="../data/rawdata_simple_sbml_p1.csv"
+model="../models/SBML_models/BIOMD0000000507_url.xml"
+name="genetic_circuit_run1" 
+output_dir="../results/BIOMD0000000507/lhs/"
+data="../data/rawdata_BIOMD0000000507_url.xml_p11.csv"
 nparameters=10
 divide=1
 python_file=cluster_sbml_test.py

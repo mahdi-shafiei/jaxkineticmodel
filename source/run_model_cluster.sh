@@ -7,8 +7,8 @@ method="lhs"
 name="monod_run1" 
 output_dir="../results/monod/lhs/"
 data="../data/rawdata_monod_model_9p.csv"
-nparameters=10
-divide=1
+nparameters=200
+divide=8
 python_file=cluster_monod.py
 
 python3 initialize_parameters.py -n $name -f $bounds_file -m $method -s $nparameters -d $divide -o $directory_path

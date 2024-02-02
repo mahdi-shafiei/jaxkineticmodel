@@ -44,8 +44,8 @@ def main():
 
     
     #for now I will keep these constant between scripts. Later think of making them into parameters to pass
-    error_thresh=0.01
-    max_iter=1500
+    error_thresh=1e-4
+    max_iter=3000
     gpu=False
     lr=1e-3
 
@@ -63,13 +63,16 @@ def main():
         model=Bioprocess(parameter_dict)
 
         trainer=Trainer(model,data,loss_func_targets=loss_function_metabolites,
-                        max_iter=max_iter,err_thresh=error_thresh,gpu=gpu,lr=lr,scaling=False) #remove scaling here and add as additional step
-        trainer.scale_data_and_loss(scaling=False) 
+                        max_iter=max_iter,err_thresh=error_thresh,lr=lr,scaling=True) #remove scaling here and add as additional step
+
 
         try:
             trainer.train()
             loss_per_iteration.append(trainer.get_loss_per_iteration)
-            optimized_parameters.append(list(trainer.ode.parameters()))
+
+            named_parameters=dict(trainer.ode.named_parameters())
+            named_parameters={i:float(named_parameters[i]) for i in named_parameters}
+            optimized_parameters.append(named_parameters)
             
         except: 
             print("cannot solve ODEs, continue")
@@ -87,10 +90,9 @@ def main():
     # # loss_per_iteration=np.array(loss_per_iteration,dtype=object).reshape(np.shape(loss_per_iteration)[0],-1)
     loss_per_iteration=pd.DataFrame(loss_per_iteration).T
     loss_per_iteration.to_csv(output_filename_loss)
-    names_parameters=list(parameter_sets.iloc[0,:].keys())
 
-    optimized_parameters=pd.DataFrame(torch.Tensor(optimized_parameters).detach().numpy(),columns=names_parameters)
     optimized_parameters=pd.DataFrame(optimized_parameters).T
+
     optimized_parameters.to_csv(output_filename_optim_params)
     b=time.time()
     print(b-a)
