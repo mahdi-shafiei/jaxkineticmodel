@@ -1,17 +1,9 @@
-# glycolysis
-To run models, following arguments can be passed through the command line
 
-`-n --model_name` (required): used to construct the metabolite dictionary that is passed as an argument to the kinetic model
-`-f --file` (required): the file with time series data (a N metabolites by T timepoints matrix).
-`-p --parameter_sets` (required): Parameter sets that are used as an initial guess. Multiple parameter initializations can be run either sequentially or parallel.
-`-w --work_dir` (required): working directory of where the kinetic model is stored.
-`-d --weight_decay`: the weight decay for ODE training. Default=0.0
-`-m --max_iter`: maximum number of iterations for the learning process. Default=1000.0
-`-e --error_thresh`: the threshold on where to stop training. If this threshold is reached, we consider the problem "solved". Default=0.001
-`-l --lr`: learning rate of the Adams optimizer. Default=1e-3
-`-g --gpu`: whether to use GPU or not. So far not implemented properly.
-`-j --jobs`: number of jobs to run parallel. Default=-1
-`-o --output_dir`: directory to save results in. Default is "../results/"
+### SBML loading models (Leon)
+1. Updated version of the loader can be found in functions/load_sbml
+2. The loader of sbml models is now working for most models. Models that are not working essentially fail to simulate (so there is nothing wrong with SBML loader class, but it could be attributed to too many parameters, too slow for the solver, etc..)
+3. I have changed the structure of the loader a little bit and added some extra steps (will prepare for tomorrow).
+4. I have added a simple test.py to see which models load and etc. My idea is to use this to time the integration steps and loading functions. I also added a small test script of tellurium, which is specifically optimized for simulating sbml models. I do not expect to beat this run time (since it is written in c) but getting closer would be nice. 
 
 
 ### Running a training process on the cluster

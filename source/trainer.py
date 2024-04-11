@@ -139,8 +139,6 @@ class Trainer:
                 target=target*(1/self.yscale.reshape(shape=(1,len(self.yscale))))
                 predicted_c=predicted_c*(1/self.yscale.reshape(shape=(1,len(self.yscale))))
 
-                
-
                 ls =torch.mean(torch.square((predicted_c - target)))
 
             except RuntimeWarning as ex:
