@@ -1,5 +1,5 @@
 import numpy
-from parameter_initializations.sampling_methods import uniform_sampling,latinhypercube_sampling,grid_sampling,maximin_hypercube_sampling
+from parameter_initializations.sampling_methods import uniform_sampling,latinhypercube_sampling,maximin_hypercube_sampling
 import os
 import argparse
 import pandas as pd

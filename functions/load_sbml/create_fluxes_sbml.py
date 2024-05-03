@@ -18,7 +18,7 @@ class torch_SBML_rate_law(torch.nn.Module):
         reaction=model.reactions[sbml_reaction_id]
         self.species=get_reaction_species(reaction)
         self.string_rate_law=get_string_expression(reaction)
-        # print("X", self.string_rate_law)
+        print("X", self.string_rate_law)
         self.func_dict=func_dict
         
 
@@ -46,7 +46,7 @@ class torch_SBML_rate_law(torch.nn.Module):
         sp_symbols_dict=get_reaction_symbols_dict(self.eval_dict)
 
         self.expr=sp.sympify(self.string_rate_law,locals=sp_symbols_dict)
-
+        print(self.expr)
         # print(expr)
         self.func=sp.lambdify(list(self.eval_dict.keys()),self.expr)
 

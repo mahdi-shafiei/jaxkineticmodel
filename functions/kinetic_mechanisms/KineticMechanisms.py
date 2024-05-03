@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import torch
 from torch import optim
 from torchdiffeq import odeint_adjoint as odeint
+import torch.jit
 
 # MM with Keq
 
@@ -35,6 +36,7 @@ class Torch_Rev_UniUni_MM(torch.nn.Module):
             else:
                 self.__setattr__(param_name, value)
 
+    
     def calculate(self, substrate,product):
         nominator = self.vmax*(substrate/self.km_substrate) * \
             (1-(1/self.k_equilibrium)*(product/substrate))
@@ -104,7 +106,8 @@ class Torch_Irrev_MM_Uni(torch.nn.Module):
         else:
             self.km_substrate = km_substrate
 
-    def calculate(self, substrate):
+
+    def forward(self, substrate):
         nominator = (self.vmax)*(substrate/self.km_substrate)
         denominator = (1+(substrate/self.km_substrate))
         return nominator/denominator

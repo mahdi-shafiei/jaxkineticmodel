@@ -1,7 +1,7 @@
 import sys
 
-sys.path.append('../models/glycolysis/')
-from fluxes import create_fluxes
+# sys.path.append('../models/glycolysis/')
+# from fluxes import create_fluxes
 
 
 import torch
@@ -26,7 +26,7 @@ from scipy.interpolate import CubicSpline
 from torchdiffeq import odeint_adjoint,odeint
 
 sys.path.append("../functions/symplectic_adjoint/")
-from torch_symplectic_adjoint import odeint_symplectic_adjoint
+from functions.symplectic_adjoint.torch_symplectic_adjoint import odeint_symplectic_adjoint
 from torch import optim
 # from TorchDiffEqPack import  odesolve,odesolve_adjoint_sym12,odesolve_adjoint
 import torch 
@@ -68,25 +68,21 @@ class Trainer:
         self.atol=atol
 
         if scaling==False:
-            self.yscale=torch.ones(np.shape(self.data)[0])
-        elif scaling==True: #make scaling for loss, and make sure that if y_max-y_min is zero, these are not used in loss_function calculations.
-            temp=torch.Tensor(np.array(data))
-            y_max,y_min=torch.max(temp,1)[0],torch.min(temp,1)[0]
-            
-            yscale=y_max-y_min
-            no_changes_in_conc=np.where(yscale==0)[0]
-            if len(no_changes_in_conc)!=0:
-                mask=np.arange(len(loss_func_targets))
-                mask=mask[mask!=no_changes_in_conc]
-                print("use following metabolites to minimize loss: ", list(self.data.index[mask]))
-                #Sometimes this type of formatting is buggy??
-                loss_func_targets=loss_func_targets[mask]
-                self.loss_func_targets=loss_func_targets
+            yscale=torch.ones(np.shape(self.data)[0])
+            self.yscale=torch.index_select(yscale, 0, torch.LongTensor(loss_func_targets))
+        elif scaling==True: #make scaling for loss, and make sure that if y_max-y_min is zero, these are not scaled
+            ymax=np.max(data,1).values
+            ymin=np.min(data,1).values
+            yscale=ymax-ymin
+            yscale=torch.Tensor(yscale)
+            where_zero=torch.where(yscale==0)
+
+
 
 
             self.yscale=torch.index_select(yscale, 0, torch.LongTensor(loss_func_targets))
-            print(self.yscale)
-            
+            if len(where_zero)!=0:
+                print("Warning: yscale is equal to zero. Make sure that manual scaling is performed\n for "+ str(where_zero))
 
         print("Scaling ",self.yscale)
         
@@ -126,9 +122,10 @@ class Trainer:
                 # print("shape target", np.shape(target))
                 predicted_c =odeint_symplectic_adjoint(func=self.ode, y0=tensor_c0, t=self.tensor_timepoints,
                                             atol=self.atol,rtol=self.rtol)
+                # print(predicted_c)
                                            # ) #adjoint_options={ "norm" : "seminorm" })
                 # predicted_c =odeint_adjoint(func=self.ode, y0=tensor_c0, t=self.tensor_timepoints,atol=self.atol,rtol=self.rtol,
-                #                             method="cvode",adjoint_atol=1e-8,adjoint_rtol=1e-6,adjoint_options={ "norm" : "seminorm" })
+                #                             method="cvode",adjoint_atol=1e-3,adjoint_rtol=1e-3,adjoint_options={ "norm" : "seminorm" })
 
                 
                 #take out metabolites that we wish not to include in loss function
@@ -136,10 +133,19 @@ class Trainer:
                 target=target[:,indices]
 
                 # Rescale the solutions
-                target=target*(1/self.yscale.reshape(shape=(1,len(self.yscale))))
-                predicted_c=predicted_c*(1/self.yscale.reshape(shape=(1,len(self.yscale))))
+                mask = ~torch.isnan(target)
+                
 
+                target=target*(1/self.yscale.reshape(shape=(1,len(self.yscale))))
+
+                predicted_c=predicted_c*(1/self.yscale.reshape(shape=(1,len(self.yscale))))
+                target=target[mask]
+                predicted_c=predicted_c[mask]
+                
+                
                 ls =torch.mean(torch.square((predicted_c - target)))
+                
+
 
             except RuntimeWarning as ex:
                 print(ex.args[0]) #potentially add extra argument
@@ -151,7 +157,7 @@ class Trainer:
             self.get_loss_per_iteration=[]
             self.optimized_parameters=[]
             for i in range(self.max_iter):
-                # scheduler_step=False
+                scheduler_step=False
                 optimizer.zero_grad()
                 loss=loss_func()
 
@@ -166,8 +172,8 @@ class Trainer:
                 
                 # print("Before optimization:", list(self.ode.parameters())[0])
                 optimizer.step()
-                # if scheduler_step:
-                    # scheduler.step(loss)
+                if scheduler_step:
+                    scheduler.step(loss)
                 
         except Exception as e:
             print(e)

@@ -103,8 +103,10 @@ class Torch_Irrev_MM_Uni(torch.nn.Module):
         else:
             self.km_substrate = km_substrate
 
-    def calculate(self, substrate):
+    def forward(self, substrate): #change this to forward for jit.torch?
         nominator = (self.vmax)*(substrate/self.km_substrate)
+        # nominator=self.vmax*substrate
+        # denominator=self.km_substrate + substrate
         denominator = (1+(substrate/self.km_substrate))
         return nominator/denominator
 

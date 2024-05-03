@@ -1,15 +1,21 @@
 
 # Bash script for the batch bioprocess, monod model, and other self-implemented models.
-directory_path="../parameter_initializations/monod_initializations/lhs/"
 
-bounds_file="../parameter_initializations/monod_initializations/monod_bounds.csv"
+
+
+directory_path="../parameter_initializations/pCA_fermentation_initializations/lhs/"
+
+pwd
+bounds_file="../parameter_initializations/pCA_fermentation_initializations/pCA_fermentation_bounds.csv"
 method="lhs"
-name="monod_run1" 
-output_dir="../results/monod/lhs/"
-data="../data/rawdata_monod_model_9p.csv"
-nparameters=200
-divide=8
-python_file=cluster_monod.py
+name="pca_run1" 
+output_dir="../results/pca_fermentation/lhs/"
+data="../data/pCA_timeseries/pCA_fermentation_data_200424.csv"
+nparameters=1
+divide=1
+python_file=cluster_pCA_model.py
+
+
 
 python3 initialize_parameters.py -n $name -f $bounds_file -m $method -s $nparameters -d $divide -o $directory_path
 
