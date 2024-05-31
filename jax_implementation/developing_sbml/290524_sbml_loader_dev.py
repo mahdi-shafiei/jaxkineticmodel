@@ -18,9 +18,13 @@ from sbml_load import *
 from collections import OrderedDict
 import inspect
 
+from source.utils import get_logger
 
+logger = get_logger(__name__)
+
+logger.debug('Loading SBML model')
 ## a simple sbml model
-filepath="sbml_models/Garde2020.xml"
+filepath="jax_implementation/developing_sbml/sbml_models/Garde2020.xml"
 model=load_sbml_model(file_path=filepath)
 
 
@@ -43,7 +47,7 @@ parameters=get_global_parameters(model)
 #but need to pass local parameters ass well. 
 
 met_point_dict=construct_flux_pointer_dictionary(v_symbol_dictionaries,reaction_names,species_names)
-print("points towards the species in y to be used for flux eval",met_point_dict)
+logger.info(f"points towards the species in y to be used for flux eval: {met_point_dict}")
 
 
 # it is probably not wise to pass param_point_dict directly to model,
@@ -52,7 +56,7 @@ print("points towards the species in y to be used for flux eval",met_point_dict)
 param_point_dict=construct_param_point_dictionary(v_symbol_dictionaries,
                                                   reaction_names,parameters)
 
-print("points towards the parameters to be used for flux eval",param_point_dict)
+logger.info(f"points towards the parameters to be used for flux eval: {param_point_dict}")
 # ####
 # # Simulation
 # ###

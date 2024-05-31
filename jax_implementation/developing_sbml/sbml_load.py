@@ -3,21 +3,28 @@ import jax
 import libsbml
 import jax.numpy as jnp
 import numpy as np
+import os
 
+from source.utils import get_logger
 
+logger = get_logger(__name__)
 
 def load_sbml_model(file_path):
     """loading sbml model from file_path"""
+    if not os.path.isfile(file_path):
+        logger.error(f"File not found: {file_path}")
+        raise FileNotFoundError()
+
     reader=libsbml.SBMLReader()
     document=reader.readSBML(file_path)
-    print("Number of internal inconsistencies",document.checkInternalConsistency())
+    logger.info(f"Number of internal inconsistencies: {document.checkInternalConsistency()}")
 
     model=document.getModel()
-    print("Number of species:",model.getNumSpecies())
-    print("Number of reactions:",model.getNumReactions())
-    print("Number of global parameters", model.getNumParameters())
-    print("Number of constant boundary metabolites: ",model.getNumSpeciesWithBoundaryCondition())
-    print("Number of lambda function definitions: ", len(model.function_definitions))
+    logger.info(f"Number of species: {model.getNumSpecies()}")
+    logger.info(f"Number of reactions: {model.getNumReactions()}")
+    logger.info(f"Number of global parameters {model.getNumParameters()}")
+    logger.info(f"Number of constant boundary metabolites: {model.getNumSpeciesWithBoundaryCondition()}")
+    logger.info(f"Number of lambda function definitions: {len(model.function_definitions)}")
 
     return model
 
@@ -296,7 +303,7 @@ def get_function_dfn_names(model):
             symbols.append(symbol)
             sp_symbols[symbol]=sp.Symbol(symbol)
         expr=sp.sympify(string_math,locals=sp_symbols)
-        print("get_function_dfn_names fnc, ", expr)
+        logger.debug(f"get_function_dfn_names fnc, {expr}")
         func_x=sp.lambdify(symbols,expr, "jax")
         
         functional_dict[id]=func_x
