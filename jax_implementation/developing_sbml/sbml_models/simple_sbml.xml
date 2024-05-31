@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level2" level="2" version="1">
+  <model name="example">
+    <listOfCompartments>
+      <compartment id="cell" size="1" />
+    </listOfCompartments>
+    <listOfSpecies>
+      <species id="A" compartment="cell" initialConcentration="0.6" />
+      <species id="B" compartment="cell" initialConcentration="0.3" />
+    </listOfSpecies>
+    <listOfParameters>
+      <parameter id="k" value="0.1" />
+    </listOfParameters>
+    <listOfReactions>
+      <reaction id="AinB">
+        <listOfReactants>
+          <speciesReference species="A" />
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="B" />
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times />
+              <ci>cell</ci>
+              <ci>k</ci>
+              <ci>A</ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+    </listOfReactions>
+  </model>
+</sbml>
+
