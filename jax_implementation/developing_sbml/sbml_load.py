@@ -9,9 +9,13 @@ import collections
 
 def load_sbml_model(file_path):
     """loading sbml model from file_path"""
+    if not os.path.isfile(file_path):
+        logger.error(f"File not found: {file_path}")
+        raise FileNotFoundError()
+
     reader=libsbml.SBMLReader()
     document=reader.readSBML(file_path)
-    print("Number of internal inconsistencies",document.checkInternalConsistency())
+    logger.info(f"Number of internal inconsistencies: {document.checkInternalConsistency()}")
 
     model=document.getModel()
     print("Number of species:",model.getNumSpecies())
