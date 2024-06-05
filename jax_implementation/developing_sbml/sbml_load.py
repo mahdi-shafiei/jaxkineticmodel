@@ -6,6 +6,10 @@ import numpy as np
 import pandas as pd
 import re
 import collections
+import os
+from source.utils import get_logger
+
+logger = get_logger(__name__)
 
 def load_sbml_model(file_path):
     """loading sbml model from file_path"""
