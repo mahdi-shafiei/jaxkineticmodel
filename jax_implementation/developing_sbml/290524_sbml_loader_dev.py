@@ -19,61 +19,74 @@ from collections import OrderedDict
 import inspect
 
 
+jax.config.update("jax_enable_x64", True)
+
 ## a simple sbml model
-filepath="sbml_models/Garde2020.xml"
+filepath="sbml_models/v4.0.0_optimized.xml"
+
 model=load_sbml_model(file_path=filepath)
 
 
 ### All the loading of functions
 
-##recreate create_fluxes, but then for jax
-v,v_symbol_dictionaries=create_fluxes_v(model)
-
-
-S,species_names,reaction_names=get_stoichiometric_matrix(model)
+S=get_stoichiometric_matrix(model)
 y0=get_initial_conditions(model)
+y0=jnp.array(list(y0.values()))
+
+##recreate create_fluxes, but then for jax
+v,v_symbol_dictionaries,local_params=create_fluxes_v(model)
+met_point_dict=construct_flux_pointer_dictionary(v_symbol_dictionaries,list(S.columns),list(S.index))
+
+# print(local_params)
+
+
+    
+# print(local_params)
+
+
+ts=jnp.arange(0,5,0.1)
+JaxKmodel = NeuralODE(v=v, S=S, 
+                  met_point_dict=met_point_dict,
+                  v_symbol_dictionaries=v_symbol_dictionaries)
 
 
 
-y0=species_match_to_S(y0,species_names)
-v=reaction_match_to_S(v,reaction_names)
-parameters=get_global_parameters(model)
-
-## we now only gather globally defined parameters, 
-#but need to pass local parameters ass well. 
-
-met_point_dict=construct_flux_pointer_dictionary(v_symbol_dictionaries,reaction_names,species_names)
-print("points towards the species in y to be used for flux eval",met_point_dict)
 
 
-# it is probably not wise to pass param_point_dict directly to model,
-#because then when we perform gradient calculations, we might
-#actually get different gradients for the same parameters
-param_point_dict=construct_param_point_dictionary(v_symbol_dictionaries,
-                                                  reaction_names,parameters)
+JaxKmodel=jax.jit(JaxKmodel)
 
-print("points towards the parameters to be used for flux eval",param_point_dict)
-# ####
-# # Simulation
-# ###
 
-ts=jnp.arange(0,10,0.1)
-model = NeuralODE(v=v, S=S, 
-                  flux_point_dict=met_point_dict,
-                  species_names=species_names,
-                  )
-model=jax.jit(model)
+# #parameters are not yet defined
+params=get_global_parameters(model)
+params={**local_params,**params}
 
-ys=model(ts,y0,param_point_dict)
+JaxKmodel(ts=jnp.array([0]),
+                       y0=y0,
+                       params=params)
+# # # print(v_local_param_dict)
+ys=JaxKmodel(ts=ts,
+      y0=y0,
+      params=params)
 
-plt.plot(ts,ys)
-# plt.show()
-start=time.time()
-for i in range(3):
 
-    param_point_dict[0]['k1']=param_point_dict[0]['k1']*(1/(i+1))
+# # # print(S)
+for i in range(len(S.index)):
+      plt.plot(ts,ys[:,i],label=S.index[i])
 
-    ys=model(ts,y0,param_point_dict)
-    plt.plot(ts,ys[:,0])
+# plt.plot(ts,ys[:,4],label=species_names[4])
+plt.legend()
+# 
 plt.show()
-end=time.time()
+
+
+# for i in range(100):
+#     print(i)
+#     # params['lp.Enzyme_synthesis.k1']=i+1
+#     ys=JaxKmodel(ts=ts,
+#       y0=y0,
+#       params=params)
+#     plt.plot(ts,ys[:,0],label=S.index[0])
+
+# plt.show()
+    
+

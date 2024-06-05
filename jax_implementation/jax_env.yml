@@ -141,7 +141,7 @@ dependencies:
   - numba=0.59.1=py312hacefee8_0
   - numpy=1.26.4=py312heda63a1_0
   - openjpeg=2.5.2=h488ebb8_0
-  - openssl=3.3.0=hd590300_0
+  - openssl=3.3.0=h4ab18f5_3
   - opt-einsum=3.3.0=hd8ed1ab_2
   - opt_einsum=3.3.0=pyhc1e730c_2
   - optimistix=0.0.6=pyhd8ed1ab_0
@@ -172,6 +172,7 @@ dependencies:
   - pysr=0.18.4=pyhd8ed1ab_0
   - python=3.12.3=hab00c5b_0_cpython
   - python-dateutil=2.9.0=pyhd8ed1ab_0
+  - python-libsbml=5.20.2=py312h30efb56_2
   - python-tzdata=2024.1=pyhd8ed1ab_0
   - python_abi=3.12=4_cp312
   - pytz=2024.1=pyhd8ed1ab_0

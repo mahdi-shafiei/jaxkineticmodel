@@ -3,8 +3,9 @@ import jax
 import libsbml
 import jax.numpy as jnp
 import numpy as np
-
-
+import pandas as pd
+import re
+import collections
 
 def load_sbml_model(file_path):
     """loading sbml model from file_path"""
@@ -18,7 +19,7 @@ def load_sbml_model(file_path):
     print("Number of global parameters", model.getNumParameters())
     print("Number of constant boundary metabolites: ",model.getNumSpeciesWithBoundaryCondition())
     print("Number of lambda function definitions: ", len(model.function_definitions))
-
+    print("Number of assignment rules",model.getNumRules())
     return model
 
 def get_initial_conditions(model):
@@ -33,8 +34,17 @@ def get_initial_conditions(model):
 
         #there are also non-stationary boundary conditions, deal with this later. 
         if specimen.getConstant() and specimen.getBoundaryCondition():
+            print("Constant Boundary Specimen ",specimen.id)
             continue
-            # print("Constant Boundary Specimen ",specimen.id)
+        
+        elif specimen.getBoundaryCondition() and not specimen.getConstant():
+            if model.getLevel()==2:
+                print("Level 2 sbml, assume that boundary condition is constant for",specimen.id)
+            
+            if model.getLevel()==3:
+                print("Non-Constant Boundary Specimen", specimen.id)
+            continue
+
         else:   
             initial_concentration_dict[species[i].id]=specimen.initial_concentration
     return initial_concentration_dict
@@ -77,7 +87,16 @@ def get_constant_boundary_species(model):
     species=model.getListOfSpecies()
     for i in range(len(species)):
         specimen=species[i]
-        if specimen.getConstant():
+        if specimen.getBoundaryCondition():
+            if model.getLevel()==2:
+
+                print("Assume that boundary is constant for level 2")
+                constant_boundary_dict[specimen.id]=specimen.initial_concentration
+
+
+
+
+
             constant_boundary_dict[specimen.id]=specimen.initial_concentration
     return constant_boundary_dict
 
@@ -88,10 +107,8 @@ def get_local_parameters(reaction):
     local_parameter_dict={}
     id=reaction.id
     r=reaction.getKineticLaw()
-    local_keys=[]
     for i in range(len(r.getListOfParameters())):
         
-        global_key=id+"_"+r.getListOfParameters()[i].id
         local_keys=r.getListOfParameters()[i].id
         value=r.getListOfParameters()[i].value
         local_parameter_dict[local_keys]=value
@@ -146,22 +163,44 @@ def sympify_lambidify_and_jit_equation(equation,nested_local_dict):
     globals=get_reaction_symbols_dict(nested_local_dict['globals'])
     locals=get_reaction_symbols_dict(nested_local_dict['locals'])
     species=get_reaction_symbols_dict(nested_local_dict['species'])
+    boundaries=nested_local_dict['boundary']
     lambda_funcs=nested_local_dict['lambda_functions'] 
-    boundary=nested_local_dict['boundary'] # not learnable
-    # print("boundary",boundary)
 
+    assignment_rules=nested_local_dict['boundary_assignments']
+    
     compartments=nested_local_dict['compartments'] #learnable
     local_dict={**species,**globals,**locals}
-    # print(local_dict)
+
+
     equation=sp.sympify(equation,locals={**local_dict,
-                                         **compartments,**boundary,**lambda_funcs})
+                                         **assignment_rules,
+                                         **lambda_funcs})
+
+    #these are filled in before compiling
+
+
+    equation=equation.subs(assignment_rules)
+    equation=equation.subs(compartments)
+    equation=equation.subs(boundaries)
+
+
     #free symbols are used for lambdifying
-    free_symbols = equation.free_symbols
-    # print(free_symbols)
+    free_symbols = list(equation.free_symbols)
+
+
     filtered_dict = {key: value for key, value in local_dict.items() if value in free_symbols}
-    # print(filtered_dict)
+
+    #perhaps a bit hacky, but some sbml models have symbols that are 
+    #predefined
+    for symbol in free_symbols:
+        if str(symbol)=="time":
+            filtered_dict['time']=sp.Symbol('time')
+    
+
     equation=sp.lambdify((filtered_dict.values()),equation,"jax")
     equation=jax.jit(equation)
+
+
     return equation,filtered_dict
 
 
@@ -176,14 +215,23 @@ def create_fluxes_v(model):
     global_parameters=get_global_parameters(model)
     compartments=get_compartments(model)
     constant_boundaries=get_constant_boundary_species(model)
-    
-    lambda_functions=get_function_dfn_names(model)
+
+
+    lambda_functions=get_lambda_function_dictionary(model)
+    assignments_rules=get_assignment_rules_dictionary(model)
+
 
     v={} 
-    v_filtered_dict={} #all symbols that are used in the equation.
+
+    v_symbol_dict={} #all symbols that are used in the equation.
+
+    local_param_dict={} #local parameters with the reaction it belongs to as a new parameter
     for i in range(nreactions):
         reaction=model.reactions[i] #will be looped by nreactions
+
+        
         local_parameters=get_local_parameters(reaction)
+        # print(local_parameters)
 
         
     # reaction_species=get_reaction_species(reaction)
@@ -194,31 +242,52 @@ def create_fluxes_v(model):
                             "locals":local_parameters,
                             "compartments":compartments,
                             "boundary":constant_boundaries,
-                            "lambda_functions":lambda_functions} #add functionality
+                            "lambda_functions":lambda_functions,
+                            "boundary_assignments":assignments_rules} #add functionality
 
-
+        
         vi_rate_law=get_string_expression(reaction)
         vi,filtered_dict=sympify_lambidify_and_jit_equation(vi_rate_law,nested_dictionary_vi)
 
-        v[model.reactions[i].id]=vi
-        v_filtered_dict[model.reactions[i].id]=filtered_dict
-    return v,v_filtered_dict
+        v[model.reactions[i].id]=vi #the jitted equation
+        v_symbol_dict[model.reactions[i].id]=filtered_dict
+
+        # here
+        for key in local_parameters.keys():
+
+            newkey="lp."+str(model.reactions[i].id)+"."+key
+            local_param_dict[newkey]=local_parameters[key]
+    return v,v_symbol_dict,local_param_dict
 
 
 def get_stoichiometric_matrix(model):
-    """Retrieves the stoichiometric matrix from the model. This code was taken from
-    https://gist.github.com/lukauskas/d1e30bdccc5b801d341d. A minor mistake was found in that the
-    stoichiometric coefficients were reversed"""
-    species = [s.getName() for s in model.getListOfSpecies()]
+    """Retrieves the stoichiometric matrix from the model. """
+
+    species_ids=[]
+    reduced_species_list=[]
+    for s in model.getListOfSpecies():
+    #these conditions do not have a rate law
+        if s.getConstant() and s.getBoundaryCondition():
+            continue
+        elif s.getBoundaryCondition() and not s.getConstant():
+            continue
+        elif s.getConstant():
+            continue
+        else:
+            reduced_species_list.append(s)
+            species_ids.append(s.getId())
+
+
+    # species = [s.getName() for s in model.getListOfSpecies()]
     reactions = [r.getId() for r in model.getListOfReactions()]
 
-    stoichiometry_matrix = np.zeros((len(species),len(reactions)))
+    stoichiometry_matrix = np.zeros((len(species_ids),len(reactions)))
     for reaction_index, reaction in enumerate(model.getListOfReactions()):
 
         reactants = {r.getSpecies(): r.getStoichiometry() for r in reaction.getListOfReactants()}
         products = {p.getSpecies(): p.getStoichiometry() for p in reaction.getListOfProducts()}
 
-        for species_index, species_node in enumerate(model.getListOfSpecies()):
+        for species_index, species_node in enumerate(reduced_species_list):
             species_id = species_node.getId()
 
 
@@ -226,9 +295,12 @@ def get_stoichiometric_matrix(model):
             # print(net_stoichiometry)
             stoichiometry_matrix[species_index, reaction_index] = net_stoichiometry
 
-    species_names = [s.getId() for s in model.getListOfSpecies()]
+    species_names = [s.getId() for s in reduced_species_list]
     reaction_names=[r.getId() for r in model.getListOfReactions()]
-    return stoichiometry_matrix,species_names,reaction_names
+
+    stoichiometry_matrix=pd.DataFrame(stoichiometry_matrix,index=species_names,columns=reaction_names)
+
+    return stoichiometry_matrix
 
 def species_match_to_S(initial_conditions,species_names):
     """Small helper function ensures that y0 is properly matched to rows of S
@@ -258,7 +330,7 @@ def construct_flux_pointer_dictionary(v_symbol_dictionaries,reaction_names,speci
         v_dict=v_symbol_dictionaries[reaction]
         filtered_dict=[species_names.index(key) for key in v_dict.keys() if key in species_names]
         filtered_dict=jnp.array(filtered_dict)
-        flux_point_dict[k]=filtered_dict
+        flux_point_dict[reaction]=filtered_dict
     return flux_point_dict
 
 def construct_param_point_dictionary(v_symbol_dictionaries,reaction_names,parameters):
@@ -274,11 +346,26 @@ def construct_param_point_dictionary(v_symbol_dictionaries,reaction_names,parame
         # params_point_dict=[parameters.index(key) for key in v_dict.keys() if key in parameters]
         # print(params_point_dict)
         # filtered_dict=jnp.array(params_point_dict)
-        flux_point_dict[k]=filtered_dict
+        flux_point_dict[reaction]=filtered_dict
     return flux_point_dict
 
+def get_leaf_nodes(node, leaf_nodes):
+    """Finds the leaf nodes of the mathml expression."""
+    if node.getNumChildren() == 0:
+        name=node.getName()
+        if name!=None:
+            leaf_nodes.append(name)
+        # print(node.getName())
+    else:
+        for i in range(node.getNumChildren()):
+            get_leaf_nodes(node.getChild(i), leaf_nodes)
+    leaf_nodes=np.array(leaf_nodes)
+    leaf_nodes=np.unique(leaf_nodes)
+    leaf_nodes=leaf_nodes.tolist()
+    return leaf_nodes
 
-def get_function_dfn_names(model):
+
+def get_lambda_function_dictionary(model):
     """Stop giving these functions confusing names...
     it returns a dictionary with all lambda functions"""
     functional_dict={}
@@ -290,14 +377,70 @@ def get_function_dfn_names(model):
         n_nodes=math.getNumChildren()
         string_math=libsbml.formulaToL3String(math.getChild(n_nodes-1))
         symbols=[]
+        leaf_nodes=[]
         sp_symbols={}
-        for i in range(n_nodes-1):
-            symbol=math.getChild(i).getName()
-            symbols.append(symbol)
-            sp_symbols[symbol]=sp.Symbol(symbol)
+        math_nodes=get_leaf_nodes(math,leaf_nodes=leaf_nodes)
+        sp_symbols={}
+        for node in math_nodes:
+            sp_symbols[node]=sp.Symbol(node)
         expr=sp.sympify(string_math,locals=sp_symbols)
-        print("get_function_dfn_names fnc, ", expr)
-        func_x=sp.lambdify(symbols,expr, "jax")
+
+        func_x=sp.lambdify(math_nodes,expr, "jax")
         
         functional_dict[id]=func_x
     return functional_dict
+
+def get_assignment_rules_dictionary(model):
+    """Get rules that assign to variables. I did not lambdify here"""
+    assignment_dict={}
+    for fnc in range(model.getNumRules()):
+        rule=model.rules[fnc]
+        id=rule.getId()
+        math=rule.getMath()
+        leaf_nodes=[]
+        string_math=libsbml.formulaToL3String(math)
+
+        math_nodes=get_leaf_nodes(math,leaf_nodes=leaf_nodes)
+        sp_symbols={}
+        for node in math_nodes:
+            sp_symbols[node]=sp.Symbol(node)
+        expr=sp.sympify(string_math,locals=sp_symbols)
+        # rule_x=sp.lambdify(math_nodes,expr, "jax")
+        
+        assignment_dict[id]=expr
+        # print("the expression: ",id,expr)
+    return assignment_dict
+
+
+def separate_params(params):
+    global_params={}
+    local_params=collections.defaultdict(dict)
+
+    for key in params.keys():
+
+        if re.match("lp.*.",key):
+
+            fkey=key.removeprefix("lp.")
+            list=fkey.split(".")
+            value=params[key]
+            newkey=list[1]
+            local_params[list[0]][newkey]=value
+            
+            
+        else:
+            global_params[key]=params[key]
+    return global_params,local_params
+
+
+# def wrap_time_symbols(t):
+def time_dependency_symbols(v_symbol_dictionaries,t):
+    time_dependencies={}
+    for key,values in v_symbol_dictionaries.items():
+        for value in values.keys():
+            if value=="time":
+                time_dependencies[key]={value:t}
+            else:
+                time_dependencies[key]={}
+    return time_dependencies
+#   time_dependencies=time_dependency_symbols(v_symbol_dictionaries,t)
+#   return time_dependencies
