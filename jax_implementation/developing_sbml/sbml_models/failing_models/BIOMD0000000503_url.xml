@@ -4606,7 +4606,7 @@ domain worldwide. Please refer to        <a href="http://creativecommons.org/pub
             <parameter id="kcat" metaid="_60bb8ae7-3bc7-4b44-a8ed-6541dc1531f7" units="per_s" value="335"/>
             <parameter id="Kru5p" metaid="_7282b4cc-25ee-49a0-95f5-8f19fbe7869d" units="mM" value="2.47"/>
             <parameter id="Kr5p" metaid="_18a8b602-2eed-4a76-b33c-0900e549c0ff" units="mM" value="5.7"/>
-            <parameter id="Kiru5p" metaid="_3592a277-ce13-4ef3-ada8-a806a2026d2b" units="mM" value="9.88"/>
+            <parameter id="Kiru5p" metaid="_3592a277-ce13-4ef3-ada8-a806a2026d2b" units="mM" value="9.88"/> 
             <parameter id="Keq" metaid="bf7a0483-2fd6-4472-9073-420a491d1c1f" units="dimensionless" value="4"/>
           </listOfParameters>
         </kineticLaw>

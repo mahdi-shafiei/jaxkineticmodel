@@ -183,7 +183,7 @@ def sympify_lambidify_and_jit_equation(equation,nested_local_dict):
     equation=sp.sympify(equation,locals={**local_dict,
                                          **assignment_rules,
                                          **lambda_funcs})
-
+    logger.info(f"equation x {equation}")
     #these are filled in before compiling
 
 

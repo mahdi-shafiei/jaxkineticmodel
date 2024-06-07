@@ -114,14 +114,14 @@ class NeuralODE():
 
         solution = diffrax.diffeqsolve(
         diffrax.ODETerm(self.func),
-        diffrax.Kvaerno3(),
+        diffrax.Kvaerno5(),
         t0=ts[0],
         t1=ts[-1],
         dt0=ts[1] - ts[0],
         y0=y0,
         args=(global_params,local_params,self.time_dict),
-        stepsize_controller=diffrax.PIDController(rtol=1e-3, atol=1e-7),
+        stepsize_controller=diffrax.PIDController(rtol=1e-3, atol=1e-6),
         saveat=diffrax.SaveAt(ts=ts),
-        max_steps=5000
+        max_steps=15000
         )
         return solution.ys

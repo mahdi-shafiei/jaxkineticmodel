@@ -27,7 +27,7 @@ logger = get_logger(__name__)
 logger.debug('Loading SBML model')
 ## a simple sbml model
 
-filepath="jax_implementation/developing_sbml/sbml_models/Garde2020.xml"
+filepath="jax_implementation/developing_sbml/sbml_models/failing_models/BIOMD0000000244_url.xml"
 # filepath="jax_implementation/developing_sbml/sbml_models/Garde2020.xml"
 model=load_sbml_model(file_path=filepath)
 
@@ -49,7 +49,6 @@ y0=jnp.array(list(y0.values()))
 
 
 
-ts=jnp.arange(0,5,0.1)
 JaxKmodel = NeuralODE(v=v, S=S, 
                   met_point_dict=met_point_dict,
                   v_symbol_dictionaries=v_symbol_dictionaries)
@@ -69,7 +68,7 @@ JaxKmodel=jax.jit(JaxKmodel)
 # # Simulation
 # ###
 
-ts=jnp.arange(0,10,0.1)
+ts=jnp.arange(0,100,0.1)
 # #parameters are not yet defined
 params=get_global_parameters(model)
 params={**local_params,**params}
