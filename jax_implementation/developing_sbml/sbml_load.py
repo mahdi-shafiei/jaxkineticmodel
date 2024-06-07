@@ -169,7 +169,7 @@ def sympify_lambidify_and_jit_equation(equation, nested_local_dict):
     # free symbols are used for lambdifying
     free_symbols = list(equation.free_symbols)
 
-    filtered_dict = {key: value for key, value in local_dict.items() if value in free_symbols}
+    filtered_dict = {key: value for key, value in local_dict.items() if value in free_symbols or key in locals}
 
     # perhaps a bit hacky, but some sbml models have symbols that are
     # predefined
