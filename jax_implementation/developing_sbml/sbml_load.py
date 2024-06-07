@@ -39,9 +39,7 @@ def get_initial_conditions(model):
     since it does not have a rate law"""
     species = model.getListOfSpecies()
     initial_concentration_dict = {}
-    for i in range(len(species)):
-        specimen = species[i]
-
+    for specimen in species:
         # there are also non-stationary boundary conditions, deal with this later.
         if specimen.getConstant() and specimen.getBoundaryCondition():
             print("Constant Boundary Specimen ", specimen.id)
@@ -56,27 +54,22 @@ def get_initial_conditions(model):
             continue
 
         else:
-            initial_concentration_dict[species[i].id] = specimen.initial_concentration
+            initial_concentration_dict[specimen.id] = specimen.initial_concentration
     return initial_concentration_dict
 
 
 def get_global_parameters(model):
     """Most sbml models have their parameters defined globally, 
     this function retrieves them"""
-    global_parameter_dict = {}
     params = model.getListOfParameters()
-    for i in range(len(params)):
-        global_parameter_dict[params[i].id] = params[i].value
+    global_parameter_dict = {param.id: param.value for param in params}
     return global_parameter_dict
 
 
 def get_compartments(model):
     """Some sbml models have compartments, retrieves them"""
-    compartment_dict = {}
     compartments = model.getListOfCompartments()
-    for i in range(len(compartments)):
-        compartment_dict[compartments[i].id] = compartments[i].size
-
+    compartment_dict = {cmp.id: cmp.size for cmp in compartments}
     return compartment_dict
 
 
@@ -97,8 +90,7 @@ def get_constant_boundary_species(model):
     https://synonym.caltech.edu/software/libsbml/5.18.0/docs/formatted/python-api/classlibsbml_1_1_species.html"""
     constant_boundary_dict = {}
     species = model.getListOfSpecies()
-    for i in range(len(species)):
-        specimen = species[i]
+    for specimen in species:
         if specimen.getBoundaryCondition():
             if model.getLevel() == 2:
                 print("Assume that boundary is constant for level 2")
@@ -111,14 +103,8 @@ def get_constant_boundary_species(model):
 def get_local_parameters(reaction):
     """Some sbml models also have local parameters (locally defined for reactions), this function retrieves them for an individual reaction, removing the chance 
     similarly named parameters are overwritten"""
-    local_parameter_dict={}
-    id=reaction.id
-    r=reaction.getKineticLaw()
-    for i in range(len(r.getListOfParameters())):
-        
-        local_keys=r.getListOfParameters()[i].id
-        value=r.getListOfParameters()[i].value
-        local_parameter_dict[local_keys]=value
+    r = reaction.getKineticLaw()
+    local_parameter_dict = {param.id: param.value for param in r.getListOfParameters()}
     return local_parameter_dict
 
 
@@ -129,15 +115,9 @@ def get_reaction_species(reaction):
     prod = reaction.getListOfProducts()
     mod = reaction.getListOfModifiers()
 
-    substrates = []
-    products = []
-    modifiers = []
-    for i in range(len(sub)):
-        substrates.append(sub[i].species)
-    for i in range(len(prod)):
-        products.append(prod[i].species)
-    for i in range(len(mod)):
-        modifiers.append(mod[i].species)
+    substrates = [s.species for s in sub]
+    products = [p.species for p in prod]
+    modifiers = [m.species for m in mod]
 
     species = substrates + products + modifiers
     return species
@@ -147,12 +127,8 @@ def get_reaction_symbols_dict(eval_dict):
     """This functions works on the local_dictionary passed in the sympify function
     It ensures that sympy symbols for parameters and y-values are properly passed,
     while the rest is simply substituted in the expression."""
-    symbol_dict = {}
-    for i in eval_dict.keys():
-        if callable(eval_dict[i]):  # skip functions symbols
-            continue
-        else:
-            symbol_dict[i] = sp.Symbol(i)
+
+    symbol_dict = {i: sp.Symbol(i) for i in eval_dict.keys() if not callable(eval_dict[i])}  # skip functions symbols
     return symbol_dict
 
 
@@ -222,17 +198,12 @@ def create_fluxes_v(model):
     lambda_functions = get_lambda_function_dictionary(model)
     assignments_rules = get_assignment_rules_dictionary(model)
 
+    v = {}
+    v_symbol_dict = {}  # all symbols that are used in the equation.
+    local_param_dict = {}  # local parameters with the reaction it belongs to as a new parameter
 
-    v={} 
-
-    v_symbol_dict={} #all symbols that are used in the equation.
-
-    local_param_dict={} #local parameters with the reaction it belongs to as a new parameter
-    for i in range(nreactions):
-        reaction=model.reactions[i] #will be looped by nreactions
-
-        
-        local_parameters=get_local_parameters(reaction)
+    for reaction in model.reactions:
+        local_parameters = get_local_parameters(reaction)
         # print(local_parameters)
         # reaction_species = get_reaction_species(reaction)
         nested_dictionary_vi = {'species': species_ic,
@@ -246,15 +217,14 @@ def create_fluxes_v(model):
         vi_rate_law = get_string_expression(reaction)
         vi, filtered_dict = sympify_lambidify_and_jit_equation(vi_rate_law, nested_dictionary_vi)
 
-        v[model.reactions[i].id]=vi #the jitted equation
-        v_symbol_dict[model.reactions[i].id]=filtered_dict
+        v[reaction.id] = vi  # the jitted equation
+        v_symbol_dict[reaction.id] = filtered_dict
 
         # here
         for key in local_parameters.keys():
-
-            newkey="lp."+str(model.reactions[i].id)+"."+key
-            local_param_dict[newkey]=local_parameters[key]
-    return v,v_symbol_dict,local_param_dict
+            newkey = "lp." + str(reaction.id) + "." + key
+            local_param_dict[newkey] = local_parameters[key]
+    return v, v_symbol_dict, local_param_dict
 
 
 def get_stoichiometric_matrix(model):
@@ -369,8 +339,7 @@ def get_lambda_function_dictionary(model):
     it returns a dictionary with all lambda functions"""
     functional_dict = {}
 
-    for fnc in range(model.getNumFunctionDefinitions()):  # loop over function definitions
-        function = model.function_definitions[fnc]
+    for function in model.function_definitions:
         id = function.getId()
         math = function.getMath()
         n_nodes = math.getNumChildren()
@@ -393,17 +362,14 @@ def get_lambda_function_dictionary(model):
 def get_assignment_rules_dictionary(model):
     """Get rules that assign to variables. I did not lambdify here"""
     assignment_dict = {}
-    for fnc in range(model.getNumRules()):
-        rule = model.rules[fnc]
+    for rule in model.rules:
         id = rule.getId()
         math = rule.getMath()
         leaf_nodes = []
         string_math = libsbml.formulaToL3String(math)
 
         math_nodes = get_leaf_nodes(math, leaf_nodes=leaf_nodes)
-        sp_symbols = {}
-        for node in math_nodes:
-            sp_symbols[node] = sp.Symbol(node)
+        sp_symbols = {node: sp.Symbol(node) for node in math_nodes}
         expr = sp.sympify(string_math, locals=sp_symbols)
         # rule_x=sp.lambdify(math_nodes,expr, "jax")
 
@@ -417,16 +383,12 @@ def separate_params(params):
     local_params = collections.defaultdict(dict)
 
     for key in params.keys():
-
         if re.match("lp.*.", key):
-
             fkey = key.removeprefix("lp.")
             list = fkey.split(".")
             value = params[key]
             newkey = list[1]
             local_params[list[0]][newkey] = value
-
-
         else:
             global_params[key] = params[key]
     return global_params, local_params
