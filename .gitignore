@@ -1,5 +1,5 @@
 
+analysis/
 parameter_initializations/
 results/
-data/
-models/
+jax_implementation/developing_sbml/__pycache__
