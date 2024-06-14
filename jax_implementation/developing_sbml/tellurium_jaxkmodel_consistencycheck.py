@@ -1,3 +1,4 @@
+import jaxlib.xla_extension
 import sympy as sp
 import jax.numpy as jnp
 from sympy.utilities.lambdify import lambdify
@@ -72,5 +73,12 @@ for sbml_file in sbml_files:
         else:
             print("discrepancy because of S in " + sbml_file)
             os.rename(file_path, pathname + "discrepancies/" + sbml_file)
-    except:
+    except jaxlib.xla_extension.XlaRuntimeError as e:
+        if 'maximum number of solver steps' not in str(e):
+            raise
+        logger.error("Maximum number of solver steps reached")
+        os.rename(file_path, pathname + "max_steps_reached/" + sbml_file)
+    except Exception as e:
+        logger.error(f"An exception of type {type(e)} was raised")
+        logger.exception(e)
         os.rename(file_path, pathname + "failing_models/" + sbml_file)
