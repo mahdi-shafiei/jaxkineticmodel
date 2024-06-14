@@ -274,154 +274,308 @@ km_sinkPEP = 1e-03
 km_sinkPYR = 1e-03
 
 # CREATE FLUXES
+
 # Notes:
 # - K_eq treated as a given!
 def create_fluxes():
 
+    
+    
+    
     # GLT
+    substrates_GLT = ['ICglucose', 'ECglucose']
     v_GLT = Torch_Facilitated_Diffusion(vmax=p_GLT_VmGLT, k_equilibrium=p_GLT_KeqGLT,
-                                        km_internal=p_GLT_KmGLTGLCi, km_external=p_GLT_KmGLTGLCo, to_be_learned=[True, False, True, True])
+                                        km_internal=p_GLT_KmGLTGLCi, km_external=p_GLT_KmGLTGLCo,
+                                        substrate_names=substrates_GLT, to_be_learned=[True, False, True, True])
 
     # GLK/HXK
+    substrates_GLK = ['ICATP','ICglucose']
+    products_GLK = ['ICADP', 'ICG6P']
+    modifiers_GLK = ['ICT6P']
     v_GLK = Torch_Rev_BiBi_MM_w_Inhibition(vmax=p_HXK_Vmax, k_equilibrium=p_HXK1_Keq, km_substrate1=p_HXK1_Katp, 
                                            km_substrate2=p_HXK1_Kglc,
                                            km_product1=p_HXK1_Kadp, km_product2=p_HXK1_Kg6p, ki_inhibitor=p_HXK1_Kt6p, 
+                                           substrate_names=substrates_GLK,
+                                           product_names=products_GLK,
+                                           modifier_names=modifiers_GLK,
                                            to_be_learned=[True, False, True, True, True, True, True])
     # PGM1
+    substrates_PGM1 = ['ICG1P']
+    products_PGM1 = ['ICG6P']
     v_PGM1 = Torch_Rev_UniUni_MM(vmax=p_PGM1_Vmax, k_equilibrium=p_PGM1_Keq,
                                  km_substrate=p_PGM1_Kg1p, km_product=p_PGM1_Kg6p,
+                                 substrate_names=substrates_PGM1,
+                                 product_names=products_PGM1,
                                  to_be_learned=[True, False, True, True])
 
     # TPS1
+    substrates_TPS1 = ['ICG6P', 'ICUDPG']
+    modifiers_TPS1  = ['ICF6P', 'ICPI']
     TPS1_inhibition_Pi = SimpleInhibitor(k_I=p_TPS1_Kpi, to_be_learned=[True])
     TPS1_activation_F6P = SimpleActivator(k_A=p_TPS1_KmF6P, to_be_learned=[True])
     v_TPS1 = Torch_Irrev_MM_Bi_w_Modifiers(vmax=p_TPS1_Vmax, km_substrate1=p_TPS1_KmF6P,
-                                           km_substrate2=0.2, modifiers=[TPS1_inhibition_Pi, TPS1_activation_F6P], to_be_learned=[True, True, True])
+                                           km_substrate2=0.2, modifiers=[TPS1_inhibition_Pi, TPS1_activation_F6P], 
+                                           substrate_names=substrates_TPS1,
+                                           modifier_names=modifiers_TPS1,
+                                           to_be_learned=[True, True, True])
     
     # TPS2
     #TPS2_inhibition_Pi = SimpleInhibitor(k_I=p_TPS2_Kpi, to_be_learned=[True])
-    v_TPS2 = Torch_Irrev_MM_Bi_w_Inhibition(vmax=p_TPS2_Vmax, km_substrate1=p_TPS2_Kt6p, ki=p_TPS2_Kpi, to_be_learned=[True, True, True])
+    
+    substrates_TPS2 = ['ICT6P']
+    products_TPS2 = ['ICPI']
+    v_TPS2 = Torch_Irrev_MM_Bi_w_Inhibition(vmax=p_TPS2_Vmax, km_substrate1=p_TPS2_Kt6p, ki=p_TPS2_Kpi,
+                                            substrate_names=substrates_TPS2,
+                                            product_names=products_TPS2,
+                                            to_be_learned=[True, True, True])
 
     
     # NTH1
-    v_NTH1 = Torch_Irrev_MM_Uni(p_NTH1_Vmax, p_NTH1_Ktre, [True, True])
+    substrates_NTH1 = ['ICtreh']
+    v_NTH1 = Torch_Irrev_MM_Uni(p_NTH1_Vmax, p_NTH1_Ktre, 
+                                substrate_names=substrates_NTH1,
+                                to_be_learned=[True, True])
 
     # PGI
+    substrates_PGI = ['ICF6P']
+    products_PGI = ['ICATP']
     v_PGI = Torch_Rev_UniUni_MM(vmax=p_PGI1_Vmax, k_equilibrium=p_PGI1_Keq, km_substrate=p_PGI1_Kg6p,
-                                km_product=p_PGI1_Kf6p, to_be_learned=[True, False, True, True])
+                                km_product=p_PGI1_Kf6p, 
+                                substrate_names=substrates_PGI,
+                                product_names=products_PGI,
+                                to_be_learned=[True, False, True, True])
     
     # PFK
+    substrates_PFK = ['ICATP', 'ICglucose']
+    products_PFK = ['ICFBP']
+    modifiers_PFK = ['ICAMP']
     v_PFK = Torch_Specific(vmax=p_PFK_Vmax, kr_F6P=p_PFK_Kf6p, kr_ATP=p_PFK_Katp, gr=p_PFK_gR,
                            c_ATP=p_PFK_Catp, ci_ATP=p_PFK_Ciatp, ci_AMP=p_PFK_Camp, 
                            ci_F26BP=p_PFK_Cf26bp, ci_F16BP=p_PFK_Cf16bp, l=p_PFK_L, 
                            kATP=p_PFK_Kiatp, kAMP=p_PFK_Kamp, F26BP = p_PFK_F26BP,
                            kF26BP = p_PFK_Kf26bp, kF16BP = p_PFK_Kf16bp,
+                           substrate_names=substrates_PFK,
+                           product_names=products_PFK,
+                           modifier_names=modifiers_PFK,
                            to_be_learned=[True, True, True, True, True, True, True,
                                           True, True, True, True, True, True, True, True])
     
     # ALD
+    substrates_ALD = ['ICFBP']
+    products_ALD = ['ICGAP', 'ICDHAP']
     v_ALD = Torch_MM_unibi(vmax=p_FBA1_Vmax, k_equilibrium=p_FBA1_Keq, km_substrate=p_FBA1_Kf16bp,
-                                    km_product1=p_FBA1_Kglyceral3p, km_product2=p_FBA1_Kdhap, to_be_learned=[True, False, True, True, True])
+                                    km_product1=p_FBA1_Kglyceral3p, km_product2=p_FBA1_Kdhap, 
+                                    substrate_names=substrates_ALD,
+                                    product_names=products_ALD,
+                                    to_be_learned=[True, False, True, True, True])
 
     # TPI
+    substrates_TPI = ['ICDHAP']
+    products_TPI = ['ICGAP']
     v_TPI = Torch_Rev_UniUni_MM(vmax=p_TPI1_kcat*f_TPI1, k_equilibrium=p_TPI1_Keq, km_substrate=p_TPI1_Kdhap,
-                                km_product=p_TPI1_Kglyceral3p, to_be_learned=[True, False, True, True])
+                                km_product=p_TPI1_Kglyceral3p,
+                                substrate_names=substrates_TPI,
+                                product_names=products_TPI,
+                                to_be_learned=[True, False, True, True])
     
     # G3PDH
+    substrates_G3PDH = ['ICDHAP', 'ICNADH']
+    products_G3PDH = ['ICG3P', 'ICNAD']
+    modifiers_G3PDH = ['ICFBP', 'ICATP', 'ICADP']
     v_G3PDH = Torch_Rev_BiBi_MM_w_Activation(vmax=p_GPD1_Vmax, k_equilibrium=p_GPD1_Keq, 
                                              km_substrate1=p_GPD1_Kdhap, km_substrate2=p_GPD1_Knadh,
                                              km_product1=p_GPD1_Kglyc3p, km_product2=p_GPD1_Knad,
                                                ka1=p_GPD1_Kf16bp, ka2=p_GPD1_Katp, ka3=p_GPD1_Kadp,
+                                               substrate_names=substrates_G3PDH,
+                                               product_names=products_G3PDH,
+                                               modifier_names=modifiers_G3PDH,
                                              to_be_learned=[True, False, True, True, True, True, True, True, True])
     
     # HOR2
+    substrates_HOR2 = ['ICG3P']
+    modifiers_HOR2 = ['ICPI']
     HOR2_inhibition_Pi = SimpleInhibitor(k_I=p_HOR2_Kpi, to_be_learned=[True])
     v_HOR2 = Torch_Irrev_MM_Uni_w_Modifiers(vmax=p_HOR2_Vmax, km_substrate=p_HOR2_Kglyc3p,
-                                            modifiers=[HOR2_inhibition_Pi], to_be_learned=[True, True])
+                                            modifiers=[HOR2_inhibition_Pi], 
+                                            substrate_names=substrates_HOR2,
+                                            modifier_names=modifiers_HOR2,
+                                            to_be_learned=[True, True])
     
     # GlycT
+    substrates_GlycT = ['ICglyc']
     v_GlycT = Torch_Diffusion(
-        enzyme=f_GLYCEROL_e, transport_coef=p_GlycerolTransport, to_be_learned=[True])
+        enzyme=f_GLYCEROL_e, transport_coef=p_GlycerolTransport,
+        substrate_names=substrates_GlycT,
+        to_be_learned=[True])
     
 
     # GAPDH
+    substrates_GAPDH = ['ICGAP', 'ICNAD', 'ICPI']
+    products_GAPDH = ['ICBPG', 'ICNADH']
     v_GAPDH = Torch_MM_Ordered_Bi_Tri(vmax=p_GAPDH_Vmax, k_equilibrium=p_TDH1_Keq, km_substrate1=p_TDH1_Kglyceral3p,
                                       km_substrate2=p_TDH1_Knad, ki=p_TDH1_Kpi, 
                                       km_product1=p_TDH1_Kglycerate13bp, km_product2=p_TDH1_Knadh,
+                                      substrate_names=substrates_GAPDH,
+                                      product_names=products_GAPDH,
                                       to_be_learned=[True, False, True, True, True, True, True])
     
     # PGK
+    substrates_PGK = ['ICBPG', 'ICADP']
+    products_PGK = ['IC3PG', 'ICATP']
     v_PGK = Torch_Rev_BiBi_MM_Vr(vmax=p_PGK_VmPGK, k_equilibrium=p_PGK_KeqPGK, 
                                km_substrate1=p_PGK_KmPGKBPG, km_substrate2=p_PGK_KmPGKADP, 
                                km_product1=p_PGK_KmPGKP3G, km_product2=p_PGK_KmPGKATP,
+                               substrate_names=substrates_PGK,
+                               product_names=products_PGK,
                               to_be_learned=[True, False, True, True, True, True])
 
     # PGM
-    v_PGM = Torch_Rev_UniUni_MM(vmax=p_GPM1_kcat*f_GPM1, k_equilibrium=p_GPM1_Keq, km_substrate=p_GPM1_K3pg,
+    substrates_PGM = ['IC3PG']
+    products_PGM = ['IC2PG']
+    v_PGM = Torch_Rev_UniUni_MM(vmax=p_GPM1_kcat*f_GPM1, k_equilibrium=p_GPM1_Keq, km_substrate=p_GPM1_K3pg,\
+                                substrate_names=substrates_PGM,
+                                product_names=products_PGM,
                                 km_product=p_GPM1_K2pg, to_be_learned=[True, False, True, True])
     # ENO
+    substrates_ENO = ['IC2PG']
+    products_ENO = ['ICPEP']
     v_ENO = Torch_Rev_UniUni_MM(vmax=p_ENO1_kcat*(f_ENO1+f_ENO2), k_equilibrium=p_ENO1_Keq,
-                                km_substrate=p_ENO1_K2pg, km_product=p_ENO1_Kpep, to_be_learned=[True, False, True, True])
+                                km_substrate=p_ENO1_K2pg, km_product=p_ENO1_Kpep, 
+                                substrate_names=substrates_ENO,
+                                product_names=products_ENO,
+                                to_be_learned=[True, False, True, True])
     
-    # PYk
+    # PYK
+    substrates_PYK = ['ICPEP', 'ICADP']
+    products_PYK = ['ICATP']
+    modifiers_PYK = ['ICFBP']
     v_PYK = Torch_Hill_Bi_Irreversible_Activation(vmax=p_PYK1_kcat*(f_PYK1+f_PYK2), hill=p_PYK1_hill,
                                                   k_substrate1=p_PYK1_Kpep, k_substrate2=p_PYK1_Kadp,
                                                   k_product=p_PYK1_Katp, k_activator=p_PYK1_Kf16bp, l=p_PYK1_L,
+                                                  substrate_names=substrates_PYK,
+                                                  product_names=products_PYK,
+                                                  modifier_names=modifiers_PYK,
                                                   to_be_learned=[True, True, True, True, True, True, True])
     # PDC
+    substrates_PDC = ['ICPYR']
+    modifiers_PDC = ['ICPI']
     v_PDC = Torch_Hill_Irreversible_Inhibition(vmax=p_PDC1_Vmax, k_half_substrate=p_PDC1_Kpyr,
-                                               hill=p_PDC1_hill, ki=p_PDC1_Kpi, to_be_learned=[True, True, True, True])
+                                               hill=p_PDC1_hill, ki=p_PDC1_Kpi, 
+                                               substrate_names=substrates_PDC,
+                                               modifier_names=modifiers_PDC,
+                                               to_be_learned=[True, True, True, True])
 
     # ADH
+    substrates_ADH = ['ICNAD', 'ICETOH']
+    products_ADH = ['ICACE', 'ICNADH']
     v_ADH = Torch_MM_Ordered_Bi_Bi(vmax=p_ADH_VmADH, k_equilibrium=p_ADH_KeqADH, km_substrate1=p_ADH_KmADHNAD, km_substrate2=p_ADH_KmADHETOH,
                                    km_product1=p_ADH_KmADHACE, km_product2=p_ADH_KmADHNADH, 
                                    ki_substrate1=p_ADH_KiADHNAD, ki_substrate2=p_ADH_KiADHETOH, 
                                    ki_product1=p_ADH_KiADHACE,ki_product2=p_ADH_KiADHNADH,
+                                   substrate_names=substrates_ADH,
+                                   product_names=products_ADH,
                                    to_be_learned=[True, False, True, True, True, True, True, True, True, True])
    
     # EtohT
+    substrates_EtohT = ['ICETOH']
     v_EtohT = Torch_Diffusion(
-        enzyme=f_ETOH_e, transport_coef=p_kETOHtransport, to_be_learned=[True])
+        enzyme=f_ETOH_e, transport_coef=p_kETOHtransport, 
+        substrate_names=substrates_EtohT,
+        to_be_learned=[True])
     
     # ATPmito
+    substrates_ATPmito = ['ICPI', 'ICADP']
     v_ATPmito = Torch_Irrev_MM_Bi(vmax=p_mitoVmax, km_substrate1=p_mitoADPKm,
-                                  km_substrate2=p_mitoPiKm, to_be_learned=[True, True, True])
+                                  km_substrate2=p_mitoPiKm,
+                                  substrate_names=substrates_ATPmito,
+                                  to_be_learned=[True, True, True])
     
     # ATPase
-    v_ATPase = Torch_ATPase(ATPase_ratio=p_ATPase_ratio, to_be_learned=[True])
+    substrates_ATPase = ['ICATP']
+    products_ATPase = ['ICADP']
+    v_ATPase = Torch_ATPase(ATPase_ratio=p_ATPase_ratio, substrate_names=substrates_ATPase,
+                            product_names=products_ATPase, to_be_learned=[True])
     
     # ADK1
-    v_ADK1 = Torch_MA_Rev_Bi(k_equilibrium=p_ADK1_k, k_fwd=p_ADK1_Keq, to_be_learned=[False, True])
+    substrates_ADK1 = ['ICADP']
+    products_ADK1 = ['ICATP', 'ICAMP']
+    v_ADK1 = Torch_MA_Rev_Bi(k_equilibrium=p_ADK1_k, k_fwd=p_ADK1_Keq, 
+                             substrate_names=substrates_ADK1,
+                             product_names=products_ADK1,
+                             to_be_learned=[False, True])
     
     # vacPi
-    v_vacPi = Torch_MA_Rev(k=p_vacuolePi_k, steady_state_substrate=p_vacuolePi_steadyStatePi, to_be_learned=[True])
+    substrates_vacPi = ['ICPI']
+    v_vacPi = Torch_MA_Rev(k=p_vacuolePi_k, steady_state_substrate=p_vacuolePi_steadyStatePi, 
+                           substrate_names=substrates_vacPi,
+                           to_be_learned=[True])
     
     # Amd1
-    v_Amd1 = Torch_Amd1(vmax=p_Amd1_Vmax, k50=p_Amd1_K50, ki=p_Amd1_Kpi, k_atp=p_Amd1_Katp, to_be_learned=[True, True, True, True]) 
+    substrates_Amd1 = ['ICAMP']
+    products_Amd1 = ['ICATP']
+    modifiers_Amd1 = ['ICPI']
+    v_Amd1 = Torch_Amd1(vmax=p_Amd1_Vmax, k50=p_Amd1_K50, ki=p_Amd1_Kpi, k_atp=p_Amd1_Katp, 
+                        substrate_names=substrates_Amd1,
+                        product_names=products_Amd1,
+                        modifier_names=modifiers_Amd1,
+                        to_be_learned=[True, True, True, True]) 
     
     # Ade1312
-    v_Ade1312 = Torch_MA_Irrev(k_fwd=p_Ade13_Ade12_k, to_be_learned=[True])
+    substrates_Ade1312 = ['ICIMP']
+    v_Ade1312 = Torch_MA_Irrev(k_fwd=p_Ade13_Ade12_k,
+                               substrate_names=substrates_Ade1312,
+                               to_be_learned=[True])
 
     # Isn1
-    v_Isn1 = Torch_MA_Irrev(k_fwd=p_Isn1_k, to_be_learned=[True])
+    substrates_Isn1 = ['ICIMP']
+    v_Isn1 = Torch_MA_Irrev(k_fwd=p_Isn1_k,
+                            substrate_names=substrates_Isn1,
+                            to_be_learned=[True])
     
     # Pnp1
-    v_Pnp1 = Torch_MA_Irrev(k_fwd=p_Pnp1_k, to_be_learned=[True])  # ISSUES??
+    
+    substrates_Pnp1 = ['ICINO']
+    v_Pnp1 = Torch_MA_Irrev(k_fwd=p_Pnp1_k, 
+                            substrate_names=substrates_Pnp1,
+                            to_be_learned=[True])  # ISSUES??
     
     # Hpt1
-    v_Hpt1 = Torch_MA_Irrev(k_fwd=p_Hpt1_k, to_be_learned=[True])  # ISSUES??
+    substrates_Hpt1 = ['ICHYP']
+    v_Hpt1 = Torch_MA_Irrev(k_fwd=p_Hpt1_k,
+                            substrate_names=substrates_Hpt1,
+                            to_be_learned=[True])  # ISSUES??
     
     # NADHmito
-    v_NADHmito = Torch_MM(p_mitoNADHVmax, p_mitoNADHKm, [True, True])
+    substrates_NADHmito = ['ICNADH']
+    v_NADHmito = Torch_MM(p_mitoNADHVmax, p_mitoNADHKm, 
+                          substrate_names=substrates_NADHmito,
+                          to_be_learned=[True, True])
 
     # sinks
-    vsinkG6P = Torch_MM_Sink(v_sink=poly_sinkG6P, km_sink=km_sinkG6P, to_be_learned=[True, True])
-    vsinkF6P = Torch_MM_Sink(v_sink=poly_sinkF6P, km_sink=km_sinkF6P, to_be_learned=[True, True])
-    vsinkGAP = Torch_MM_Sink(v_sink=poly_sinkGAP, km_sink=km_sinkGAP, to_be_learned=[True, True])
-    vsinkP3G = Torch_MM_Sink(v_sink=poly_sinkP3G, km_sink=km_sinkP3G, to_be_learned=[True, True])
-    vsinkPEP = Torch_MM_Sink(v_sink=poly_sinkPEP, km_sink=km_sinkPEP, to_be_learned=[True, True])
-    vsinkPYR = Torch_MM_Sink(v_sink=poly_sinkPYR, km_sink=km_sinkPYR, to_be_learned=[True, True])
-    vsinkACE = Torch_MM_Sink(v_sink=poly_sinkACE, km_sink=km_sinkACE, to_be_learned=[True, True])
+    substrates_sinkG6P = ['ICG6P']
+    substrates_sinkF6P = ['ICF6P']
+    substrates_sinkGAP = ['ICGAP']
+    substrates_sinkP3G = ['IC3PG']
+    substrates_sinkPEP = ['ICPEP']
+    substrates_sinkPYR = ['ICPYR']
+    substrates_sinkACE = ['ICACE']
+
+
+
+    vsinkG6P = Torch_MM_Sink(v_sink=poly_sinkG6P, km_sink=km_sinkG6P, 
+                             substrate_names=substrates_sinkG6P, to_be_learned=[True, True])
+    vsinkF6P = Torch_MM_Sink(v_sink=poly_sinkF6P, km_sink=km_sinkF6P,
+                             substrate_names=substrates_sinkF6P, to_be_learned=[True, True])
+    vsinkGAP = Torch_MM_Sink(v_sink=poly_sinkGAP, km_sink=km_sinkGAP, 
+                             substrate_names=substrates_sinkGAP, to_be_learned=[True, True])
+    vsinkP3G = Torch_MM_Sink(v_sink=poly_sinkP3G, km_sink=km_sinkP3G, 
+                             substrate_names=substrates_sinkP3G, to_be_learned=[True, True])
+    vsinkPEP = Torch_MM_Sink(v_sink=poly_sinkPEP, km_sink=km_sinkPEP,
+                             substrate_names=substrates_sinkPEP, to_be_learned=[True, True])
+    vsinkPYR = Torch_MM_Sink(v_sink=poly_sinkPYR, km_sink=km_sinkPYR,
+                             substrate_names=substrates_sinkPYR, to_be_learned=[True, True])
+    vsinkACE = Torch_MM_Sink(v_sink=poly_sinkACE, km_sink=km_sinkACE,
+                             substrate_names=substrates_sinkACE, to_be_learned=[True, True])
     v = {
         'v_GLT': v_GLT,
         'v_GLK': v_GLK,
@@ -463,3 +617,5 @@ def create_fluxes():
         'vsinkACE': vsinkACE
     }
     return v
+
+

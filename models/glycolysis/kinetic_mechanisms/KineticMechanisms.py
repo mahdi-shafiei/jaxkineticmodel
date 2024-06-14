@@ -14,6 +14,8 @@ class Torch_Rev_UniUni_MM(torch.nn.Module):
                  k_equilibrium: float,
                  km_substrate: float,
                  km_product: float,
+                 substrate_names: list[str],
+                 product_names:  list[str],
                  to_be_learned):
         super(Torch_Rev_UniUni_MM, self).__init__()
         # self.substrate=concentration[0]
@@ -24,9 +26,11 @@ class Torch_Rev_UniUni_MM(torch.nn.Module):
             vmax: 'vmax',
             k_equilibrium: 'k_equilibrium',
             km_substrate: 'km_substrate',
-            km_product: 'km_product'
+            km_product: 'km_product',
         }
-
+        self.substrate_names = substrate_names
+        self.product_names =  product_names
+        self.modifiers_names = []
         # make parameters learnable/treat as a given
         for idx, (value, param_name) in enumerate(params.items()):
             if to_be_learned[idx]:
@@ -35,11 +39,13 @@ class Torch_Rev_UniUni_MM(torch.nn.Module):
             else:
                 self.__setattr__(param_name, value)
 
-    def calculate(self, substrate,product):
-        nominator = self.vmax*(substrate/self.km_substrate) * \
-            (1-(1/self.k_equilibrium)*(product/substrate))
-        denominator = (1+(substrate/self.km_substrate) +
-                       (product/self.km_product))
+    def calculate(self, substrate, product, _):
+        s = substrate[0]
+        p = product[0]
+        nominator = self.vmax*(s/self.km_substrate) * \
+            (1-(1/self.k_equilibrium)*(p/s))
+        denominator = (1+(s/self.km_substrate) +
+                       (p/self.km_product))
         return nominator/denominator
 
 
@@ -48,9 +54,12 @@ class Torch_MM_Sink(torch.nn.Module):
     def __init__(self,
                  v_sink: float,
                  km_sink: float,
+                 substrate_names: list[str],
                  to_be_learned):
         super(Torch_MM_Sink, self).__init__()
-
+        self.substrate_names = substrate_names
+        self.product_names = []
+        self.modifiers_names = []
         if to_be_learned[0]:
             self.v_sink = torch.nn.Parameter(torch.Tensor([v_sink]))
         else:
@@ -61,17 +70,20 @@ class Torch_MM_Sink(torch.nn.Module):
         else:
             self.km_sink = km_sink
 
-    def calculate(self, substrate):
-        return self.v_sink * substrate / (substrate + self.km_sink)
+    def calculate(self, substrate, *_):
+        return self.v_sink * substrate[0] / (substrate[0] + self.km_sink)
 
 
 class Torch_MM(torch.nn.Module):
     def __init__(self,
                  vmax: float,
                  km: float,
+                 substrate_names: list[str],
                  to_be_learned):
         super(Torch_MM, self).__init__()
-
+        self.substrate_names = substrate_names
+        self.product_names =  []
+        self.modifiers_names = []
         if to_be_learned[0]:
             self.vmax = torch.nn.Parameter(torch.Tensor([vmax]))
         else:
@@ -82,17 +94,20 @@ class Torch_MM(torch.nn.Module):
         else:
             self.km = km
 
-    def calculate(self, substrate):
-        return self.vmax * substrate / (substrate + self.km)
+    def calculate(self, substrate, *_):
+        return self.vmax * substrate[0] / (substrate[0] + self.km)
     
 # the following two can be merged potentially:
 class Torch_Irrev_MM_Uni(torch.nn.Module):
     def __init__(self,
                  vmax: float,
                  km_substrate: float,
+                 substrate_names: list[str],
                  to_be_learned):
         super(Torch_Irrev_MM_Uni, self).__init__()
-
+        self.substrate_names = substrate_names
+        self.product_names =  []
+        self.modifiers_names = []
         if to_be_learned[0]:
             # make mu a learnable parameter
             self.vmax = torch.nn.Parameter(torch.tensor([vmax]))
@@ -104,9 +119,9 @@ class Torch_Irrev_MM_Uni(torch.nn.Module):
         else:
             self.km_substrate = km_substrate
 
-    def calculate(self, substrate):
-        nominator = (self.vmax)*(substrate/self.km_substrate)
-        denominator = (1+(substrate/self.km_substrate))
+    def calculate(self, substrate, *_):
+        nominator = (self.vmax)*(substrate[0]/self.km_substrate)
+        denominator = (1+(substrate[0]/self.km_substrate))
         return nominator/denominator
 
 
@@ -115,9 +130,12 @@ class Torch_Irrev_MM_Bi(torch.nn.Module):
                  vmax: float,
                  km_substrate1: float,
                  km_substrate2: float,
+                 substrate_names: list[str],
                  to_be_learned):
         super(Torch_Irrev_MM_Bi, self).__init__()
-        
+        self.substrate_names = substrate_names
+        self.product_names =  []
+        self.modifiers_names = []
         if to_be_learned[0]:
             self.vmax = torch.nn.Parameter(torch.Tensor([vmax]))
         else:
@@ -135,7 +153,7 @@ class Torch_Irrev_MM_Bi(torch.nn.Module):
         else:
             self.km_substrate2 = km_substrate2
       
-    def calculate(self, substrate):
+    def calculate(self, substrate, *_):
         substrate1 = substrate[0]
         substrate2 = substrate[1]
 
@@ -154,10 +172,14 @@ class Torch_Rev_BiBi_MM(torch.nn.Module):
                  km_substrate2: float,
                  km_product1: float,
                  km_product2: float,
+                 substrate_names: list[str],
+                 product_names: list[str],
                  to_be_learned
                  ):
         super(Torch_Rev_BiBi_MM, self).__init__()
-       
+        self.substrate_names = substrate_names
+        self.product_names =  product_names
+        self.modifiers_names = []
 
         # dictionary with all parameters
         params = {
@@ -177,7 +199,7 @@ class Torch_Rev_BiBi_MM(torch.nn.Module):
             else:
                 self.__setattr__(param_name, value)
 
-    def calculate(self, substrate, product):
+    def calculate(self, substrate, product, _):
         # common_denominator = 1 + s1/kis1 + s2/kis2 + p1/kip1 + p2/kip2 + \
         #           s1*s2/(kis1*kms2) + p1*p2/(kip2*kmp1)
 
@@ -201,19 +223,22 @@ class Torch_Rev_BiBi_MM(torch.nn.Module):
 class Torch_MA_Irrev(torch.nn.Module):
     def __init__(self,
                  k_fwd: float,
+                 substrate_names: list[str],
                  to_be_learned):
         super(Torch_MA_Irrev, self).__init__()
 
         # self.substrate=substrate
-
+        self.substrate_names = substrate_names
+        self.product_names =  []
+        self.modifiers_names = []
         if to_be_learned[0]:
             # make k_fwd a learnable parameter
             self.k_fwd = torch.nn.Parameter(torch.Tensor([k_fwd]))
         else:
             self.k_fwd = k_fwd
 
-    def calculate(self, substrate):
-        return self.k_fwd * substrate
+    def calculate(self, substrate, *_):
+        return self.k_fwd * substrate[0]
 
 
 class Torch_Hill_Irreversible(torch.nn.Module):
@@ -221,9 +246,12 @@ class Torch_Hill_Irreversible(torch.nn.Module):
                  vmax: float,
                  hill: float,
                  k_half_substrate: float,
+                 substrate_names: list[str],
                  to_be_learned):
         super(Torch_Hill_Irreversible, self).__init__()
-
+        self.substrate_names = substrate_names
+        self.product_names =  []
+        self.modifiers_names = []
         # self.substrate=substrate
         if to_be_learned[0]:
             self.vmax = torch.nn.Parameter(torch.Tensor([vmax]))
@@ -241,7 +269,7 @@ class Torch_Hill_Irreversible(torch.nn.Module):
         else:
             self.k_half_substrate = k_half_substrate
 
-    def calculate(self, substrate):
+    def calculate(self, substrate, *_):
         numerator = self.vmax * \
             ((substrate/self.k_half_substrate) ** self.hill)
         denominator = 1 + ((substrate/self.k_half_substrate) ** self.hill)
@@ -252,9 +280,12 @@ class Torch_Diffusion(torch.nn.Module):
     def __init__(self,
                  enzyme: float,
                  transport_coef: float,
+                 substrate_names: list[str],
                  to_be_learned):
         super(Torch_Diffusion, self).__init__()
-
+        self.substrate_names = substrate_names
+        self.product_names =  []
+        self.modifiers_names = []
         # self.substrate=substrate
         self.enzyme = enzyme
         if to_be_learned[0]:
@@ -263,8 +294,8 @@ class Torch_Diffusion(torch.nn.Module):
         else:
             self.transport_coef = transport_coef
 
-    def calculate(self, substrate):
-        return self.transport_coef * (substrate - self.enzyme)
+    def calculate(self, substrate, *_):
+        return self.transport_coef * (substrate[0] - self.enzyme)
 
 
 if __name__ == '__main__':
