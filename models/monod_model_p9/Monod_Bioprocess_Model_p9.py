@@ -31,3 +31,5 @@ class Monod_Model(torch.nn.Module):
         X=conc_in[self.metabolites['X']]*(self.fluxes['mu_A'].value+self.fluxes['mu_P'].value+self.fluxes['mu_L'].value-K_e)
         dXdt=torch.cat([LACT,ACT,PYR,X],dim=0)
         return dXdt
+
+

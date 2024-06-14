@@ -1,5 +1,5 @@
 import numpy
-from parameter_initializations.sampling_methods import uniform_sampling,latinhypercube_sampling
+from parameter_initializations.sampling_methods import uniform_sampling,latinhypercube_sampling,maximin_hypercube_sampling
 import os
 import argparse
 import pandas as pd
@@ -36,6 +36,10 @@ def main():
         parameter_sets=latinhypercube_sampling(bounds,N_param_sets)
     elif args.method=="uniform":
         parameter_sets=uniform_sampling(bounds,N_param_sets)
+    elif args.method=="grid":
+        parameter_sets=grid_sampling(bounds,N_param_sets)
+    elif args.method=="maximin":
+        parameter_sets=maximin_hypercube_sampling(bounds,N_param_sets)
     else:
         print("Method not known")
 
