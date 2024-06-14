@@ -82,4 +82,4 @@ for sbml_file in sbml_files:
             
 
     except:
-        os.rename(file_path,pathname+"discrepancies/"+sbml_file)
+        os.rename(file_path,pathname+"failing_models/"+sbml_file)
