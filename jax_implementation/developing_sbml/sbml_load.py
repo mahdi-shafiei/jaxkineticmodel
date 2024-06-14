@@ -398,11 +398,10 @@ def separate_params(params):
 def time_dependency_symbols(v_symbol_dictionaries, t):
     time_dependencies = {}
     for key, values in v_symbol_dictionaries.items():
+        time_dependencies[key] = {}
         for value in values.keys():
             if value == "time":
                 time_dependencies[key] = {value: t}
-            else:
-                time_dependencies[key] = {}
     return time_dependencies
 #   time_dependencies=time_dependency_symbols(v_symbol_dictionaries,t)
 #   return time_dependencies
