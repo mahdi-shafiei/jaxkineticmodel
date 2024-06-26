@@ -7,7 +7,13 @@ import pandas as pd
 import re
 import collections
 import os
+
+#Suddenly this source.utils doesnt load anymore without adding path directly. Make an init file?
+import sys
+sys.path.append('/home/plent/Documenten/Gitlab/NeuralODEs/symplectic_adjoint/')
+
 from source.utils import get_logger
+
 
 logger = get_logger(__name__)
 
@@ -29,6 +35,7 @@ def load_sbml_model(file_path):
     print("Number of constant boundary metabolites: ", model.getNumSpeciesWithBoundaryCondition())
     print("Number of lambda function definitions: ", len(model.function_definitions))
     print("Number of assignment rules", model.getNumRules())
+    print("Number of events",model.getNumEvents())
     return model
 
 
@@ -62,8 +69,42 @@ def get_global_parameters(model):
     """Most sbml models have their parameters defined globally, 
     this function retrieves them"""
     params = model.getListOfParameters()
-    global_parameter_dict = {param.id: param.value for param in params}
+    global_parameter_dict={}
+    for param in params:
+        if param.isSetConstant():
+            if param.getConstant()==True:
+                global_parameter_dict[param.id] = param.value
+            if param.getConstant()==False:
+                global_parameter_dict[param.id]=param.value
     return global_parameter_dict
+
+def get_initial_assignments(model,global_parameters,assignment_rules,y0):
+    """Some sbml assign values through the list of initial assignments. This should be used
+    to overwrite y0 where necessary. This can be done outside the model structure"""
+
+    initial_assignments={}
+    for init_assign in model.getListOfInitialAssignments():
+        if init_assign.id in y0.keys():
+            math=init_assign.getMath()
+            math_string=libsbml.formulaToL3String(math)
+            sympy_expr=sp.sympify(math_string,locals={**assignment_rules,**global_parameters})
+            # sympy_expr=sympy_expr.subs(global_parameters)
+            if type(sympy_expr)!=float:
+                sympy_expr=sympy_expr.subs(global_parameters)
+                sympy_expr=sympy_expr.subs(y0)
+                sympy_expr=np.float64(sympy_expr)
+            initial_assignments[init_assign.id]=sympy_expr
+    return initial_assignments
+        
+def overwrite_init_conditions_with_init_assignments(model,global_parameters,assignment_rules,y0):
+    """y0 values are initialized in sbml, but some models also define initial assignments
+    These should be leading and be passed to y0"""
+    initial_assignments=get_initial_assignments(model,global_parameters,assignment_rules,y0)
+    # initial_assignments=get_initial_assignments(model,params)
+    for key in initial_assignments.keys():
+        if key in y0.keys():
+            y0[key]=initial_assignments[key]
+    return y0
 
 
 def get_compartments(model):
@@ -73,6 +114,41 @@ def get_compartments(model):
     return compartment_dict
 
 
+
+
+def get_events_dictionary(model):
+    """There are many type of events. For now I only add a few and the rest will throw a warning"""
+    num_events=model.getNumEvents()
+    events_dict={}
+    if model.getLevel()==2 and num_events!=0:
+        for i in range(num_events):
+            event = model.getEvent(i)
+            
+            # Print the trigger
+            trigger = event.getTrigger()
+            if trigger is not None:
+                logger.info(f"Trigger: {libsbml.formulaToString(trigger.getMath())}")
+                trigger_event=libsbml.formulaToL3String(trigger.getMath())
+
+                #need to replace && for proper reading in sympy
+                trigger_event=trigger_event.replace("&&","&")
+                leaf_nodes=[]
+                leaf_nodes=get_leaf_nodes(trigger.getMath(),leaf_nodes)
+                symbols={leaf_node:sp.Symbol(leaf_node) for leaf_node in leaf_nodes}
+
+                expr=sp.sympify(trigger_event,locals=symbols)
+                events_dict[event.id]=expr
+
+            # Print the delay (if any)
+            delay = event.getDelay()
+            if delay is not None:
+                logger.warn("sbml model has delay event, but this is not supported yet, output might be different")
+                
+            # Print the priority (if any)
+            priority = event.getPriority()
+            if priority is not None:
+                logger.warn("sbml model has priority event,but this is not supported yet, output might be different")
+    return events_dict
 # We do not deal yet with non-constant boundaries
 def get_string_expression(reaction):
     """retrieves the kinetic rate law from the reaction"""
@@ -152,23 +228,37 @@ def sympify_lambidify_and_jit_equation(equation, nested_local_dict):
     lambda_funcs = nested_local_dict['lambda_functions']
 
     assignment_rules = nested_local_dict['boundary_assignments']
+    rate_rules=nested_local_dict['rate_rules']
+    event_rules=nested_local_dict['event_rules']
+
 
     compartments = nested_local_dict['compartments']  # learnable
     local_dict = {**species, **globals, **locals}
-
+    # print("a",equation)
     equation = sp.sympify(equation, locals={**local_dict,
                                             **assignment_rules,
-                                            **lambda_funcs})
-
+                                            **lambda_funcs,**rate_rules,**event_rules})
+    # print("b",equation)
     # these are filled in before compiling
 
-    equation = equation.subs(assignment_rules)
+    # print("assignment",assignment_rules)
+
+    
+    # print("assignment eq",equation)
     equation = equation.subs(compartments)
     equation = equation.subs(boundaries)
+    
+    # print("c",equation)
+    equation=equation.subs(event_rules)
+    equation = equation.subs(assignment_rules)
+    # print('d',equation)
 
+
+
+    
     # free symbols are used for lambdifying
     free_symbols = list(equation.free_symbols)
-
+    # print(free_symbols)
     filtered_dict = {key: value for key, value in local_dict.items() if value in free_symbols or key in locals}
 
     # perhaps a bit hacky, but some sbml models have symbols that are
@@ -183,48 +273,6 @@ def sympify_lambidify_and_jit_equation(equation, nested_local_dict):
     return equation, filtered_dict
 
 
-def create_fluxes_v(model):
-    """This function defines the jax jitted equations that are used in TorchKinModel
-    class
-    """
-    # retrieve whatever is important
-    nreactions = model.getNumReactions()
-
-    species_ic = get_initial_conditions(model)
-    global_parameters = get_global_parameters(model)
-    compartments = get_compartments(model)
-    constant_boundaries = get_constant_boundary_species(model)
-
-    lambda_functions = get_lambda_function_dictionary(model)
-    assignments_rules = get_assignment_rules_dictionary(model)
-
-    v = {}
-    v_symbol_dict = {}  # all symbols that are used in the equation.
-    local_param_dict = {}  # local parameters with the reaction it belongs to as a new parameter
-
-    for reaction in model.reactions:
-        local_parameters = get_local_parameters(reaction)
-        # print(local_parameters)
-        # reaction_species = get_reaction_species(reaction)
-        nested_dictionary_vi = {'species': species_ic,
-                                'globals': global_parameters,
-                                'locals': local_parameters,
-                                'compartments': compartments,
-                                'boundary': constant_boundaries,
-                                'lambda_functions': lambda_functions,
-                                'boundary_assignments': assignments_rules}  # add functionality
-
-        vi_rate_law = get_string_expression(reaction)
-        vi, filtered_dict = sympify_lambidify_and_jit_equation(vi_rate_law, nested_dictionary_vi)
-
-        v[reaction.id] = vi  # the jitted equation
-        v_symbol_dict[reaction.id] = filtered_dict
-
-        # here
-        for key in local_parameters.keys():
-            newkey = "lp." + str(reaction.id) + "." + key
-            local_param_dict[newkey] = local_parameters[key]
-    return v, v_symbol_dict, local_param_dict
 
 
 def get_stoichiometric_matrix(model):
@@ -338,6 +386,7 @@ def get_lambda_function_dictionary(model):
     """Stop giving these functions confusing names...
     it returns a dictionary with all lambda functions"""
     functional_dict = {}
+    symbolic_function_dict={}
 
     for function in model.function_definitions:
         id = function.getId()
@@ -356,26 +405,67 @@ def get_lambda_function_dictionary(model):
         func_x = sp.lambdify(math_nodes, expr, "jax")
 
         functional_dict[id] = func_x
+
+
     return functional_dict
 
 
 def get_assignment_rules_dictionary(model):
-    """Get rules that assign to variables. I did not lambdify here"""
+    """Get all rules that are an assignment rule, not algebraic or rate"""
     assignment_dict = {}
     for rule in model.rules:
-        id = rule.getId()
-        math = rule.getMath()
-        leaf_nodes = []
-        string_math = libsbml.formulaToL3String(math)
+        if rule.isAssignment():
+            id = rule.getId()
+            math = rule.getMath()
+            leaf_nodes = []
+            string_math = libsbml.formulaToL3String(math)
 
-        math_nodes = get_leaf_nodes(math, leaf_nodes=leaf_nodes)
-        sp_symbols = {node: sp.Symbol(node) for node in math_nodes}
-        expr = sp.sympify(string_math, locals=sp_symbols)
-        # rule_x=sp.lambdify(math_nodes,expr, "jax")
+            math_nodes = get_leaf_nodes(math, leaf_nodes=leaf_nodes)
+            sp_symbols = {node: sp.Symbol(node) for node in math_nodes}
+            expr = sp.sympify(string_math, locals=sp_symbols)
+            rule_x=sp.lambdify(math_nodes,expr, "jax")
 
-        assignment_dict[id] = expr
+            assignment_dict[id] = expr
         # print("the expression: ",id,expr)
     return assignment_dict
+
+def get_rate_rules_dictionary(model):
+    """Retrieve all rate_rules, and replace reactions with their respective kinetic laws"""
+    rate_rules_dict = {}
+    for rule in model.rules:
+        if rule.isRate():
+            id=rule.getId()
+            math=rule.getMath()
+            leaf_nodes = []
+            string_math = libsbml.formulaToL3String(math)
+
+            math_nodes = get_leaf_nodes(math, leaf_nodes=leaf_nodes)
+            sp_symbols = {node: sp.Symbol(node) for node in math_nodes}
+            expr = sp.sympify(string_math, locals=sp_symbols)
+
+            # this replaces reactions with the actual kinetic law, to ensure proper
+            # sympyfying and jitting
+            temp_dict={}
+            for math_node in math_nodes:
+                if model.getReaction(math_node)!=None:
+                    reaction=model.getReaction(math_node)
+                    math=reaction.getKineticLaw()
+                    string_math=libsbml.formulaToL3String(math.getMath())
+
+                    temp_dict[math_node]=string_math
+
+            expr=expr.subs(temp_dict)
+            # rule_x=sp.lambdify(math_nodes,expr, "jax")
+            ## here we should substitute any reaction name with its actual equation
+
+            rate_rules_dict[id]=expr
+
+    return rate_rules_dict
+            
+
+
+
+
 
 
 def separate_params(params):

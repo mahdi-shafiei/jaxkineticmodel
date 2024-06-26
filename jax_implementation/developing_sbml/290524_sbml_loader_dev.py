@@ -11,7 +11,7 @@ import time
 from functools import partial
 import optax
 import libsbml
-from jax_kinetic_model import NeuralODE
+from jax_kinetic_model import NeuralODE,create_fluxes_v
 import os
 
 from sbml_load import *
@@ -22,30 +22,41 @@ import inspect
 jax.config.update("jax_enable_x64", True)
 from source.utils import get_logger
 
+# from source.utils import get_logger
+
 logger = get_logger(__name__)
 
 logger.debug('Loading SBML model')
 ## a simple sbml model
 
-filepath="jax_implementation/developing_sbml/sbml_models/failing_models/BIOMD0000000244_url.xml"
+filepath="jax_implementation/developing_sbml/sbml_models/Bertozzi2020.xml"
 # filepath="jax_implementation/developing_sbml/sbml_models/Garde2020.xml"
 model=load_sbml_model(file_path=filepath)
 
 
 ### All the loading of functions
+# changing_params=get_changing_parameters(model)
+
+
 
 S=get_stoichiometric_matrix(model)
-y0=get_initial_conditions(model)
-y0=jnp.array(list(y0.values()))
+
 
 ##recreate create_fluxes, but then for jax
+params=get_global_parameters(model)
+assignments_rules = get_assignment_rules_dictionary(model)
+# print(assignments_rules)
+
 v,v_symbol_dictionaries,local_params=create_fluxes_v(model)
 met_point_dict=construct_flux_pointer_dictionary(v_symbol_dictionaries,list(S.columns),list(S.index))
-
-
+# print(params)
 
 y0=get_initial_conditions(model)
+
+y0=overwrite_init_conditions_with_init_assignments(model,params,assignments_rules,y0)
+
 y0=jnp.array(list(y0.values()))
+
 
 
 
@@ -68,9 +79,10 @@ JaxKmodel=jax.jit(JaxKmodel)
 # # Simulation
 # ###
 
-ts=jnp.arange(0,100,0.1)
+ts=jnp.linspace(0,100,200)
 # #parameters are not yet defined
-params=get_global_parameters(model)
+
+
 params={**local_params,**params}
 
 JaxKmodel(ts=jnp.array([0]),
@@ -88,3 +100,5 @@ for i in range(len(S.index)):
 plt.legend()
 # 
 plt.show()
+print(ys[0,:])
+print(ys[-1,:])
