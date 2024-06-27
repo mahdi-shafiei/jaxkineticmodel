@@ -137,7 +137,10 @@ def get_events_dictionary(model):
                 symbols={leaf_node:sp.Symbol(leaf_node) for leaf_node in leaf_nodes}
 
                 expr=sp.sympify(trigger_event,locals=symbols)
-                events_dict[event.id]=expr
+                if event.isSetId():
+                    events_dict[event.id]=expr
+                if event.isSetName():
+                    events_dict[event.name]=expr
 
             # Print the delay (if any)
             delay = event.getDelay()
@@ -234,6 +237,8 @@ def sympify_lambidify_and_jit_equation(equation, nested_local_dict):
 
     compartments = nested_local_dict['compartments']  # learnable
     local_dict = {**species, **globals, **locals}
+
+    
     # print("a",equation)
     equation = sp.sympify(equation, locals={**local_dict,
                                             **assignment_rules,

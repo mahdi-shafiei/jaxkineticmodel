@@ -22,6 +22,28 @@ import tellurium as te
 jax.config.update("jax_enable_x64", True)
 from source.utils import get_logger
 
+
+def get_parameters_from_tellurium(model):
+    """retrieves parameters and initial conditions from tellurium"""
+    global_parameters = model.getGlobalParameterIds()
+    global_params_dict={}
+    species_dict={}
+    print("Global Parameters and Values:")
+    for param in global_parameters:
+        global_params_dict[param] = model[param]
+
+
+    # Retrieve and print boundary species and their values
+    boundary_species = model.getFloatingSpeciesIds()
+
+    for species in boundary_species:
+        species_dict[species] = model[species]
+    
+    return species_dict,global_params_dict
+
+
+
+
 pathname = "jax_implementation/developing_sbml/sbml_models/"
 files = os.listdir(pathname)
 sbml_files = []
@@ -31,6 +53,12 @@ for file in files:
     if file.endswith(".sbml"):
         sbml_files.append(file)
 
+
+
+working_models_counter=0
+max_steps_reached_counter=0
+failing_models_counter=0
+discrepancy_counter=0
 for sbml_file in sbml_files:
     print(sbml_file)
     file_path = pathname + sbml_file
@@ -64,27 +92,38 @@ for sbml_file in sbml_files:
         ys = JaxKmodel(ts=ts, y0=y0, params=params)
 
         model = te.loadSBMLModel(file_path)
-        sol = model.simulate(0, 10, 100)[:, 1:]
+        sol = model.simulate(0, 10, 100)[:,1:]
+
+
 
         S_tellurium = model.getFullStoichiometryMatrix()
         if np.sum(np.abs(S_tellurium) - np.abs(np.array(S))) == 0:
-            if np.sum(sol - ys) < 0.001:
+            if np.sum(sol - ys) < 0.001: # I notice in some cases that a model is actually very similar visually
 
                 print("numerical solve is identical:" + str(np.sum(sol - ys)))
+                working_models_counter+=1
                 os.rename(file_path, pathname + "working_models/" + sbml_file)
             else:
                 print("numerical solve is not identical" + str(np.sum(sol - ys)))
-
-                os.rename(file_path, pathname + "discrepancies/" + sbml_file)
+                discrepancy_counter+=1
+                # os.rename(file_path, pathname + "discrepancies/" + sbml_file)
         else:
             print("discrepancy because of S in " + sbml_file)
+            discrepancy_counter+=1
             os.rename(file_path, pathname + "discrepancies/" + sbml_file)
     except jaxlib.xla_extension.XlaRuntimeError as e:
         if 'maximum number of solver steps' not in str(e):
             raise
         logger.error("Maximum number of solver steps reached")
         os.rename(file_path, pathname + "max_steps_reached/" + sbml_file)
+        max_steps_reached_counter+=1
     except Exception as e:
         logger.error(f"An exception of type {type(e)} was raised")
         logger.exception(e)
         os.rename(file_path, pathname + "failing_models/" + sbml_file)
+        failing_models_counter+=1
+
+print("failing_models:",failing_models_counter)
+print("working_models:",working_models_counter)
+print("max steps reached model:",max_steps_reached_counter)
+print("discrepancies:",discrepancy_counter)

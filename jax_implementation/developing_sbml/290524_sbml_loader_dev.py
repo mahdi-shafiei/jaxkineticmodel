@@ -29,7 +29,7 @@ logger = get_logger(__name__)
 logger.debug('Loading SBML model')
 ## a simple sbml model
 
-filepath="jax_implementation/developing_sbml/sbml_models/Bertozzi2020.xml"
+filepath="jax_implementation/developing_sbml/sbml_models/BIOMD0000000507_url.xml"
 # filepath="jax_implementation/developing_sbml/sbml_models/Garde2020.xml"
 model=load_sbml_model(file_path=filepath)
 
@@ -42,10 +42,13 @@ model=load_sbml_model(file_path=filepath)
 S=get_stoichiometric_matrix(model)
 
 
+
 ##recreate create_fluxes, but then for jax
 params=get_global_parameters(model)
 assignments_rules = get_assignment_rules_dictionary(model)
-# print(assignments_rules)
+
+
+# print(params)
 
 v,v_symbol_dictionaries,local_params=create_fluxes_v(model)
 met_point_dict=construct_flux_pointer_dictionary(v_symbol_dictionaries,list(S.columns),list(S.index))
@@ -54,6 +57,8 @@ met_point_dict=construct_flux_pointer_dictionary(v_symbol_dictionaries,list(S.co
 y0=get_initial_conditions(model)
 
 y0=overwrite_init_conditions_with_init_assignments(model,params,assignments_rules,y0)
+
+
 
 y0=jnp.array(list(y0.values()))
 
@@ -79,7 +84,7 @@ JaxKmodel=jax.jit(JaxKmodel)
 # # Simulation
 # ###
 
-ts=jnp.linspace(0,100,200)
+ts=jnp.linspace(0,200,200)
 # #parameters are not yet defined
 
 
@@ -93,12 +98,24 @@ ys=JaxKmodel(ts=ts,
       y0=y0,
       params=params)
 
-for i in range(len(S.index)):
-      plt.plot(ts,ys[:,i],label=S.index[i])
+# for i in range(len(S.index)):
+#       plt.plot(ts,ys[:,i],label=S.index[i])
 
 # plt.plot(ts,ys[:,4],label=species_names[4])
+
+
+
+#optional visual comparison for tellurium
+import tellurium as te
+model = te.loadSBMLModel(filepath)
+sol_tell = model.simulate(0, 50, 200)
+colnames=sol_tell.colnames[1:]
+sol_tell=sol_tell[:,1:]
+
+for i in range(len(S.index)):
+      plt.plot(ts,sol_tell[:,i],label=S.index[i])
+      plt.plot(ts,ys[:,i],label=colnames[i],linewidth=4,linestyle="--")
+
+
 plt.legend()
-# 
 plt.show()
-print(ys[0,:])
-print(ys[-1,:])
