@@ -431,7 +431,7 @@ Dedication</a>
               <ci> compartment_1 </ci>
               <apply>
                 <ci> function_1 </ci>
-                <ci> parameter_1 </ci>
+                <ci> parameter_1 </ci>  #made a change here
                 <ci> species_2 </ci>
                 <ci> parameter_3 </ci>
               </apply>

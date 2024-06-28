@@ -48,20 +48,20 @@ def get_initial_conditions(model):
     initial_concentration_dict = {}
     for specimen in species:
         # there are also non-stationary boundary conditions, deal with this later.
-        if specimen.getConstant() and specimen.getBoundaryCondition():
-            print("Constant Boundary Specimen ", specimen.id)
-            continue
+        if specimen.isSetConstant() and specimen.isSetBoundaryCondition():
+            if specimen.getConstant() and specimen.getBoundaryCondition():
+                print("Constant Boundary Specimen ", specimen.id)
+                continue
 
-        elif specimen.getBoundaryCondition() and not specimen.getConstant():
-            if model.getLevel() == 2:
-                print("Level 2 sbml, assume that boundary condition is constant for", specimen.id)
+            elif specimen.getBoundaryCondition() and not specimen.getConstant():
+                ## these will be passed to the sympy expression by get_boundaries
+                # initial_concentration_dict[specimen.id] = specimen.initial_concentration
+                continue
 
-            if model.getLevel() == 3:
-                print("Non-Constant Boundary Specimen", specimen.id)
-            continue
-
+            else:
+                initial_concentration_dict[specimen.id] = specimen.initial_concentration
         else:
-            initial_concentration_dict[specimen.id] = specimen.initial_concentration
+            logger.warn(f"Constant and Boundary condition boolean are not set for {specimen}")
     return initial_concentration_dict
 
 
@@ -170,12 +170,31 @@ def get_constant_boundary_species(model):
     constant_boundary_dict = {}
     species = model.getListOfSpecies()
     for specimen in species:
-        if specimen.getBoundaryCondition():
-            if model.getLevel() == 2:
-                print("Assume that boundary is constant for level 2")
+        if specimen.isSetConstant() and specimen.isSetBoundaryCondition():  
+            if specimen.getBoundaryCondition() and specimen.getConstant():
+                ## if it is both a boundary condition and a constant, then we pass it as a constant boundary that will be filled into the sympy equation 
+                print("constant boundary",specimen.id)
                 constant_boundary_dict[specimen.id] = specimen.initial_concentration
 
-            constant_boundary_dict[specimen.id] = specimen.initial_concentration
+            elif specimen.getConstant() and not specimen.getBoundaryCondition():
+                print("constant non-boundary",specimen.id)
+                ## if it is not a boundary condition but it is a constant, then we pass it as a constant boundary that will be filled into the sympy equation
+
+                constant_boundary_dict[specimen.id] = specimen.initial_concentration
+            elif specimen.getBoundaryCondition() and not specimen.getConstant(): #values are either defined by a rule/event or rate law
+                logger.info(f"{specimen.id} is boundary but not constant ")
+                if specimen.isSetInitialConcentration():
+                    constant_boundary_dict[specimen.id]=specimen.initial_concentration
+
+                # print(specimen.get)
+                continue
+        else:
+            logger.warn("Constant and Boundary conditions were not set, for level 2 we assume that boundary is constant")
+            #     print(specimen)
+            if model.getLevel() == 2:
+                constant_boundary_dict[specimen.id] = specimen.initial_concentration
+    
+    print(constant_boundary_dict)
     return constant_boundary_dict
 
 
@@ -239,11 +258,11 @@ def sympify_lambidify_and_jit_equation(equation, nested_local_dict):
     local_dict = {**species, **globals, **locals}
 
     
-    # print("a",equation)
+    # print("input equation:",equation)
     equation = sp.sympify(equation, locals={**local_dict,
                                             **assignment_rules,
                                             **lambda_funcs,**rate_rules,**event_rules})
-    # print("b",equation)
+    # print("after sympifying",equation)
     # these are filled in before compiling
 
     # print("assignment",assignment_rules)
@@ -256,10 +275,8 @@ def sympify_lambidify_and_jit_equation(equation, nested_local_dict):
     # print("c",equation)
     equation=equation.subs(event_rules)
     equation = equation.subs(assignment_rules)
-    # print('d',equation)
 
-
-
+    # print("output after substitution",equation)
     
     # free symbols are used for lambdifying
     free_symbols = list(equation.free_symbols)
@@ -287,15 +304,26 @@ def get_stoichiometric_matrix(model):
     reduced_species_list = []
     for s in model.getListOfSpecies():
         # these conditions do not have a rate law
-        if s.getConstant() and s.getBoundaryCondition():
-            continue
-        elif s.getBoundaryCondition() and not s.getConstant():
-            continue
-        elif s.getConstant():
-            continue
+        if s.isSetConstant() and s.isSetBoundaryCondition():
+
+            if s.getConstant() and s.getBoundaryCondition():
+                #is a boundary and a constant, does not have stoichiometry
+                continue
+            elif s.getBoundaryCondition() and not s.getConstant():
+                #is a boundary and but not a constant. has a stoichiometry?
+                # reduced_species_list.append(s)
+                # species_ids.append(s.getId())
+                continue
+            
+            elif not s.getBoundaryCondition() and s.getConstant():
+                continue
+
+            elif not s.getBoundaryCondition() and not s.getConstant():
+                reduced_species_list.append(s)
+                species_ids.append(s.getId())
         else:
-            reduced_species_list.append(s)
-            species_ids.append(s.getId())
+            logger.warn("Constant and Boundary booleans are not set")
+
 
     # species = [s.getName() for s in model.getListOfSpecies()]
     reactions = [r.getId() for r in model.getListOfReactions()]
@@ -318,6 +346,7 @@ def get_stoichiometric_matrix(model):
 
     stoichiometry_matrix = pd.DataFrame(stoichiometry_matrix, index=species_names, columns=reaction_names)
 
+        
     return stoichiometry_matrix
 
 
@@ -386,6 +415,17 @@ def get_leaf_nodes(node, leaf_nodes):
     leaf_nodes = leaf_nodes.tolist()
     return leaf_nodes
 
+def get_ordered_symbols(expr):
+    """Orders based on appearance: thanks chatGPT"""
+    ordered_symbols = []
+    def traverse(e):
+        if isinstance(e, sp.Symbol) and e not in ordered_symbols:
+            ordered_symbols.append(e)
+        for arg in e.args:
+            traverse(arg)
+    traverse(expr)
+    return ordered_symbols
+
 
 def get_lambda_function_dictionary(model):
     """Stop giving these functions confusing names...
@@ -406,7 +446,8 @@ def get_lambda_function_dictionary(model):
         for node in math_nodes:
             sp_symbols[node] = sp.Symbol(node)
         expr = sp.sympify(string_math, locals=sp_symbols)
-
+        
+        math_nodes=get_ordered_symbols(expr)
         func_x = sp.lambdify(math_nodes, expr, "jax")
 
         functional_dict[id] = func_x

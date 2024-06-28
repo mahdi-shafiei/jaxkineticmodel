@@ -23,23 +23,6 @@ jax.config.update("jax_enable_x64", True)
 from source.utils import get_logger
 
 
-def get_parameters_from_tellurium(model):
-    """retrieves parameters and initial conditions from tellurium"""
-    global_parameters = model.getGlobalParameterIds()
-    global_params_dict={}
-    species_dict={}
-    print("Global Parameters and Values:")
-    for param in global_parameters:
-        global_params_dict[param] = model[param]
-
-
-    # Retrieve and print boundary species and their values
-    boundary_species = model.getFloatingSpeciesIds()
-
-    for species in boundary_species:
-        species_dict[species] = model[species]
-    
-    return species_dict,global_params_dict
 
 
 
@@ -88,25 +71,38 @@ for sbml_file in sbml_files:
         
         params = {**local_params, **params}
 
-        ts = jnp.linspace(0, 10, 100)
+
+        tellurium_model = te.loadSBMLModel(file_path)
+        sol_tellurium = tellurium_model.simulate(0,100,100)
+
+
+        ts = jnp.array(sol_tellurium['time'])
         ys = JaxKmodel(ts=ts, y0=y0, params=params)
+        ys=pd.DataFrame(ys,columns=S.index)
+        
 
-        model = te.loadSBMLModel(file_path)
-        sol = model.simulate(0, 10, 100)[:,1:]
+        ## we need to do another estimate for the error tolerance
 
 
+        #calculate maximum relative error compared to tellurium
+        rtols_per_species=[]
+        for name in S.index:
 
-        S_tellurium = model.getFullStoichiometryMatrix()
+            rtol=np.abs(sol_tellurium["["+name+"]"]-ys[name])/(sol_tellurium["["+name+"]"])
+            rtol = rtol[~np.isnan(rtol)]
+            rtols_per_species.append(rtol)
+        rtol=np.max(rtols_per_species)
+
+        S_tellurium = tellurium_model.getFullStoichiometryMatrix()
         if np.sum(np.abs(S_tellurium) - np.abs(np.array(S))) == 0:
-            if np.sum(sol - ys) < 0.001: # I notice in some cases that a model is actually very similar visually
-
-                print("numerical solve is identical:" + str(np.sum(sol - ys)))
+            if rtol < 0.03:
+                print("numerical solve is identical: max rtol="+str(rtol))
                 working_models_counter+=1
                 os.rename(file_path, pathname + "working_models/" + sbml_file)
             else:
-                print("numerical solve is not identical" + str(np.sum(sol - ys)))
+                print("numerical solve is not identical: max rtol="+str(rtol))
                 discrepancy_counter+=1
-                # os.rename(file_path, pathname + "discrepancies/" + sbml_file)
+                os.rename(file_path, pathname + "discrepancies/" + sbml_file)
         else:
             print("discrepancy because of S in " + sbml_file)
             discrepancy_counter+=1
