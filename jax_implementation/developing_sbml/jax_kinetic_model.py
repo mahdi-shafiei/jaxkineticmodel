@@ -50,7 +50,7 @@ def create_fluxes_v(model):
                                 "event_rules":event_rules}  # add functionality
 
         vi_rate_law = get_string_expression(reaction)
-
+        print(reaction.id)
         vi, filtered_dict = sympify_lambidify_and_jit_equation(vi_rate_law, nested_dictionary_vi)
         
         v[reaction.id] = vi  # the jitted equation

@@ -7,7 +7,7 @@ import pandas as pd
 import re
 import collections
 import os
-
+from sympy import Max
 #Suddenly this source.utils doesnt load anymore without adding path directly. Make an init file?
 import sys
 sys.path.append('/home/plent/Documenten/Gitlab/NeuralODEs/symplectic_adjoint/')
@@ -258,7 +258,7 @@ def sympify_lambidify_and_jit_equation(equation, nested_local_dict):
     local_dict = {**species, **globals, **locals}
 
     
-    # print("input equation:",equation)
+    print("input equation:",equation)
     equation = sp.sympify(equation, locals={**local_dict,
                                             **assignment_rules,
                                             **lambda_funcs,**rate_rules,**event_rules})
@@ -276,7 +276,7 @@ def sympify_lambidify_and_jit_equation(equation, nested_local_dict):
     equation=equation.subs(event_rules)
     equation = equation.subs(assignment_rules)
 
-    # print("output after substitution",equation)
+    print("output after substitution",equation)
     
     # free symbols are used for lambdifying
     free_symbols = list(equation.free_symbols)
@@ -441,13 +441,18 @@ def get_lambda_function_dictionary(model):
         symbols = []
         leaf_nodes = []
         sp_symbols = {}
-        math_nodes = get_leaf_nodes(math, leaf_nodes=leaf_nodes)
+        math_nodes=[]
+        for i in range(function.getNumArguments()):
+            math_node_name=function.getArgument(i).getName()
+            math_nodes.append(math_node_name)
+        print(math_nodes)
         sp_symbols = {}
         for node in math_nodes:
             sp_symbols[node] = sp.Symbol(node)
         expr = sp.sympify(string_math, locals=sp_symbols)
+        #substitute some operations using sympy expressions. This is a bit ugly
+
         
-        math_nodes=get_ordered_symbols(expr)
         func_x = sp.lambdify(math_nodes, expr, "jax")
 
         functional_dict[id] = func_x
