@@ -3,9 +3,13 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 
+filepath = (
+    "models/sbml_models/"
+    # "failing_models/model_GL-GNT-bypass_13Cflux.xml"
+    "working_models/Bertozzi2020.xml"
+)
 
-
-model=te.loadSBMLModel("models/sbml_models/working_models/Berzins2022 - C cohnii glucose and glycerol.xml")
-sol=model.simulate(0,12,1000)
+model=te.loadSBMLModel(filepath)
+sol=model.simulate(0,100,1000)
 # b=time.time()
 model.plot()

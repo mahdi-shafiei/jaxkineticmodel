@@ -17,7 +17,7 @@ logger.debug('Loading SBML model')
 
 # a simple sbml model
 filepath = (
-    "jax_implementation/developing_sbml/sbml_models/"
+    "models/sbml_models/"
     # "failing_models/model_GL-GNT-bypass_13Cflux.xml"
     "working_models/Bertozzi2020.xml"
 )
