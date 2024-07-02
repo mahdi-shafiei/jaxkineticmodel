@@ -1,4 +1,4 @@
 
-### A Systems Biology Markup Language (SBML) simulator in jax
+### A Systems Biology Markup Language (SBML) model simulator in Jax
 
 
