@@ -1,7 +1,12 @@
 import matplotlib.pyplot as plt
+import os
 
-from sbml_load import *
-from sbml_model import SBMLModel
+import sys, os
+sys.path.append('/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes')
+from source.load_sbml.sbml_load import *
+from source.load_sbml.sbml_model import SBMLModel
+
+
 
 jax.config.update("jax_enable_x64", True)
 from source.utils import get_logger
@@ -54,3 +59,12 @@ for i in range(len(model.S.index)):
 plt.legend()
 # 
 plt.show()
+
+
+# #optional visual comparison for tellurium
+# import tellurium as te
+# model = te.loadSBMLModel(filepath)
+# sol_tell = model.simulate(0, 100, 200)
+# time_tell=sol_tell['time']
+# colnames=sol_tell.colnames[1:]
+# sol_tell=sol_tell[:,1:]

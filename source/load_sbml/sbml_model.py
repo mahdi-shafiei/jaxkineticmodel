@@ -10,7 +10,7 @@ import re
 import collections
 import os
 from source.utils import get_logger
-from jax_kinetic_model import NeuralODE
+from .jax_kinetic_model import NeuralODE
 
 logger = get_logger(__name__)
 

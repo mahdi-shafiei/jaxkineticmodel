@@ -4,9 +4,9 @@ import numpy as np
 import jax.numpy as jnp
 import jax
 from functools import partial
-from sbml_load import construct_param_point_dictionary, separate_params
-from sbml_load import time_dependency_symbols
-from sbml_load import *
+from .sbml_load import construct_param_point_dictionary, separate_params
+from .sbml_load import time_dependency_symbols
+from .sbml_load import *
 
 jax.config.update("jax_enable_x64", True)
 
