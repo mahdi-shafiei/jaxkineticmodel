@@ -29,7 +29,7 @@ logger = get_logger(__name__)
 logger.debug('Loading SBML model')
 ## a simple sbml model
 
-filepath="jax_implementation/developing_sbml/sbml_models/Beer_MolBioSystems2014.xml"
+filepath="jax_implementation/developing_sbml/sbml_models/Sobotta_Frontiers2017.xml"
 
 # filepath="jax_implementation/developing_sbml/sbml_models/Garde2020.xml"
 model=load_sbml_model(file_path=filepath)
@@ -41,24 +41,15 @@ model=load_sbml_model(file_path=filepath)
 
 
 S=get_stoichiometric_matrix(model)
-
-
 ##recreate create_fluxes, but then for jax
 params=get_global_parameters(model)
 assignments_rules = get_assignment_rules_dictionary(model)
-
 v,v_symbol_dictionaries,local_params=create_fluxes_v(model)
 met_point_dict=construct_flux_pointer_dictionary(v_symbol_dictionaries,list(S.columns),list(S.index))
 # print(params)
-
 y0=get_initial_conditions(model)
-
 y0=overwrite_init_conditions_with_init_assignments(model,params,assignments_rules,y0)
-
-
 y0=jnp.array(list(y0.values()))
-
-
 
 
 JaxKmodel = NeuralODE(v=v, S=S, 
@@ -97,25 +88,25 @@ ys=JaxKmodel(ts=ts,
 
 
 
-# for i in range(len(S.index)):
-#       plt.plot(ts,ys[:,i],label=S.index[i])
-
+for i in range(len(S.index)):
+      plt.plot(ts,ys[:,i],label=S.index[i])
+      plt.plot(ts,ys2[:,i],label=S.index[i])
 # plt.plot(ts,ys[:,4],label=species_names[4])
 
 
 
-#optional visual comparison for tellurium
-import tellurium as te
-model = te.loadSBMLModel(filepath)
-sol_tell = model.simulate(0, 100, 200)
-time_tell=sol_tell['time']
-colnames=sol_tell.colnames[1:]
-sol_tell=sol_tell[:,1:]
+# #optional visual comparison for tellurium
+# import tellurium as te
+# model = te.loadSBMLModel(filepath)
+# sol_tell = model.simulate(0, 100, 200)
+# time_tell=sol_tell['time']
+# colnames=sol_tell.colnames[1:]
+# sol_tell=sol_tell[:,1:]
 
-for i in range(len(S.index)):
-      plt.plot(time_tell,sol_tell[:,i],label=colnames[i])
-      plt.plot(time_tell,ys[:,i],label=S.index[i],linewidth=2,linestyle="--")
+# for i in range(len(S.index)):
+#       plt.plot(time_tell,sol_tell[:,i],label=colnames[i])
+#       plt.plot(time_tell,ys[:,i],label=S.index[i],linewidth=2,linestyle="--")
 
 
-plt.legend()
-plt.show()
+# plt.legend()
+# plt.show()
