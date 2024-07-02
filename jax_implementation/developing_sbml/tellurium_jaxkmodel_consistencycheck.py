@@ -23,6 +23,8 @@ jax.config.update("jax_enable_x64", True)
 from source.utils import get_logger
 
 
+def calc_euclidean(actual, predic):
+    return np.sqrt(np.sum((actual - predic) ** 2))
 
 
 
@@ -73,7 +75,7 @@ for sbml_file in sbml_files:
 
 
         tellurium_model = te.loadSBMLModel(file_path)
-        sol_tellurium = tellurium_model.simulate(0,100,100)
+        sol_tellurium = tellurium_model.simulate(0,100,200)
 
 
         ts = jnp.array(sol_tellurium['time'])
@@ -84,25 +86,42 @@ for sbml_file in sbml_files:
         ## we need to do another estimate for the error tolerance
 
 
-        #calculate maximum relative error compared to tellurium
-        rtols_per_species=[]
+        #calculate the MSE between two timeseries because this should be a more stable error measure
+        rtols=[]
+
         for name in S.index:
 
-            rtol=np.abs(sol_tellurium["["+name+"]"]-ys[name])/(sol_tellurium["["+name+"]"])
-            rtol = rtol[~np.isnan(rtol)]
-            rtols_per_species.append(rtol)
-        rtol=np.max(rtols_per_species)
+            # mse=np.sum(sol_tellurium["["+name+"]"]-ys[name])**2
+            max_tell=np.max(sol_tellurium["["+name+"]"])
+            max_ys=np.max(ys[name])+0.0001
+            max_denominator=np.max([max_tell,max_ys])
+            rtol=np.abs(sol_tellurium["["+name+"]"]-ys[name])/max_denominator
+            # cross_correlation=crosscorr(sol_tellurium["["+name+"]"],ys[name],lag=1)
+
+            rtols.append(rtol)
+
+        mse=np.mean(rtols)
+
+
+        
+        for i,k in enumerate(S.index):
+            print(i,k)
+            name="["+k+"]"
+            plt.plot(ts,sol_tellurium[name],label=name)
+            plt.plot(ts,ys[k],label=S.index[i],linewidth=2,linestyle="--")
+        plt.legend()
+        plt.show()
 
         S_tellurium = tellurium_model.getFullStoichiometryMatrix()
         if np.sum(np.abs(S_tellurium) - np.abs(np.array(S))) == 0:
-            if rtol < 0.03:
-                print("numerical solve is identical: max rtol="+str(rtol))
+            if mse < 0.001:
+                print("numerical solve is identical: mse="+str(mse))
                 working_models_counter+=1
                 os.rename(file_path, pathname + "working_models/" + sbml_file)
             else:
-                print("numerical solve is not identical: max rtol="+str(rtol))
+                print("numerical solve is not identical: mse="+str(mse))
                 discrepancy_counter+=1
-                os.rename(file_path, pathname + "discrepancies/" + sbml_file)
+                # os.rename(file_path, pathname + "discrepancies/" + sbml_file)
         else:
             print("discrepancy because of S in " + sbml_file)
             discrepancy_counter+=1
@@ -116,7 +135,7 @@ for sbml_file in sbml_files:
     except Exception as e:
         logger.error(f"An exception of type {type(e)} was raised")
         logger.exception(e)
-        os.rename(file_path, pathname + "failing_models/" + sbml_file)
+        # os.rename(file_path, pathname + "failing_models/" + sbml_file)
         failing_models_counter+=1
 
 print("failing_models:",failing_models_counter)

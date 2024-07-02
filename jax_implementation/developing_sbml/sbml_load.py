@@ -258,7 +258,7 @@ def sympify_lambidify_and_jit_equation(equation, nested_local_dict):
     local_dict = {**species, **globals, **locals}
 
     
-    print("input equation:",equation)
+    # print("input equation:",equation)
     equation = sp.sympify(equation, locals={**local_dict,
                                             **assignment_rules,
                                             **lambda_funcs,**rate_rules,**event_rules})
@@ -276,7 +276,7 @@ def sympify_lambidify_and_jit_equation(equation, nested_local_dict):
     equation=equation.subs(event_rules)
     equation = equation.subs(assignment_rules)
 
-    print("output after substitution",equation)
+    # print("output after substitution",equation)
     
     # free symbols are used for lambdifying
     free_symbols = list(equation.free_symbols)
@@ -445,7 +445,7 @@ def get_lambda_function_dictionary(model):
         for i in range(function.getNumArguments()):
             math_node_name=function.getArgument(i).getName()
             math_nodes.append(math_node_name)
-        print(math_nodes)
+
         sp_symbols = {}
         for node in math_nodes:
             sp_symbols[node] = sp.Symbol(node)

@@ -50,7 +50,7 @@ def create_fluxes_v(model):
                                 "event_rules":event_rules}  # add functionality
 
         vi_rate_law = get_string_expression(reaction)
-        print(reaction.id)
+        # print(reaction.id)
         vi, filtered_dict = sympify_lambidify_and_jit_equation(vi_rate_law, nested_dictionary_vi)
         
         v[reaction.id] = vi  # the jitted equation
@@ -162,7 +162,7 @@ class NeuralODE:
             args=(global_params, local_params, self.time_dict),
             stepsize_controller=diffrax.PIDController(rtol=1e-6, atol=1e-12),
             saveat=diffrax.SaveAt(ts=ts),
-            max_steps=100000
+            max_steps=50000
         )
 
 

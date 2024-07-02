@@ -29,7 +29,8 @@ logger = get_logger(__name__)
 logger.debug('Loading SBML model')
 ## a simple sbml model
 
-filepath="jax_implementation/developing_sbml/sbml_models/BIOMD0000000626_url.xml"
+filepath="jax_implementation/developing_sbml/sbml_models/Beer_MolBioSystems2014.xml"
+
 # filepath="jax_implementation/developing_sbml/sbml_models/Garde2020.xml"
 model=load_sbml_model(file_path=filepath)
 
@@ -79,7 +80,7 @@ JaxKmodel=jax.jit(JaxKmodel)
 # # Simulation
 # ###
 
-ts=jnp.linspace(0,10,200)
+ts=jnp.linspace(0,100,200)
 # #parameters are not yet defined
 
 
@@ -106,14 +107,14 @@ ys=JaxKmodel(ts=ts,
 #optional visual comparison for tellurium
 import tellurium as te
 model = te.loadSBMLModel(filepath)
-sol_tell = model.simulate(0, 10, 200)
+sol_tell = model.simulate(0, 100, 200)
 time_tell=sol_tell['time']
 colnames=sol_tell.colnames[1:]
 sol_tell=sol_tell[:,1:]
 
 for i in range(len(S.index)):
       plt.plot(time_tell,sol_tell[:,i],label=colnames[i])
-      plt.plot(ts,ys[:,i],label=S.index[i],linewidth=2,linestyle="--")
+      plt.plot(time_tell,ys[:,i],label=S.index[i],linewidth=2,linestyle="--")
 
 
 plt.legend()
