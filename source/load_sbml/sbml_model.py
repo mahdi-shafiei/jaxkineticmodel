@@ -24,7 +24,15 @@ class SBMLModel:
         # TODO the following two lines assume that self.S will never change
         self.reaction_names = list(self.S.columns)
         self.species_names = list(self.S.index)
-        self.y0 = jnp.array(list(self._get_initial_conditions().values()))
+
+        self.y0=self._get_initial_conditions()
+        self.y0=overwrite_init_conditions_with_init_assignments(self.model,self.y0).values()
+        self.y0 = jnp.array(list(self.y0))
+
+        
+
+        
+        
         self.v, self.v_symbol_dictionaries, self.local_params = self._create_fluxes_v()
         self.met_point_dict = self._construct_flux_pointer_dictionary()
 
@@ -46,7 +54,7 @@ class SBMLModel:
         logger.info("Model loaded.")
         logger.info(f" number of species: {model.getNumSpecies()}")
         logger.info(f" number of reactions: {model.getNumReactions()}")
-        logger.info(f" number of global parameters{model.getNumParameters()}")
+        logger.info(f" number of global parameters: {model.getNumParameters()}")
         logger.info(f" number of constant boundary metabolites: {model.getNumSpeciesWithBoundaryCondition()}")
         logger.info(f" number of lambda function definitions: {len(model.function_definitions)}")
         logger.info(f" number of assignment rules: {model.getNumRules()}")
@@ -100,21 +108,20 @@ class SBMLModel:
         species = self.model.getListOfSpecies()
         initial_concentration_dict = {}
         for specimen in species:
+            if specimen.isSetConstant() and specimen.isSetBoundaryCondition():
             # there are also non-stationary boundary conditions, deal with this later.
-            if specimen.getConstant() and specimen.getBoundaryCondition():
-                print("Constant Boundary Specimen ", specimen.id)
-                continue
-
-            elif specimen.getBoundaryCondition() and not specimen.getConstant():
-                if self.model.getLevel() == 2:
-                    print("Level 2 sbml, assume that boundary condition is constant for", specimen.id)
-
-                if self.model.getLevel() == 3:
-                    print("Non-Constant Boundary Specimen", specimen.id)
-                continue
-
+                if specimen.getConstant() and specimen.getBoundaryCondition():
+                    print("Constant Boundary Specimen ", specimen.id)
+                    continue
+                elif specimen.getBoundaryCondition() and not specimen.getConstant():
+                    continue
+                elif not specimen.getBoundaryCondition() and specimen.getConstant():
+                    continue #not a boundary, but still a constant
+                elif not specimen.getBoundaryCondition() and not specimen.getConstant():
+                    initial_concentration_dict[specimen.id] = specimen.initial_concentration
             else:
-                initial_concentration_dict[specimen.id] = specimen.initial_concentration
+                logger.warn(f"{specimen.id} constant/boundary attribute not set. Assume that boundary is constant")
+                continue
         return initial_concentration_dict
 
     def _create_fluxes_v(self):
@@ -428,3 +435,34 @@ def time_dependency_symbols(v_symbol_dictionaries, t):
     return time_dependencies
 #   time_dependencies=time_dependency_symbols(v_symbol_dictionaries,t)
 #   return time_dependencies
+
+def get_initial_assignments(model,global_parameters,assignment_rules,y0):
+    """Some sbml assign values through the list of initial assignments. This should be used
+    to overwrite y0 where necessary. This can be done outside the model structure"""
+
+    initial_assignments={}
+    for init_assign in model.getListOfInitialAssignments():
+        if init_assign.id in y0.keys():
+            math=init_assign.getMath()
+            math_string=libsbml.formulaToL3String(math)
+            sympy_expr=sp.sympify(math_string,locals={**assignment_rules,**global_parameters})
+            # sympy_expr=sympy_expr.subs(global_parameters)
+            if type(sympy_expr)!=float:
+                sympy_expr=sympy_expr.subs(global_parameters)
+                sympy_expr=sympy_expr.subs(y0)
+                sympy_expr=np.float64(sympy_expr)
+            initial_assignments[init_assign.id]=sympy_expr
+    return initial_assignments
+
+
+def overwrite_init_conditions_with_init_assignments(model,y0):
+    """y0 values are initialized in sbml, but some models also define initial assignments
+    These should be leading and be passed to y0"""
+    assignment_rules=get_assignment_rules_dictionary(model)
+    global_params=get_global_parameters(model)
+    initial_assignments=get_initial_assignments(model,global_params,assignment_rules,y0)
+    # initial_assignments=get_initial_assignments(model,params)
+    for key in initial_assignments.keys():
+        if key in y0.keys():
+            y0[key]=initial_assignments[key]
+    return y0
