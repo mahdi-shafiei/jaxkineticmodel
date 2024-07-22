@@ -19,10 +19,10 @@ logger.debug('Loading SBML model')
 filepath = (
     "models/sbml_models/"
     # "failing_models/model_GL-GNT-bypass_13Cflux.xml"
-    "working_models/Bertozzi2020.xml"
+    "working_models/Zheng_PNAS2012.xml"
 )
-filepath="models/sbml_models/working_models/Borghans_BiophysChem1997.xml"
-filepath="models/sbml_models/working_models/Raia_CancerResearch.xml"
+# filepath="models/sbml_models/working_models/Borghans_BiophysChem1997.xml"
+# filepath="models/sbml_models/working_models/Raia_CancerResearch.xml"
 
 model = SBMLModel(filepath)
 S=model._get_stoichiometric_matrix()
@@ -42,10 +42,12 @@ JaxKmodel = jax.jit(JaxKmodel)
 # # Simulation
 # ###
 
-ts = jnp.linspace(0,10,200)
+ts = jnp.linspace(0,2,100)
 # #parameters are not yet defined
 params = get_global_parameters(model.model)
 params = {**model.local_params, **params}
+print("params",len(params))
+
 
 JaxKmodel(ts=jnp.array([0]),
           y0=model.y0,
@@ -69,7 +71,7 @@ print(np.shape(ys))
 #optional visual comparison for tellurium
 import tellurium as te
 model = te.loadSBMLModel(filepath)
-sol_tell = model.simulate(0, 10, 200)
+sol_tell = model.simulate(0, 50, 200)
 time_tell=sol_tell['time']
 colnames=sol_tell.colnames
 print(np.shape(sol_tell))
@@ -81,5 +83,5 @@ for name in S.index:
       plt.plot(ts,ys[name],label=name,linewidth=2,linestyle="--")
 
 
-plt.legend()
+# plt.legend()
 plt.show()

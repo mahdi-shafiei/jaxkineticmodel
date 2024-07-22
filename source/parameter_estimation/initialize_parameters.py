@@ -115,3 +115,51 @@ def save_parameter_initializations(model_name,dataset,id):
         filename=output_filedir+model_name+"_parameterset_"+"id_"+id+".csv"
         dataset.to_csv(filename)
     return dataset
+
+
+def save_optimized_params(model_name,result,id):
+    """Saves parameter initializations in folder. Requires setting id string"""
+    model_name=model_name.replace(".xml","")
+    model_name=model_name.replace(".sbml","")
+    output_filedir="results/"+model_name+"/"
+    if not os.path.exists(output_filedir):
+        os.mkdir(output_filedir)
+        filename=output_filedir+model_name+"_parameters_"+"id_"+id+".csv"
+        result.to_csv(filename)
+    else:
+        print(f"The directory '{output_filedir}' already exists. ")
+        filename=output_filedir+model_name+"_parameters_"+"id_"+id+".csv"
+        result.to_csv(filename)
+    return result
+
+
+
+def save_losses(model_name,result,id):
+    """Saves parameter initializations in folder. Requires setting id string"""
+    model_name=model_name.replace(".xml","")
+    model_name=model_name.replace(".sbml","")
+    output_filedir="results/"+model_name+"/"
+    if not os.path.exists(output_filedir):
+        os.mkdir(output_filedir)
+        filename=output_filedir+model_name+"_losses_"+"id_"+id+".csv"
+        result.to_csv(filename)
+    else:
+        print(f"The directory '{output_filedir}' already exists. ")
+        filename=output_filedir+model_name+"_losses_"+"id_"+id+".csv"
+        result.to_csv(filename)
+    return result
+
+def save_norms(model_name,result,id):
+    """Saves parameter initializations in folder. Requires setting id string"""
+    model_name=model_name.replace(".xml","")
+    model_name=model_name.replace(".sbml","")
+    output_filedir="results/"+model_name+"/"
+    if not os.path.exists(output_filedir):
+        os.mkdir(output_filedir)
+        filename=output_filedir+model_name+"_norms_"+"id_"+id+".csv"
+        result.to_csv(filename)
+    else:
+        print(f"The directory '{output_filedir}' already exists. ")
+        filename=output_filedir+model_name+"_norms_"+"id_"+id+".csv"
+        result.to_csv(filename)
+    return result
