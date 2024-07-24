@@ -160,9 +160,9 @@ class NeuralODE:
             dt0=ts[1] - ts[0],
             y0=y0,
             args=(global_params, local_params, self.time_dict),
-            stepsize_controller=diffrax.PIDController(rtol=1e-6, atol=1e-12),
+            stepsize_controller=diffrax.PIDController(rtol=1e-3, atol=1e-7),
             saveat=diffrax.SaveAt(ts=ts),
-            max_steps=100000
+            max_steps=200000
         )
 
 

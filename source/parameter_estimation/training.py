@@ -56,6 +56,54 @@ def create_log_params_loss_func(model):
         return loss
     return loss_func
 
+def create_log_params_log_loss_func(model):
+    """Loss function for log transformed parameters """
+    def loss_func(params,ts,ys):
+        params=exponentiate_parameters(params)
+        mask=~jnp.isnan(jnp.array(ys))
+        y0=ys[0,:]
+        y_pred=model(ts,y0,params)
+
+        y_pred=jnp.log2(y_pred+1)
+        ys=jnp.log2(ys+1)
+
+
+        ys = jnp.where(mask, ys, 0)
+        y_pred = jnp.where(mask, y_pred, 0)
+        # print(ys,y_pred)
+        non_nan_count = jnp.sum(mask)
+        
+        loss = jnp.sum((y_pred - ys) ** 2) / non_nan_count
+        return loss
+    return loss_func
+
+def create_log_params_means_centered_loss_func(model):
+    """Loss function for log transformed parameters. 
+    We do a simple input scaling using the mean per state variable (we add 1 everywhere to prevent division by zero) """
+    def loss_func(params,ts,ys):
+
+        params=exponentiate_parameters(params)
+        mask=~jnp.isnan(jnp.array(ys))
+        y0=ys[0,:]
+        y_pred=model(ts,y0,params)
+        ys = jnp.where(mask, ys, 0)
+
+        ys=ys+1
+        y_pred=y_pred+1
+        scale=jnp.mean(ys,axis=0)
+
+        ys=ys/scale
+        y_pred=y_pred/scale
+
+        y_pred = jnp.where(mask, y_pred, 0)
+        # print(ys,y_pred)
+        non_nan_count = jnp.sum(mask)
+
+        loss = jnp.sum((y_pred - ys) ** 2) / non_nan_count
+        return loss
+    return loss_func
+
+
 
 
 

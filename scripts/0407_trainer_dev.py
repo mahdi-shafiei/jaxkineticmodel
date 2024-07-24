@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import os
 import sys, os
 sys.path.append('/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes')
+# sys.path.append('/home/plent/Documenten/Gitlab/NeuralODEs')
 from source.load_sbml.sbml_load import *
 from source.load_sbml.sbml_model import SBMLModel
 jax.config.update("jax_enable_x64", True)
@@ -12,18 +13,19 @@ from source.parameter_estimation.training import *
 import time
 
 
+
 # model_name="Raia_CancerResearch.xml"
-# model_name="Bertozzi2020.xml"
-model_name="Berzins2022 - C cohnii glucose and glycerol.xml"
+model_name="Bertozzi2020.xml"
+# model_name="Berzins2022 - C cohnii glucose and glycerol.xml"
 filepath="models/sbml_models/working_models/"+model_name
-lr=1e-2
-N=10
+lr=1e-3
+N=20
 lb=0.01
 ub=100
-id="lhs_"+"N="+str(N)+"run_1"
+id="lhs_"+"N="+str(N)+"run_1_log_update"
 loss_threshold=1e-3
 
-ts=jnp.linspace(0,1,10)
+ts=jnp.linspace(0,200,10)
 
 dataset,params=generate_dataset(filepath,ts)
 
@@ -55,7 +57,8 @@ params = {**model.local_params, **params}
 print("# params",len(params))
 
 
-log_loss_func=jax.jit(create_log_params_loss_func(JaxKmodel))
+# log_loss_func=jax.jit(create_log_params_loss_func(JaxKmodel))
+log_loss_func=jax.jit(create_log_params_means_centered_loss_func(JaxKmodel))
 loss_func=jax.jit(create_loss_func(JaxKmodel))
 
 @jax.jit
@@ -92,12 +95,14 @@ optimized_parameters_dict={}
 global_norm_dict={}
 start=time.time()
 for init in range(np.shape(lhs_parameter_initializations)[0]):
+
     print(f"init {init}")
     
     params_init=lhs_parameter_initializations.iloc[init,:].to_dict()
+
     optimizer = optax.adabelief(lr)
 
-    clip_by_global=optax.clip_by_global_norm(np.log(3))
+    clip_by_global=optax.clip_by_global_norm(np.log(10))
     optimizer = optax.chain(optimizer,clip_by_global)
     opt_state = optimizer.init(params_init)
 
@@ -112,6 +117,15 @@ for init in range(np.shape(lhs_parameter_initializations)[0]):
 
             gradient_norms.append(global_norm(grads))
             loss_per_iter.append(loss)
+
+            if loss<loss_threshold:
+                #stop training because loss reached threshold
+                print("loss threshold reached:",loss)
+                loss_per_iteration_dict[init]=loss_per_iter
+                global_norm_dict[init]=gradient_norms
+                break
+
+
             if step% 10==0:
                 # print(f"global norm: {global_norm(grads)}")
                 print(f"Step {step}, Loss {loss}")
@@ -125,13 +139,22 @@ for init in range(np.shape(lhs_parameter_initializations)[0]):
         print(f"init {init} could not be optimized")
         loss_per_iteration_dict[init]=-1
         optimized_parameters_dict[init]=-1
+        global_norm_dict[init]=-1
         continue
 end=time.time()
 print("time it took",end-start)
 
-losses= pd.DataFrame(loss_per_iteration_dict)
-optimized_parameters=pd.DataFrame(optimized_parameters_dict)
-norms=pd.DataFrame(global_norm_dict)
+
+
+
+losses = pd.DataFrame({ key:pd.Series(value) for key, value in loss_per_iteration_dict.items() })
+# losses= pd.DataFrame(loss_per_iteration_dict)
+
+optimized_parameters = pd.DataFrame({ key:pd.Series(value) for key, value in optimized_parameters_dict.items() })
+# optimized_parameters=pd.DataFrame(optimized_parameters_dict)
+# norms=pd.DataFrame(global_norm_dict)
+norms = pd.DataFrame({ key:pd.Series(value) for key, value in global_norm_dict.items() })
+
 
 
 save_losses(model_name,losses,id=id)
