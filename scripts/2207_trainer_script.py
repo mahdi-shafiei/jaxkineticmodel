@@ -49,7 +49,7 @@ def main():
 
 
     bounds=generate_bounds(params,lower_bound=lb,upper_bound=ub)
-    uniform_parameter_initializations=uniform_sampling(bounds,N)
+    # uniform_parameter_initializations=uniform_sampling(bounds,N)
     lhs_parameter_initializations=latinhypercube_sampling(bounds,N)
 
 

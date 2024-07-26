@@ -138,6 +138,10 @@ class NeuralODE:
         self.v_symbol_dictionaries = v_symbol_dictionaries
         self.Stoichiometry = S
 
+        self.max_steps=200000
+        self.rtol=1e-3
+        self.atol=1e-7
+
         def wrap_time_symbols(t):
             time_dependencies = time_dependency_symbols(v_symbol_dictionaries, t)
             return time_dependencies
@@ -160,9 +164,9 @@ class NeuralODE:
             dt0=ts[1] - ts[0],
             y0=y0,
             args=(global_params, local_params, self.time_dict),
-            stepsize_controller=diffrax.PIDController(rtol=1e-3, atol=1e-7),
+            stepsize_controller=diffrax.PIDController(rtol=self.rtol, atol=self.atol),
             saveat=diffrax.SaveAt(ts=ts),
-            max_steps=200000
+            max_steps=self.max_steps
         )
 
 
