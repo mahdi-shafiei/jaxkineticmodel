@@ -19,7 +19,7 @@ logger.debug('Loading SBML model')
 filepath = (
     "models/sbml_models/"
     # "failing_models/model_GL-GNT-bypass_13Cflux.xml"
-    "working_models/Zheng_PNAS2012.xml"
+    "working_models/Palani2011.xml"
 )
 # filepath="models/sbml_models/working_models/Borghans_BiophysChem1997.xml"
 # filepath="models/sbml_models/working_models/Raia_CancerResearch.xml"
@@ -27,6 +27,7 @@ filepath = (
 model = SBMLModel(filepath)
 S=model._get_stoichiometric_matrix()
 JaxKmodel = model.get_kinetic_model()
+
 
 ## we now only gather globally defined parameters, 
 # but need to pass local parameters ass well.

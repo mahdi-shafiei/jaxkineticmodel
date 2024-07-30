@@ -34,7 +34,7 @@ def main():
     ub=100
     # id="lhs_"+"N="+str(N)+"run_1"
     run_id="run_"+str(args.id_run)
-    id="lhs_"+"N="+str(N)+run_id+"_log_update"
+    id="lhs_"+"N="+str(N)+run_id+"_log_update_sequentialsampling"
     loss_threshold=1e-3
 
     ts=jnp.linspace(0,args.final_time_point,10)
@@ -43,19 +43,15 @@ def main():
 
 
 
-    # plt.plot(ts,dataset)
-    # plt.show()
-
-
-
     bounds=generate_bounds(params,lower_bound=lb,upper_bound=ub)
     # uniform_parameter_initializations=uniform_sampling(bounds,N)
-    lhs_parameter_initializations=latinhypercube_sampling(bounds,N)
+    lhs_parameter_initializations=latinhypercube_sampling(bounds,100000)
+
 
 
 
     save_dataset(model_name,dataset)
-    save_parameter_initializations(model_name,lhs_parameter_initializations,id=id)
+    # save_parameter_initializations(model_name,lhs_parameter_initializations,id=id)
 
 
     ### If time
@@ -68,10 +64,17 @@ def main():
 
     print("# params",len(params))
 
-
     # log_loss_func=jax.jit(create_log_params_log_loss_func(JaxKmodel))
     log_loss_func=jax.jit(create_log_params_means_centered_loss_func(JaxKmodel))
     loss_func=jax.jit(create_loss_func(JaxKmodel))
+
+    #sample N points with succesfull initialization
+    sample_func=create_sample_model_func(log_loss_func,ts,jnp.array(dataset))
+
+
+    lhs_parameter_initializations=sequential_sampling(sample_func,lhs_parameter_initializations,args.n_parameters)
+    print("N points sampled",np.shape(lhs_parameter_initializations)[0])
+    save_parameter_initializations(model_name,lhs_parameter_initializations,id=id)
 
     @jax.jit
     def update(opt_state,params,ts,ys):

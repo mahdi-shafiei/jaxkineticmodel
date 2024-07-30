@@ -164,3 +164,45 @@ def save_norms(model_name,result,id):
         filename=output_filedir+model_name+"_norms_"+"id_"+id+".csv"
         result.to_csv(filename)
     return result
+
+
+def create_sample_model_func(log_loss_func,ts,ys):
+    """Creates an evaluation function to evaluate whether a parameter set is feasible"""
+    def evaluate_sample_model(parameter_set):
+        try:
+            loss=log_loss_func(parameter_set,ts,ys)
+            success=1
+        except:
+            # print("d")
+            success=0
+        return success
+    return evaluate_sample_model
+
+
+def sequential_sampling(sample_func,parameter_seeds,N_samples):
+    """Samples until N of feasible samples is reached,
+    sample_func: the function that checks feasibility of the parameter. Right now this is simply the loss function. We might think about doing it in an alternative way (like largest eigenvalue of the jacobian)
+
+
+    parameter seeds: the parameters initialized using lhs,
+    N_samples: number of samples we wish to further optimize"""
+
+    indices=np.arange(0,np.shape(parameter_seeds)[0])
+    success=0
+    succesfull_indices=[]
+    while success<N_samples:
+        selected_indices=np.random.choice(indices,size=10,replace=False)
+        indices=set(list(indices))-set(list(selected_indices))
+
+        for i in indices:
+
+            loss=sample_func(dict(parameter_seeds.iloc[i,:]))
+            if loss==1:
+
+                success+=1
+                succesfull_indices.append(i)
+
+            if success >= N_samples:
+                break
+    parameter_seeds=parameter_seeds.iloc[succesfull_indices,:]
+    return parameter_seeds
