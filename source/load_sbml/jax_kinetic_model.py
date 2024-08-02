@@ -145,6 +145,7 @@ class NeuralODE:
         def wrap_time_symbols(t):
             time_dependencies = time_dependency_symbols(v_symbol_dictionaries, t)
             return time_dependencies
+        
 
         self.time_dict = jax.jit(wrap_time_symbols)
 

@@ -12,6 +12,8 @@ import optax
 from source.parameter_estimation.training import *
 import time
 import argparse
+from source.parameter_estimation.jacobian import *
+
 
 def main():
     parser=argparse.ArgumentParser()
@@ -45,7 +47,9 @@ def main():
 
     bounds=generate_bounds(params,lower_bound=lb,upper_bound=ub)
     # uniform_parameter_initializations=uniform_sampling(bounds,N)
-    lhs_parameter_initializations=latinhypercube_sampling(bounds,args.n_parameters)
+    lhs_parameter_initializations=latinhypercube_sampling(bounds,10000)
+
+    #filter
 
 
 

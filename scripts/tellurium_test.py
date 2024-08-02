@@ -10,7 +10,8 @@ filepath = (
 )
 
 model=te.loadSBMLModel(filepath)
-sol=model.simulate(0,10,1000)
+sol=model.simulate(0,100,1000)
 # b=time.time()
 model.plot()
+
 plt.show()

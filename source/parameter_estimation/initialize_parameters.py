@@ -30,6 +30,7 @@ def generate_dataset(filepath,ts):
           y0=model.y0,
           params=params)
     ys=pd.DataFrame(ys,columns=S.index,index=ts)
+
     return ys,params
 
 def save_dataset(model_name,dataset):
@@ -43,6 +44,8 @@ def save_dataset(model_name,dataset):
         dataset.to_csv(filename)
     else:
         print(f"The directory '{output_filedir}' already exists.")
+        filename=output_filedir+model_name+"_dataset.csv"
+        dataset.to_csv(filename)
     
     return dataset
 

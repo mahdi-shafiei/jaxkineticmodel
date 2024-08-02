@@ -12,6 +12,7 @@ import optax
 from source.parameter_estimation.training import *
 import time
 import argparse
+from source.parameter_estimation.jacobian import *
 
 def main():
     parser=argparse.ArgumentParser()
@@ -34,28 +35,49 @@ def main():
     ub=100
     # id="lhs_"+"N="+str(N)+"run_1"
     run_id="run_"+str(args.id_run)
-    id="lhs_"+"N="+str(N)+run_id+"_log_update_sequentialsampling"
+    id="lhs_"+"N="+str(N)+run_id+"_log_update"
     loss_threshold=1e-3
-
+    
     ts=jnp.linspace(0,args.final_time_point,10)
 
     dataset,params=generate_dataset(filepath,ts)
-
+    
 
 
     bounds=generate_bounds(params,lower_bound=lb,upper_bound=ub)
     # uniform_parameter_initializations=uniform_sampling(bounds,N)
-    lhs_parameter_initializations=latinhypercube_sampling(bounds,100000)
+    lhs_parameter_initializations=latinhypercube_sampling(bounds,40000)
+
+    #filter parameters based on stability
+    model=SBMLModel(filepath)
+    jacobian_object=Jacobian(model)
+    logger.info("Jacobian Compiled")
+    compiled_jacobian=jacobian_object.compile_jacobian()
+
+    y_t=jnp.array(dataset.iloc[0,:])
+    lhs_parameter_initializations=jacobian_object.filter_stable_parameter_sets(compiled_jacobian,y_t,lhs_parameter_initializations)
+
+    print("number of feasible parameters: ", np.shape(lhs_parameter_initializations))
+    
+    if np.shape(lhs_parameter_initializations)[0]<args.n_parameters:
+        choices=np.arange(0,np.shape(lhs_parameter_initializations)[0])
+        indices=np.random.choice(a=choices,size=np.shape(lhs_parameter_initializations)[0])
+    else:    ## downsampling
+        choices=np.arange(0,np.shape(lhs_parameter_initializations)[0])
+
+        indices=np.random.choice(a=choices,size=args.n_parameters)
 
 
+    lhs_parameter_initializations=lhs_parameter_initializations.iloc[indices,:]
 
+    print("lhs samples:  ",np.shape(lhs_parameter_initializations))
 
     save_dataset(model_name,dataset)
-    # save_parameter_initializations(model_name,lhs_parameter_initializations,id=id)
+    save_parameter_initializations(model_name,lhs_parameter_initializations,id=id)
 
 
     ### If time
-    model=SBMLModel(filepath)
+    
     JaxKmodel = model.get_kinetic_model()
     JaxKmodel = jax.jit(JaxKmodel)
     # #parameters are not yet defined
@@ -68,13 +90,9 @@ def main():
     log_loss_func=jax.jit(create_log_params_means_centered_loss_func(JaxKmodel))
     loss_func=jax.jit(create_loss_func(JaxKmodel))
 
-    #sample N points with succesfull initialization
-    sample_func=create_sample_model_func(log_loss_func,ts,jnp.array(dataset))
 
 
-    lhs_parameter_initializations=sequential_sampling(sample_func,lhs_parameter_initializations,args.n_parameters)
-    print("N points sampled",np.shape(lhs_parameter_initializations)[0])
-    save_parameter_initializations(model_name,lhs_parameter_initializations,id=id)
+
 
     @jax.jit
     def update(opt_state,params,ts,ys):
