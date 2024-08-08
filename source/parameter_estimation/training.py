@@ -29,6 +29,7 @@ def exponentiate_parameters(params):
 def create_loss_func(model):
     def loss_func(params,ts,ys):
         mask=~jnp.isnan(jnp.array(ys))
+        ys=jnp.atleast_2d(ys)
         y0=ys[0,:]
         y_pred=model(ts,y0,params)
         ys = jnp.where(mask, ys, 0)
@@ -45,6 +46,7 @@ def create_log_params_loss_func(model):
     def loss_func(params,ts,ys):
         params=exponentiate_parameters(params)
         mask=~jnp.isnan(jnp.array(ys))
+        ys=jnp.atleast_2d(ys)
         y0=ys[0,:]
         y_pred=model(ts,y0,params)
         ys = jnp.where(mask, ys, 0)
@@ -61,6 +63,7 @@ def create_log_params_log_loss_func(model):
     def loss_func(params,ts,ys):
         params=exponentiate_parameters(params)
         mask=~jnp.isnan(jnp.array(ys))
+        ys=jnp.atleast_2d(ys)
         y0=ys[0,:]
         y_pred=model(ts,y0,params)
 
@@ -84,6 +87,7 @@ def create_log_params_means_centered_loss_func(model):
 
         params=exponentiate_parameters(params)
         mask=~jnp.isnan(jnp.array(ys))
+        ys=jnp.atleast_2d(ys)
         y0=ys[0,:]
         y_pred=model(ts,y0,params)
         ys = jnp.where(mask, ys, 0)

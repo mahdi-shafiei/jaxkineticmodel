@@ -94,6 +94,7 @@ class JaxKineticModel:
         # @partial(jax.jit, static_argnums=2)
 
         def apply_func(i, y, flux_point_dict, local_params, time_dict):
+
             if len(flux_point_dict) != 0:
                 y = y[flux_point_dict]
                 species = self.species_names[flux_point_dict]

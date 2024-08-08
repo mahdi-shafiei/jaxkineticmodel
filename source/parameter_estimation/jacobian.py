@@ -58,7 +58,9 @@ class Jacobian:
         eigvals=[]
         for i in range(np.shape(parameter_initializations)[0]):
             init_param=parameter_initializations.iloc[i,:].to_dict()
-            init_global_params, init_local_params = separate_params(init_param)
+            # print(init_param)
+            init_global_params, init_local_params = separate_params_jac(init_param)
+            # print(init_local_params)
             eigvals.append(jnp.linalg.eigvals(compiled_jacobian(y_t,init_global_params,init_local_params)))
         eigvals=np.array(eigvals)
         epsilon=0.001
@@ -66,8 +68,41 @@ class Jacobian:
         negative_eigenvalues=eigvals.real<=(0+epsilon)
         stable_parameters_indices=np.where(np.sum(negative_eigenvalues,axis=1)==len(negative_eigenvalues[0,:]))[0]
         filtered_parameters=parameter_initializations.iloc[stable_parameters_indices,:]
+        return filtered_parameters
+    
+    def filter_oscillations(self,compiled_jacobian,y_t,parameter_initializations,period_bounds):
+        """
+        Filtering a LHS based on oscillatory behavior.
+        Input:
+        compiled jacobian
+        y_t: values at time t 
 
-        # elif rule == "stability_oscillation":
+        parameter_initializations: a pandas dataframe with parameter initializations from a latin hypercube sampling
+        period bounds (list [lb,ub] in proper units): used to filter for dynamics where an estimate of the period of damped oscillations is available. Imaginary eigenvalus are check according to
+        2pi/T_lb <=Im(λ_i)<= 2pi/Tub.
+        """
+        eigvals=[]
+        for i in range(np.shape(parameter_initializations)[0]):
+            init_param=parameter_initializations.iloc[i,:].to_dict()
+            init_global_params, init_local_params = separate_params(init_param)
+            eigvals.append(jnp.linalg.eigvals(compiled_jacobian(y_t,init_global_params,init_local_params)))
+        eigvals=np.array(eigvals)
+        epsilon=0.0001
+
+        max_period=(2*np.pi)/np.max(np.abs(eigvals.imag)+epsilon,axis=1)
+
+
+        oscillation_parameter_indices2=np.where(max_period>=period_bounds[0])[0]
+    
+        oscillation_parameter_indices1=np.where(max_period<=period_bounds[1])[0]
+        oscillation_parameter_indices=np.intersect1d(oscillation_parameter_indices1,oscillation_parameter_indices2)
+   
+                                               
+                                               #and max_imag_eigvals>=(2*np.pi/period_bounds[0]))[0]
+        filtered_parameters=parameter_initializations.iloc[oscillation_parameter_indices,:]
+        return filtered_parameters
+
+            # elif rule == "stability_oscillation":
         #     stable_negative = eigvals.real < (0 + epsilon)
         #     positive_imaginary = eigvals.imag > 0
 
@@ -91,5 +126,3 @@ class Jacobian:
         #     # filtered_parameters = parameter_initializations.iloc[periodic_indices, :]
         # else:
         #     raise ValueError("Unsupported filtering rule. Supported rules are: 'stability', 'stability_oscillation', 'oscillation'.")
-            
-        return filtered_parameters

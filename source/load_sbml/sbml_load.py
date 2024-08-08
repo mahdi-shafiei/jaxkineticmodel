@@ -520,6 +520,7 @@ def get_rate_rules_dictionary(model):
 
 
 def separate_params(params):
+    """Seperates the global from local parameters using a identifier (lp.[Enz].)"""
     global_params = {}
     local_params = collections.defaultdict(dict)
 
@@ -530,6 +531,23 @@ def separate_params(params):
             value = params[key]
             newkey = list[1]
             local_params[list[0]][newkey] = value
+        else:
+            global_params[key] = params[key]
+    return global_params, local_params
+
+
+def separate_params_jac(params):
+    """Only used to pass parameters locally and globally to the jacobian (see if this is better?)"""
+    global_params = {}
+    local_params = collections.defaultdict(dict)
+
+    for key in params.keys():
+        if re.match("lp.*.", key):
+            # fkey = key.removeprefix("lp.")
+            # list = fkey.split(".")
+            value = params[key]
+            # newkey = list[1]
+            local_params[key] = value
         else:
             global_params[key] = params[key]
     return global_params, local_params
