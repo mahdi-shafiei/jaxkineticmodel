@@ -106,7 +106,7 @@ class Jax_Irrev_MM_Bi:
                  vmax: str,
                 km_substrate1: str,
                 km_substrate2: str):
-                
+
         self.vmax = vmax
         self.km_substrate1 = km_substrate1
         self.km_substrate2 = km_substrate2
@@ -123,5 +123,180 @@ class Jax_Irrev_MM_Bi:
 
         numerator = vmax * (substrate1 / km_substrate1) * (substrate2 / km_substrate2)
         denominator = (1 + (substrate1 / km_substrate1)) * (1 + (substrate2 / km_substrate2))
+
+        return numerator / denominator
+    
+
+
+class Jax_Rev_MM_UniBi:
+    """Uni Bi reversible MM reaction of the form A-->B+C"""
+    def __init__(self, 
+                 substrate:str,
+                 product1:str,
+                 product2:str,
+
+                 vmax: str,
+                k_equilibrium: str, km_substrate: str, km_product1: str, km_product2: str):
+        self.vmax = vmax
+        self.k_equilibrium = k_equilibrium
+        self.km_substrate = km_substrate
+        self.km_product1 = km_product1
+        self.km_product2 = km_product2
+        self.substrate=substrate
+        self.product1=product1
+        self.product2=product2
+
+    def __call__(self, eval_dict):
+        vmax = eval_dict[self.vmax]
+        k_equilibrium = eval_dict[self.k_equilibrium]
+        km_substrate = eval_dict[self.km_substrate]
+        km_product1 = eval_dict[self.km_product1]
+        km_product2 = eval_dict[self.km_product2]
+
+        substrate = eval_dict[self.substrate]
+        product1 = eval_dict[self.product1]
+        product2 = eval_dict[self.product2]
+
+        numerator = vmax / km_substrate * (substrate - product1 * product2 / k_equilibrium)
+        denominator = (substrate / km_substrate + (1 + product1 / km_product1) * (1 + product2 / km_product2))
+        return numerator / denominator
+
+
+class Jax_Rev_BiBi_MM:
+    """Reversible BiBi Michaelis-Menten Kinetics"""
+    def __init__(self, 
+                 substrate1:str,
+                 substrate2:str,
+                 product1:str,
+                 product2:str,
+                 vmax: str, k_equilibrium: str, km_substrate1: str, km_substrate2: str,
+                 km_product1: str, km_product2: str):
+        self.substrate1 = substrate1
+        self.substrate2 = substrate2
+        self.product1 = product1
+        self.product2 = product2
+        self.vmax = vmax
+        self.k_equilibrium = k_equilibrium
+        self.km_substrate1 = km_substrate1
+        self.km_substrate2 = km_substrate2
+        self.km_product1 = km_product1
+        self.km_product2 = km_product2
+
+    def __call__(self, eval_dict):
+        vmax = eval_dict[self.vmax]
+        k_equilibrium = eval_dict[self.k_equilibrium]
+        km_substrate1 = eval_dict[self.km_substrate1]
+        km_substrate2 = eval_dict[self.km_substrate2]
+        km_product1 = eval_dict[self.km_product1]
+        km_product2 = eval_dict[self.km_product2]
+
+        substrate1 = eval_dict[self.substrate1]
+        substrate2 = eval_dict[self.substrate2]
+        product1 = eval_dict[self.product1]
+        product2 = eval_dict[self.product2]
+
+        # Denominator calculation
+        denominator = (1 + substrate1/km_substrate1 + product1/km_product1) * \
+                      (1 + substrate2/km_substrate2 + product2/km_product2)
+
+        # Numerator calculation
+        numerator = vmax * (substrate1 * substrate2 / (km_substrate1 * km_substrate2)) * \
+                    (1 - 1/k_equilibrium * (product1 * product2 / (substrate1 * substrate2)))
+
+        # Rate equation
+        return numerator / denominator
+    
+
+
+class Jax_Diffusion:
+    """Diffusion model with a transport coefficient and enzyme."""
+    def __init__(self, 
+                 substrate: str, 
+                 enzyme: str, 
+                 transport_coef: str):
+        self.substrate = substrate
+        self.enzyme = enzyme
+        self.transport_coef = transport_coef
+
+    def __call__(self, eval_dict):
+        substrate = eval_dict[self.substrate]
+        enzyme = eval_dict[self.enzyme]
+        transport_coef = eval_dict[self.transport_coef]
+
+        # Calculate diffusion rate
+        diffusion_rate = transport_coef * (substrate - enzyme)
+
+        return diffusion_rate
+
+
+import jax.numpy as jnp
+from jax import jit
+
+class Jax_MM_Ordered_Bi_Bi:
+    """Ordered Bi-Bi Michaelis-Menten model with inhibitors."""
+
+    def __init__(self,
+                 substrate1:str,
+                 substrate2:str,
+                 product1:str,
+                 product2: str,
+                 vmax: str,
+                 k_equilibrium: str,
+                 km_substrate1: str,
+                 km_substrate2: str,
+                 km_product1: str,
+                 km_product2: str,
+                 ki_substrate1: str,
+                 ki_substrate2: str,
+                 ki_product1: str,
+                 ki_product2: str):
+        self.vmax = vmax
+        self.k_equilibrium = k_equilibrium
+        self.km_substrate1 = km_substrate1
+        self.km_substrate2 = km_substrate2
+        self.km_product1 = km_product1
+        self.km_product2 = km_product2
+        self.ki_substrate1 = ki_substrate1
+        self.ki_substrate2 = ki_substrate2
+        self.ki_product1 = ki_product1
+        self.ki_product2 = ki_product2
+        self.substrate1=substrate1
+        self.substrate2=substrate2
+        self.product1=product1
+        self.product2=product2
+
+
+    def __call__(self, eval_dict):
+        vmax = eval_dict[self.vmax]
+        k_equilibrium = eval_dict[self.k_equilibrium]
+        km_substrate1 = eval_dict[self.km_substrate1]
+        km_substrate2 = eval_dict[self.km_substrate2]
+        km_product1 = eval_dict[self.km_product1]
+        km_product2 = eval_dict[self.km_product2]
+        ki_substrate1 = eval_dict[self.ki_substrate1]
+        ki_substrate2 = eval_dict[self.ki_substrate2]
+        ki_product1 = eval_dict[self.ki_product1]
+        ki_product2 = eval_dict[self.ki_product2]
+
+        s1 = eval_dict[self.substrate1]  # NAD
+        s2 = eval_dict[self.substrate2]  # ETOH
+        p1 = eval_dict[self.product1]    # ACE
+        p2 = eval_dict[self.product2]    # NADH
+
+        # Calculate numerator
+        numerator = (vmax * (s1 * s2 - p1 * p2 / k_equilibrium) /
+                     (ki_substrate1 * km_substrate2))
+
+        # Calculate denominator
+        denominator = (1 + s1 / ki_substrate1 +
+                       km_substrate1 * s2 / (ki_substrate1 * km_substrate2) +
+                       km_product2 * p1 / (km_product1 * ki_product2) +
+                       p2 / ki_product2 +
+                       s1 * s2 / (ki_substrate1 * km_substrate2) +
+                       km_product2 * s1 * p1 / (km_product1 * ki_product2 * ki_substrate1) +
+                       km_substrate1 * s2 * p2 / (ki_substrate1 * km_substrate2 * ki_product2) +
+                       p1 * p2 / (km_product1 * ki_product2) +
+                       s1 * s2 * p1 / (ki_substrate1 * km_substrate2 * ki_product1) +
+                       s2 * p1 * p2 / (ki_substrate1 * km_substrate2 * ki_product2))
 
         return numerator / denominator

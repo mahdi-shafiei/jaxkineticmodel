@@ -28,11 +28,11 @@ class Jax_Irrev_MM_Bi_w_Modifiers:
     the names of the modifiers concentrations should be added as strings as well as classes, in the same order as the classes"""
     def __init__(self,substrate1:str,
                  substrate2:str,
-                 modifiers_list:list, 
+                 modifiers_list:list, #strings
                  vmax: str, 
                  km_substrate1: str, 
                  km_substrate2: str,
-                   modifiers):
+                   modifiers): #classes
         
         
         self.substrate1=substrate1
@@ -135,5 +135,315 @@ class Jax_Specific:
 
 
 
+class Jax_Rev_BiBi_MM_w_Activation:
+    """Specific Rev BiBi MM with 3 modifiers for G3PDH"""
+    def __init__(self, 
+                 substrate1:str,
+                 substrate2:str,
+                 product1:str,
+                 product2:str,
+                 modifiers:list,
+                 vmax: str, k_equilibrium: str, km_substrate1: str, km_substrate2: str,
+                 km_product1: str, km_product2: str, ka1: str, ka2: str, ka3: str):
+        self.vmax = vmax
+        self.k_equilibrium = k_equilibrium
+        self.km_substrate1 = km_substrate1
+        self.km_substrate2 = km_substrate2
+        self.km_product1 = km_product1
+        self.km_product2 = km_product2
+        self.ka1 = ka1
+        self.ka2 = ka2
+        self.ka3 = ka3
+        self.substrate1=substrate1
+        self.substrate2=substrate2
+        self.product1=product1
+        self.product2=product2
+        self.modifier=modifiers
 
 
+    def __call__(self, eval_dict):
+        vmax = eval_dict[self.vmax]
+        k_equilibrium = eval_dict[self.k_equilibrium]
+        km_substrate1 = eval_dict[self.km_substrate1]
+        km_substrate2 = eval_dict[self.km_substrate2]
+        km_product1 = eval_dict[self.km_product1]
+        km_product2 = eval_dict[self.km_product2]
+        ka1 = eval_dict[self.ka1]
+        ka2 = eval_dict[self.ka2]
+        ka3 = eval_dict[self.ka3]
+
+        substrate1 = eval_dict[self.substrate1]
+        substrate2 = eval_dict[self.substrate2]
+        product1 = eval_dict[self.product1]
+        product2 = eval_dict[self.product2]
+
+        modifier=[]
+        for mod in self.modifier:
+            modifier.append(eval_dict[mod])
+
+        denominator = (1 + substrate1 / km_substrate1 + product1 / km_product1) * \
+                      (1 + substrate2 / km_substrate2 + product2 / km_product2) * \
+                      (1 + modifier[0] / ka1 + modifier[1] / ka2 + modifier[2] / ka3)
+
+        numerator = vmax * (substrate1 * substrate2 / (km_substrate1 * km_substrate2)) * \
+                    (1 - 1 / k_equilibrium * (product1 *product2/ (substrate1 * substrate2)))
+        return numerator / denominator
+
+
+
+#v_GAPDH
+class Jax_MM_Ordered_Bi_Tri:
+    """Ordered Bi-Tri MM model with co-factor binding first."""
+    def __init__(self, 
+                 substrate1: str, 
+                 substrate2: str, 
+                 substrate3: str, 
+                 product1: str, 
+                 product2: str, 
+                 vmax: str, 
+                 k_equilibrium: str, 
+                 km_substrate1: str, 
+                 km_substrate2: str, 
+                 ki: str, 
+                 km_product1: str, 
+                 km_product2: str):
+        self.vmax = vmax
+        self.k_equilibrium = k_equilibrium
+        self.km_substrate1 = km_substrate1
+        self.km_substrate2 = km_substrate2
+        self.ki = ki
+        self.km_product1 = km_product1
+        self.km_product2 = km_product2
+        self.substrate1 = substrate1
+        self.substrate2 = substrate2
+        self.substrate3 = substrate3
+        self.product1 = product1
+        self.product2 = product2
+
+    def __call__(self, eval_dict):
+        vmax = eval_dict[self.vmax]
+        k_equilibrium = eval_dict[self.k_equilibrium]
+        km_substrate1 = eval_dict[self.km_substrate1]
+        km_substrate2 = eval_dict[self.km_substrate2]
+        ki = eval_dict[self.ki]
+        km_product1 = eval_dict[self.km_product1]
+        km_product2 = eval_dict[self.km_product2]
+
+        s1 = eval_dict[self.substrate1]
+        s2 = eval_dict[self.substrate2]
+        s3 = eval_dict[self.substrate3]
+        p1 = eval_dict[self.product1]
+        p2 = eval_dict[self.product2]
+
+        numerator = vmax * (s1 * s2 * s3 - p1 * p2 / k_equilibrium) / (km_substrate1 * km_substrate2 * ki)
+        denominator = ((1 + s1 / km_substrate1) * (1 + s2 / km_substrate2) * (1 + s3 / ki) +
+                       (1 + p1 / km_product1) * (1 + p2 / km_product2) - 1)
+        
+        return numerator / denominator
+    
+
+
+class Jax_Irrev_MM_Uni_w_Modifiers:
+    """Irreversible Michaelis-Menten model with modifiers."""
+    def __init__(self, 
+                 substrate: str, 
+                 vmax: str, 
+                 km_substrate: str, 
+                 modifiers_list: list,
+                 modifiers):#classes of modifier type
+        self.vmax = vmax
+        self.km_substrate = km_substrate
+        self.substrate = substrate
+        self.modifiers = modifiers
+        self.modifiers_list=modifiers_list
+
+
+    def __call__(self, eval_dict):
+        vmax = eval_dict[self.vmax]
+        km_substrate = eval_dict[self.km_substrate]
+        substrate = eval_dict[self.substrate]
+
+        # Initial velocity calculation (without modifiers)
+        v = (vmax * substrate / km_substrate) / (1 + substrate / km_substrate)
+
+        # Apply each modifier
+        for i, modifier in enumerate(self.modifiers):
+            modifier_conc = eval_dict[self.modifiers_list[i]]
+            v *= modifier.add_modifier(modifier_conc, eval_dict)
+
+        return v
+    
+
+
+class Jax_Hill_Bi_Irreversible_Activation:
+    """Hill Bi-substrate irreversible model with activation. (PYK1)"""
+    def __init__(self, 
+                 substrate1: str, 
+                 substrate2: str, 
+                 product: str, 
+                 activator: str, 
+                 vmax: str, 
+                 hill: str, 
+                 k_substrate1: str, 
+                 k_substrate2: str, 
+                 k_product: str, 
+                 k_activator: str, 
+                 l: str):
+        self.vmax = vmax
+        self.hill = hill
+        self.k_substrate1 = k_substrate1
+        self.k_substrate2 = k_substrate2
+        self.k_product = k_product
+        self.k_activator = k_activator
+        self.l = l
+        self.substrate1 = substrate1
+        self.substrate2 = substrate2
+        self.product = product
+        self.activator = activator
+
+
+    def __call__(self, eval_dict):
+        vmax = eval_dict[self.vmax]
+        hill = eval_dict[self.hill]
+        k_substrate1 = eval_dict[self.k_substrate1]
+        k_substrate2 = eval_dict[self.k_substrate2]
+        k_product = eval_dict[self.k_product]
+        k_activator = eval_dict[self.k_activator]
+        l = eval_dict[self.l]
+
+        substrate1 = eval_dict[self.substrate1]
+        substrate2 = eval_dict[self.substrate2]
+        product = eval_dict[self.product]
+        activator = eval_dict[self.activator]
+
+        # Calculate velocity using Hill equation with activation
+        numerator = vmax * substrate1 * substrate2 / (k_substrate1 * k_substrate2)
+        denominator = ((1 + substrate1 / k_substrate1) * (1 + substrate2 / k_substrate2)) * \
+                      ((substrate1 / k_substrate1 + 1) ** (hill - 1))
+        
+        activator_term = l * (((product / k_product + 1) / (activator / k_activator + 1)) ** hill)
+        hill_term = (substrate1 / k_substrate1 + 1) ** hill
+
+        return numerator / (denominator * activator_term + hill_term)
+
+
+class Jax_Hill_Irreversible_Inhibition:
+    """Hill irreversible model with inhibition."""
+    def __init__(self, 
+                 substrate: str, 
+                 inhibitor: str, 
+                 vmax: str, 
+                 hill: str, 
+                 k_half_substrate: str, 
+                 ki: str):
+        self.vmax = vmax
+        self.hill = hill
+        self.k_half_substrate = k_half_substrate
+        self.ki = ki
+        self.substrate = substrate
+        self.inhibitor = inhibitor
+
+
+    def __call__(self, eval_dict):
+        vmax = eval_dict[self.vmax]
+        hill = eval_dict[self.hill]
+        k_half_substrate = eval_dict[self.k_half_substrate]
+        ki = eval_dict[self.ki]
+        substrate = eval_dict[self.substrate]
+        inhibitor = eval_dict[self.inhibitor]
+
+        # Calculate the numerator
+        numerator = vmax * ((substrate / k_half_substrate) ** hill)
+
+        # Calculate the denominator
+        denominator = 1 + ((substrate / k_half_substrate) ** hill) + (inhibitor / ki)
+
+        # Return the rate
+        return numerator / denominator
+    
+
+
+class Jax_Irrev_MM_Bi_w_Inhibition:
+    """Irreversible Michaelis-Menten Bi-substrate model with inhibition."""
+    def __init__(self, 
+                 substrate: str, 
+                 product: str, 
+                 vmax: str, 
+                 km_substrate1: str, 
+                 ki: str):
+        self.vmax = vmax
+        self.km_substrate1 = km_substrate1
+        self.ki = ki
+        self.substrate = substrate
+        self.product = product
+
+    def __call__(self, eval_dict):
+        vmax = eval_dict[self.vmax]
+        km_substrate1 = eval_dict[self.km_substrate1]
+        ki = eval_dict[self.ki]
+        substrate = eval_dict[self.substrate]
+        product = eval_dict[self.product]
+
+        # Calculate the rate
+        rate = (vmax * substrate * product) / (
+                (km_substrate1 * ki) + 
+                (km_substrate1 * substrate) * product)
+        
+        return rate
+    
+
+
+class Jax_Rev_BiBi_MM_w_Inhibition:
+    """Reversible Bi-Bi Michaelis-Menten model with inhibition."""
+    def __init__(self, 
+                 substrate1: str, 
+                 substrate2: str, 
+                 product1: str, 
+                 product2: str, 
+                 modifier: str, 
+                 vmax: str, 
+                 k_equilibrium: str, 
+                 km_substrate1: str, 
+                 km_substrate2: str, 
+                 km_product1: str, 
+                 km_product2: str, 
+                 ki_inhibitor: str):
+        self.vmax = vmax
+        self.k_equilibrium = k_equilibrium
+        self.km_substrate1 = km_substrate1
+        self.km_substrate2 = km_substrate2
+        self.km_product1 = km_product1
+        self.km_product2 = km_product2
+        self.ki_inhibitor = ki_inhibitor
+        self.substrate1 = substrate1
+        self.substrate2 = substrate2
+        self.product1 = product1
+        self.product2 = product2
+        self.modifier = modifier
+
+    def __call__(self, eval_dict):
+        vmax = eval_dict[self.vmax]
+        k_equilibrium = eval_dict[self.k_equilibrium]
+        km_substrate1 = eval_dict[self.km_substrate1]
+        km_substrate2 = eval_dict[self.km_substrate2]
+        km_product1 = eval_dict[self.km_product1]
+        km_product2 = eval_dict[self.km_product2]
+        ki_inhibitor = eval_dict[self.ki_inhibitor]
+        substrate1 = eval_dict[self.substrate1]
+        substrate2 = eval_dict[self.substrate2]
+        product1 = eval_dict[self.product1]
+        product2 = eval_dict[self.product2]
+        modifier = eval_dict[self.modifier]
+
+        # Calculate the denominator
+        denominator = (1 + substrate1 / km_substrate1 + product1 / km_product1) * \
+                      (1 + substrate2 / km_substrate2 + product2 / km_product2 + modifier / ki_inhibitor)
+
+        # Calculate the numerator
+        numerator = vmax * (substrate1 * substrate2 / (km_substrate1 * km_substrate2)) * \
+                    (1 - 1 / k_equilibrium * (product1 * product2 / (substrate1 * substrate2)))
+
+        # Calculate the rate
+        v = numerator / denominator
+
+        return v
