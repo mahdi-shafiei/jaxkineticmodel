@@ -163,10 +163,10 @@ class NeuralODE:
             diffrax.Kvaerno5(),
             t0=ts[0],
             t1=ts[-1],
-            dt0=ts[1] - ts[0],
+            dt0=1e-4,
             y0=y0,
             args=(global_params, local_params, self.time_dict),
-            stepsize_controller=diffrax.PIDController(rtol=self.rtol, atol=self.atol),
+            stepsize_controller=diffrax.PIDController(rtol=self.rtol, atol=self.atol,pcoeff=0.4,icoeff=0.3,dcoeff=0),
             saveat=diffrax.SaveAt(ts=ts),
             max_steps=self.max_steps
         )
