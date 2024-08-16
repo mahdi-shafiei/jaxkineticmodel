@@ -84,6 +84,22 @@ class Jax_Rev_UniUni_MM:
         return nominator / denominator
     
 
+class Jax_MM:
+    """Michaelis-Menten kinetic model."""
+    def __init__(self,substrate:str, vmax: str, km: str):
+        self.vmax = vmax
+        self.km = km
+        self.substrate=substrate
+
+
+    def __call__(self, eval_dict):
+        vmax = eval_dict[self.vmax]
+        km = eval_dict[self.km]
+        substrate = eval_dict[self.substrate]
+
+        return vmax * substrate / (substrate + km)
+
+
 class Jax_MM_Sink:
     """Just Irrev Michaelis-Menten, but objected as a specific class for sinks"""
     def __init__(self,substrate:str, v_sink: str, km_sink: str):
@@ -229,8 +245,6 @@ class Jax_Diffusion:
         return diffusion_rate
 
 
-import jax.numpy as jnp
-from jax import jit
 
 class Jax_MM_Ordered_Bi_Bi:
     """Ordered Bi-Bi Michaelis-Menten model with inhibitors."""
@@ -300,3 +314,5 @@ class Jax_MM_Ordered_Bi_Bi:
                        s2 * p1 * p2 / (ki_substrate1 * km_substrate2 * ki_product2))
 
         return numerator / denominator
+
+

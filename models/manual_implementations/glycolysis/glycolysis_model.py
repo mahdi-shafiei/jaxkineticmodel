@@ -1,36 +1,10 @@
 
-
-import sys
-
-sys.path.insert(0,"/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes")
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import diffrax
-import jax.numpy as jnp
-import jax
-import equinox as eqx
-import optax
-
-from source.kinetic_mechanisms.JaxKineticMechanisms import *
-from source.kinetic_mechanisms.JaxKineticMechanismsCustom import *
-from source.parameter_estimation.training import *
-
-jax.config.update("jax_enable_x64", True)
-
-
-#get time points
-glycolysis_data=pd.read_csv("datasets/VanHeerden_Glucose_Pulse/FF1_timeseries_format.csv",index_col=0).T
-time_points=[int(i) for i in glycolysis_data.index.to_list()]
-
-
-
 # %reload_ext autoreload
 from source.kinetic_mechanisms.JaxKineticMechanisms import  *
 from source.kinetic_mechanisms.JaxKineticMechanismsCustom import *
 ## set up a small term system for state variables
 # S=pd.DataFrame(np.array([[-1,1,2]]),index=['ICglucose'],columns=['v_GLT','v_HXK','v_NTH1'])
-
+import diffrax
 
 
 # S=pd.DataFrame(np.array([[1,-1]]),index=['ICglucose'],columns=['v_GLT','v_HXK'])
@@ -86,6 +60,9 @@ UGP_params={"flux_ugp":3.1000e-04}
 ETOH_params={"p_kETOHtransport" : 0.0328,"f_ETOH_e" : 0}
 
 
+
+
+
 params={**GLT_params,**HXK1_params,**NTH1_params,
         **NTH1_params,**PGI_params,**v_sinkG6P_params,
         **PGM1_params,**TPS1_params,**TPS2_params,
@@ -99,33 +76,10 @@ params={**GLT_params,**HXK1_params,**NTH1_params,
         **vsinkACE_params,**ETOH_params,**mitoNADH_params,**UGP_params} #remove v_sinkF16P
 print("n_parameters",len(params))
 
-#interpolate things we do not wish to model    
-coeffs_ECglucose=diffrax.backward_hermite_coefficients(ts=jnp.array(time_points),ys=jnp.array(glycolysis_data['ECglucose']),
-                                             fill_forward_nans_at_end=True)
-EC_glucose_interpolation_cubic=diffrax.CubicInterpolation(ts=jnp.array(time_points),coeffs=coeffs_ECglucose)
-                                                    #  ys=EC_glucose_missing)
 
-coeffs_ICtreh=diffrax.backward_hermite_coefficients(ts=jnp.array(time_points),ys=jnp.array(glycolysis_data['ICtreh']),
-                                             fill_forward_nans_at_end=True)
-ECtreh_interpolation_cubic=diffrax.CubicInterpolation(ts=jnp.array(time_points),coeffs=coeffs_ICtreh)                                                
+   
 
 
-coeffs_ICATP=diffrax.backward_hermite_coefficients(ts=jnp.array(time_points),ys=jnp.array(glycolysis_data['ICATP']),
-                                             fill_forward_nans_at_end=True)
-ICATP_interpolation_cubic=diffrax.CubicInterpolation(ts=jnp.array(time_points),coeffs=coeffs_ICATP)     
-
-coeffs_ICADP=diffrax.backward_hermite_coefficients(ts=jnp.array(time_points),ys=jnp.array(glycolysis_data['ICADP']),
-                                             fill_forward_nans_at_end=True)
-ICADP_interpolation_cubic=diffrax.CubicInterpolation(ts=jnp.array(time_points),coeffs=coeffs_ICADP)     
-
-coeffs_ICAMP=diffrax.backward_hermite_coefficients(ts=jnp.array(time_points),ys=jnp.array(glycolysis_data['ICAMP']),
-                                             fill_forward_nans_at_end=True)
-ICAMP_interpolation_cubic=diffrax.CubicInterpolation(ts=jnp.array(time_points),coeffs=coeffs_ICAMP)     
-
-
-coeffs_ICPEP=diffrax.backward_hermite_coefficients(ts=jnp.array(time_points),ys=jnp.array(glycolysis_data['ICPEP']),
-                                             fill_forward_nans_at_end=True)
-ICPEP_interpolation_cubic=diffrax.CubicInterpolation(ts=jnp.array(time_points),coeffs=coeffs_ICPEP)  
 
 ##
 v_GLT=Jax_Facilitated_Diffusion(substrate_extracellular='ECglucose',product_intracellular='ICglucose',vmax="p_GLT_VmGLT",km_internal='p_GLT_KmGLTGLCi',km_external='p_GLT_KmGLTGLCo')
@@ -230,7 +184,7 @@ class glycolysis():
         rate_GAPDH=v_GAPDH(eval_dict)
         rate_vsink3PGA=vsink3PGA(eval_dict)
         rate_HOR2=v_HOR2(eval_dict)
-        rate_vGLycT=v_GlycT(eval_dict)
+        # rate_vGLycT=v_GlycT(eval_dict)
         rate_PGM=v_PGM(eval_dict)
         rate_ENO=v_ENO(eval_dict)
         rate_vsinkPEP=vsinkPEP(eval_dict)
@@ -270,69 +224,7 @@ class glycolysis():
                           dICFBP,dICDHAP,dICG3P,
                           dICGlyc,dICGAP,dICBPG,dIC3PG,
                           dIC2PG,dICPEP,dICPYR,dICACE,dICETOH,dICNADH,dICNAD])#,dICPEP,dICPYR,dICACE])
-
-
-interpolated_mets={'ECglucose':EC_glucose_interpolation_cubic,
-                    'ICtreh':ECtreh_interpolation_cubic,
-                    "ICATP":ICATP_interpolation_cubic,
-                    "ICADP":ICADP_interpolation_cubic,
-                    "ICAMP":ICAMP_interpolation_cubic,
-                    "ICPEP":ICPEP_interpolation_cubic}
-
-
-
-
-
-y0_dict={'ICG1P':0.064568,
-         "ICT6P":0.093705,
-         "ICtreh":63.312040,
-         'ICglucose':0.196003,
-         'ICG6P':0.716385,
-         'ICF6P':0.202293,
-         "ICFBP":0.057001,
-         "ICDHAP":0.048571,
-         "ICG3P":0.020586,
-         "ICglyc":0.1,
-         "ICGAP":0.006213,
-         "ICBPG":0.0001,
-         "IC3PG":2.311074,
-         "IC2PG":0.297534,
-          "ICPEP":1.171415,
-          "ICPYR":0.152195,
-          "ICACE":0.04,
-          "ICETOH":10.0,
-          "ICNADH":0.0106,
-          "ICNAD":1.5794}
-        #  ICPYR":0.152195,
-        #  "ICACE":0.04}
-
-
-y0=jnp.array(list(y0_dict.values()))
-metabolite_names=list(y0_dict.keys())
-
-glycolyse=glycolysis(interpolated_mets,metabolite_names)
-term=diffrax.ODETerm(glycolyse)
-
-ts=jnp.linspace(0,400,1000)
-
-solver = diffrax.Kvaerno5()
-saveat=diffrax.SaveAt(ts=ts)
-stepsize_controller = diffrax.PIDController(rtol=1e-6, atol=1e-9)
-
-
-sol = diffrax.diffeqsolve(term, solver, t0=ts[0], t1=ts[-1], 
-                          dt0=0.01, 
-                          y0=y0,
-                          saveat=saveat,
-                            stepsize_controller=stepsize_controller,
-                            args=params,
-                            max_steps=200000)
-
-
-
-# log_loss_func=jax.jit(create_log_params_log_loss_func(JaxKmodel))
-
-
+    
 
 class NeuralODE():
     def __init__(self,func):
@@ -356,99 +248,3 @@ class NeuralODE():
         max_steps=self.max_steps)
 
         return solution.ys
-
-
-glycolyse=jax.jit(NeuralODE(glycolysis(interpolated_mets,metabolite_names)))
-
-
-def create_log_params_means_centered_loss_func(model,to_include:list):
-    """Loss function for log transformed parameters. 
-    We do a simple input scaling using the mean per state variable (we add 1 everywhere to prevent division by zero) """
-    def loss_func(params,ts,ys):
-
-        params=exponentiate_parameters(params)
-        mask=~jnp.isnan(jnp.array(ys))
-        ys=jnp.atleast_2d(ys)
-        y0=ys[0,:]
-        y_pred=model(ts,y0,params)
-        ys = jnp.where(mask, ys, 0)
-
-        ys=ys+1
-        y_pred=y_pred+1
-        scale=jnp.mean(ys,axis=0)
-
-        ys=ys/scale
-        y_pred=y_pred/scale
-
-        y_pred = jnp.where(mask, y_pred, 0)
-
-
-            
-        ys=ys[:,to_include]
-        y_pred=y_pred[:,to_include]
-        # print(ys,y_pred)
-        non_nan_count = jnp.sum(mask)
-
-        loss = jnp.sum((y_pred - ys) ** 2) / non_nan_count
-        return loss
-    return loss_func
-
-
-
-
-log_loss_func=jax.jit(create_log_params_means_centered_loss_func(glycolyse,[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]))
-# loss_func=jax.jit(create_loss_func(glycolyse))
-
-
-@jax.jit
-def update_log(opt_state,params,ts,ys):
-    """Update rule for the gradients for log-transformed parameters. Can only be applied
-    to nonnegative parameters"""
-    log_params=log_transform_parameters(params)
-    loss=log_loss_func(log_params,ts,ys)
-    # print(loss)
-    grads=jax.jit(jax.grad(log_loss_func,0))(log_params,ts,ys) #loss w.r.t. parameters
-    updates,opt_state=optimizer.update(grads,opt_state)
-    #we perform updates in log space, but only return params in lin space
-    log_params = optax.apply_updates(log_params, updates)
-    lin_params = exponentiate_parameters(log_params) 
-    return opt_state,lin_params,loss,grads
-
-glycolysis_data.loc["0",'ICglyc']=0.01
-glycolysis_data.loc["0",'ICBPG']=0.0001
-glycolysis_data.loc["0",'ICNAD']=1.5794
-glycolysis_data.loc["0",'ICNADH']=0.0106
-glycolysis_data.loc["0","ICACE"]=0.04
-glycolysis_data.loc["0","ICETOH"]=10.0
-
-dataset=glycolysis_data[metabolite_names]
-dataset=jnp.array(dataset)
-
-
-
-
-lr=1e-3
-params_init=params
-optimizer = optax.adabelief(lr)
-clip_by_global=optax.clip_by_global_norm(np.log(4))
-optimizer = optax.chain(optimizer,clip_by_global)
-opt_state = optimizer.init(params_init)
-
-loss_per_iter=[]
-print("round 3")
-params_per_iter=[]
-# alpha1=np.linspace(0.2,1.0,2500)
-for step in range(5000):
-    opt_state,params_init,loss,grads=update_log(opt_state,params_init,time_points,
-                                                jnp.array(glycolysis_data[metabolite_names]))
-    
-    loss_per_iter.append(float(loss))
-    if step% 50==0:
-        
-#           # Scale step to range [0, 1]
-        params_per_iter.append(params_init)
-        print(f"global norm: {global_norm(grads)}")
-        print(f"Step {step}, Loss {loss}")
-
-
-

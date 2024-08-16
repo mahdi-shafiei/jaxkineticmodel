@@ -185,8 +185,12 @@ class Jax_Rev_BiBi_MM_w_Activation:
                       (1 + substrate2 / km_substrate2 + product2 / km_product2) * \
                       (1 + modifier[0] / ka1 + modifier[1] / ka2 + modifier[2] / ka3)
 
-        numerator = vmax * (substrate1 * substrate2 / (km_substrate1 * km_substrate2)) * \
-                    (1 - 1 / k_equilibrium * (product1 *product2/ (substrate1 * substrate2)))
+
+        numerator = (vmax / (km_substrate1 * km_substrate2)) * \
+                    (substrate1 * substrate2 - (product1 * product2 / k_equilibrium))
+
+        # numerator = vmax * (substrate1 * substrate2 / (km_substrate1 * km_substrate2)) * \
+        #             (1 - 1 / k_equilibrium * (product1 *product2/ (substrate1 * substrate2)))
         return numerator / denominator
 
 
@@ -447,3 +451,73 @@ class Jax_Rev_BiBi_MM_w_Inhibition:
         v = numerator / denominator
 
         return v
+    
+
+class Jax_ADH_Reaction:
+    """JAX class for the ADH reaction with detailed rate expression."""
+    
+    def __init__(self, 
+                 NAD:str,
+                 ETOH:str,
+                 NADH:str,
+                 ACE:str,
+                 vmax: str, k_equilibrium: str, 
+                 km_substrate1: str, km_substrate2: str,
+                 km_product1: str, km_product2: str, 
+                 ki_substrate1: str, ki_substrate2: str, 
+                 ki_product1: str, ki_product2: str, 
+                 exprs_cor: str):
+        self.vmax = vmax
+        self.k_equilibrium = k_equilibrium
+        self.km_substrate1 = km_substrate1
+        self.km_substrate2 = km_substrate2
+        self.km_product1 = km_product1
+        self.km_product2 = km_product2
+        self.ki_substrate1 = ki_substrate1
+        self.ki_substrate2 = ki_substrate2
+        self.ki_product1 = ki_product1
+        self.ki_product2 = ki_product2
+        self.exprs_cor = exprs_cor
+        self.ETOH=ETOH
+        self.NADH=NADH
+        self.NAD=NAD
+        self.ACE=ACE
+    
+    def __call__(self, eval_dict):
+        vmax = eval_dict[self.vmax]
+        k_equilibrium = eval_dict[self.k_equilibrium]
+        km_substrate1 = eval_dict[self.km_substrate1]
+        km_substrate2 = eval_dict[self.km_substrate2]
+        km_product1 = eval_dict[self.km_product1]
+        km_product2 = eval_dict[self.km_product2]
+        ki_substrate1 = eval_dict[self.ki_substrate1]
+        ki_substrate2 = eval_dict[self.ki_substrate2]
+        ki_product1 = eval_dict[self.ki_product1]
+        ki_product2 = eval_dict[self.ki_product2]
+        exprs_cor = eval_dict[self.exprs_cor]
+        
+        NAD = eval_dict.get(self.NAD)
+        ETOH = eval_dict.get(self.ETOH)
+        NADH = eval_dict.get(self.NADH)
+        ACE = eval_dict[self.ACE]
+        
+        # Numerator calculation
+        numerator = (vmax / (ki_substrate1 * km_substrate2)) * \
+                    ((NAD * ETOH - NADH * ACE) / k_equilibrium)
+        
+        # Denominator calculation
+        term1 = 1 + NAD / ki_substrate1
+        term2 = km_substrate1 * ETOH / (ki_substrate1 * km_substrate2)
+        term3 = km_product2 * ACE / (ki_substrate1 * km_product1)
+        term4 = NADH / ki_product2
+        term5 = NAD * ETOH / (ki_substrate1 * km_substrate2)
+        term6 = km_product2 * NAD * ACE / (ki_substrate1 * ki_product2 * km_product1)
+        term7 = km_substrate1 * ETOH * NADH / (ki_substrate1 * km_substrate2 * ki_product2)
+        term8 = NADH * ACE / (ki_product2 * km_product1)
+        term9 = NAD * ETOH * ACE / (ki_substrate1 * km_substrate2 * ki_product1)
+        term10 = ETOH * NADH * ACE / (ki_substrate1 * km_substrate2 * ki_product2)
+        
+        denominator = (term1 + term2 + term3 + term4 + term5 + term6 + term7 +
+                       term8 + term9 + term10)
+        
+        return -exprs_cor*(numerator / denominator)
