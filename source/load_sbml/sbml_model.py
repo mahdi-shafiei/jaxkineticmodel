@@ -373,7 +373,7 @@ def get_lambda_function_dictionary(model):
         id = function.getId()
         math = function.getMath()
         n_nodes = math.getNumChildren()
-        string_math = libsbml.formulaToL3String(math.getChild(n_nodes - 1))
+        string_math = replace_piecewise(libsbml.formulaToL3String(math.getChild(n_nodes - 1)))
         symbols = []
         leaf_nodes = []
         sp_symbols = {}
@@ -389,6 +389,61 @@ def get_lambda_function_dictionary(model):
     return functional_dict
 
 
+def replace_piecewise(formula):
+    """Replace libsbml piecewise with sympy piecewise."""
+    # Code taken from: https://github.com/matthiaskoenig/sbmlsim/blob/develop/src/sbmlsim/combine/mathml.py
+    # FIXME This approach is not robust (or very Pythonic). Rewrite with
+    #  regular expressions, or by iterating through the AST.
+    while True:
+        index = formula.find("piecewise(")
+        if index == -1:
+            break
+
+        # process piecewise
+        search_idx = index + 9
+
+        # init counters
+        bracket_open = 0
+        pieces = []
+        piece_chars = []
+
+        while search_idx < len(formula):
+            c = formula[search_idx]
+            if c == ",":
+                if bracket_open == 1:
+                    pieces.append("".join(piece_chars).strip())
+                    piece_chars = []
+            else:
+                if c == "(":
+                    if bracket_open != 0:
+                        piece_chars.append(c)
+                    bracket_open += 1
+                elif c == ")":
+                    if bracket_open != 1:
+                        piece_chars.append(c)
+                    bracket_open -= 1
+                else:
+                    piece_chars.append(c)
+
+            if bracket_open == 0:
+                pieces.append("".join(piece_chars).strip())
+                break
+
+            # next character
+            search_idx += 1
+
+        # find end index
+        if (len(pieces) % 2) == 1:
+            pieces.append("True")  # last condition is True
+        sympy_pieces = []
+        for k in range(0, int(len(pieces) / 2)):
+            sympy_pieces.append(f"({pieces[2*k]}, {pieces[2*k+1]})")
+        new_str = f"Piecewise({','.join(sympy_pieces)})"
+        formula = formula.replace(formula[index : search_idx + 1], new_str)
+
+    return formula
+
+
 def get_assignment_rules_dictionary(model):
     """Get rules that assign to variables. I did not lambdify here"""
     assignment_dict = {}
@@ -396,7 +451,7 @@ def get_assignment_rules_dictionary(model):
         id = rule.getId()
         math = rule.getMath()
         leaf_nodes = []
-        string_math = libsbml.formulaToL3String(math)
+        string_math = replace_piecewise(libsbml.formulaToL3String(math))
 
         math_nodes = get_leaf_nodes(math, leaf_nodes=leaf_nodes)
         sp_symbols = {node: sp.Symbol(node) for node in math_nodes}
@@ -443,9 +498,9 @@ def get_initial_assignments(model,global_parameters,assignment_rules,y0):
     initial_assignments={}
     for init_assign in model.getListOfInitialAssignments():
         if init_assign.id in y0.keys():
-            math=init_assign.getMath()
-            math_string=libsbml.formulaToL3String(math)
-            sympy_expr=sp.sympify(math_string,locals={**assignment_rules,**global_parameters})
+            math = init_assign.getMath()
+            math_string = replace_piecewise(libsbml.formulaToL3String(math))
+            sympy_expr = sp.sympify(math_string, locals={**assignment_rules, **global_parameters})
             # sympy_expr=sympy_expr.subs(global_parameters)
             if type(sympy_expr)!=float:
                 sympy_expr=sympy_expr.subs(global_parameters)
