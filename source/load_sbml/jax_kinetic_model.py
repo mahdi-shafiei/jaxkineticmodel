@@ -90,6 +90,7 @@ class JaxKineticModel:
         """I explicitly add params to call for gradient calculations. Find out whether this is actually necessary"""
         params, local_params, time_dict = args
         time_dict = time_dict(t)
+        
 
         # @partial(jax.jit, static_argnums=2)
 

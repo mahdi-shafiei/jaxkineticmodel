@@ -156,6 +156,7 @@ class SBMLModel:
                                     'boundary_assignments': assignments_rules}  # add functionality
 
             vi_rate_law = get_string_expression(reaction)
+            # print(vi_rate_law)
             vi, filtered_dict = sympify_lambidify_and_jit_equation(vi_rate_law, nested_dictionary_vi)
 
             v[reaction.id] = vi  # the jitted equation
@@ -291,6 +292,7 @@ def sympify_lambidify_and_jit_equation(equation, nested_local_dict):
     equation = equation.subs(assignment_rules)
     equation = equation.subs(compartments)
     equation = equation.subs(boundaries)
+    equation = equation.subs({"pi":sp.pi})
 
     # free symbols are used for lambdifying
     free_symbols = list(equation.free_symbols)
@@ -305,6 +307,7 @@ def sympify_lambidify_and_jit_equation(equation, nested_local_dict):
 
     equation = sp.lambdify((filtered_dict.values()), equation, "jax")
     equation = jax.jit(equation)
+
 
     return equation, filtered_dict
 

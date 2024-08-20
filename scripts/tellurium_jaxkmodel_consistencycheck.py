@@ -6,16 +6,19 @@ import jax
 import numpy as np
 import equinox as eqx
 import matplotlib.pyplot as plt
-
+import sys
 from diffrax import diffeqsolve, ODETerm, Dopri5, SaveAt
-
+sys.path.append('/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes')
 from functools import partial
 
 import libsbml
-from jax_kinetic_model import NeuralODE,create_fluxes_v
-import os
+import sys, os
+sys.path.append('/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes')
+from source.load_sbml.sbml_load import *
+from source.load_sbml.sbml_model import SBMLModel
 
-from sbml_load import *
+
+from source.load_sbml.sbml_load import *
 
 import tellurium as te
 
@@ -29,7 +32,7 @@ def calc_euclidean(actual, predic):
 
 
 
-pathname = "jax_implementation/developing_sbml/sbml_models/"
+pathname = "models/sbml_models/"
 files = os.listdir(pathname)
 sbml_files = []
 for file in files:
@@ -48,30 +51,19 @@ for sbml_file in sbml_files:
     print(sbml_file)
     file_path = pathname + sbml_file
     try:
+        model = SBMLModel(file_path)
+        S=model._get_stoichiometric_matrix()
+        JaxKmodel = model.get_kinetic_model()
         # simulate for jax kinetic model
-        model = load_sbml_model(file_path=file_path)
-        params=get_global_parameters(model)
-        assignments_rules = get_assignment_rules_dictionary(model)
-
-        S = get_stoichiometric_matrix(model)
-        y0 = get_initial_conditions(model)
-        y0=overwrite_init_conditions_with_init_assignments(model,params,assignments_rules,y0)
-
-        y0 = jnp.array(list(y0.values()))
-
-        ##recreate create_fluxes, but then for jax
-        v, v_symbol_dictionaries, local_params = create_fluxes_v(model)
-        met_point_dict = construct_flux_pointer_dictionary(v_symbol_dictionaries, list(S.columns), list(S.index))
 
 
-        JaxKmodel = NeuralODE(v=v, S=S,
-                              met_point_dict=met_point_dict,
-                              v_symbol_dictionaries=v_symbol_dictionaries)
+
         JaxKmodel = jax.jit(JaxKmodel)
 
         # #parameters are not yet defined
-        
-        params = {**local_params, **params}
+        params = get_global_parameters(model.model)
+        params = {**model.local_params, **params}
+        # params = {**local_params, **params}
 
 
         tellurium_model = te.loadSBMLModel(file_path)
@@ -79,7 +71,7 @@ for sbml_file in sbml_files:
 
 
         ts = jnp.array(sol_tellurium['time'])
-        ys = JaxKmodel(ts=ts, y0=y0, params=params)
+        ys = JaxKmodel(ts=ts, y0=model.y0, params=params)
         ys=pd.DataFrame(ys,columns=S.index)
         
 
@@ -121,7 +113,7 @@ for sbml_file in sbml_files:
             else:
                 print("numerical solve is not identical: mse="+str(mse))
                 discrepancy_counter+=1
-                # os.rename(file_path, pathname + "discrepancies/" + sbml_file)
+                os.rename(file_path, pathname + "discrepancies/" + sbml_file)
         else:
             print("discrepancy because of S in " + sbml_file)
             discrepancy_counter+=1
@@ -135,7 +127,7 @@ for sbml_file in sbml_files:
     except Exception as e:
         logger.error(f"An exception of type {type(e)} was raised")
         logger.exception(e)
-        # os.rename(file_path, pathname + "failing_models/" + sbml_file)
+        os.rename(file_path, pathname + "failing_models/" + sbml_file)
         failing_models_counter+=1
 
 print("failing_models:",failing_models_counter)

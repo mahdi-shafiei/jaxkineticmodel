@@ -230,69 +230,70 @@ def get_reaction_symbols_dict(eval_dict):
     return symbol_dict
 
 
-# we want the output to be a list v, which contains jitted function
-def sympify_lambidify_and_jit_equation(equation, nested_local_dict):
-    """Sympifies, lambdifies, and then jits a string rate law
-    "equation: the string rate law equation
-    nested_local_dict: a dictionary having dictionaries of
-      global parameters,local parameters, compartments, and boundary conditions
+# # we want the output to be a list v, which contains jitted function
+# def sympify_lambidify_and_jit_equation(equation, nested_local_dict):
+#     """Sympifies, lambdifies, and then jits a string rate law
+#     "equation: the string rate law equation
+#     nested_local_dict: a dictionary having dictionaries of
+#       global parameters,local parameters, compartments, and boundary conditions
     
-      #returns
-      the jitted equation
-      a filtered dictionary. This will be used to construct the flux_pointer_dictionary. 
+#       #returns
+#       the jitted equation
+#       a filtered dictionary. This will be used to construct the flux_pointer_dictionary. 
     
-    """
-    # unpacking the nested_local_dictionary, with global and local parameters symbols
-    globals = get_reaction_symbols_dict(nested_local_dict['globals'])
-    locals = get_reaction_symbols_dict(nested_local_dict['locals'])
-    species = get_reaction_symbols_dict(nested_local_dict['species'])
-    boundaries = nested_local_dict['boundary']
-    lambda_funcs = nested_local_dict['lambda_functions']
+#     """
+#     # unpacking the nested_local_dictionary, with global and local parameters symbols
+#     globals = get_reaction_symbols_dict(nested_local_dict['globals'])
+#     locals = get_reaction_symbols_dict(nested_local_dict['locals'])
+#     species = get_reaction_symbols_dict(nested_local_dict['species'])
+#     boundaries = nested_local_dict['boundary']
+#     lambda_funcs = nested_local_dict['lambda_functions']
 
-    assignment_rules = nested_local_dict['boundary_assignments']
-    rate_rules=nested_local_dict['rate_rules']
-    event_rules=nested_local_dict['event_rules']
+#     assignment_rules = nested_local_dict['boundary_assignments']
+#     rate_rules=nested_local_dict['rate_rules']
+#     event_rules=nested_local_dict['event_rules']
 
 
-    compartments = nested_local_dict['compartments']  # learnable
-    local_dict = {**species, **globals, **locals}
-
-    
-    # print("input equation:",equation)
-    equation = sp.sympify(equation, locals={**local_dict,
-                                            **assignment_rules,
-                                            **lambda_funcs,**rate_rules,**event_rules})
-    # print("after sympifying",equation)
-    # these are filled in before compiling
-
-    # print("assignment",assignment_rules)
+#     compartments = nested_local_dict['compartments']  # learnable
+#     local_dict = {**species, **globals, **locals}
 
     
-    # print("assignment eq",equation)
-    equation = equation.subs(compartments)
-    equation = equation.subs(boundaries)
+#     # print("input equation:",equation)
+#     equation = sp.sympify(equation, locals={**local_dict,
+#                                             **assignment_rules,
+#                                             **lambda_funcs,**rate_rules,**event_rules})
+#     # print("after sympifying",equation)
+#     # these are filled in before compiling
+
+#     # print("assignment",assignment_rules)
+
     
-    # print("c",equation)
-    equation=equation.subs(event_rules)
-    equation = equation.subs(assignment_rules)
-
-    # print("output after substitution",equation)
+#     # print("assignment eq",equation)
+#     equation = equation.subs(compartments)
+#     equation = equation.subs(boundaries)
     
-    # free symbols are used for lambdifying
-    free_symbols = list(equation.free_symbols)
-    # print(free_symbols)
-    filtered_dict = {key: value for key, value in local_dict.items() if value in free_symbols or key in locals}
+#     # print("c",equation)
+#     equation=equation.subs(event_rules)
+#     equation = equation.subs(assignment_rules)
+#     equation=equation.subs({"pi":3.14159265359})
+#     print(equation)
+#     # print("output after substitution",equation)
+    
+#     # free symbols are used for lambdifying
+#     free_symbols = list(equation.free_symbols)
+#     # print(free_symbols)
+#     filtered_dict = {key: value for key, value in local_dict.items() if value in free_symbols or key in locals}
 
-    # perhaps a bit hacky, but some sbml models have symbols that are
-    # predefined
-    for symbol in free_symbols:
-        if str(symbol) == "time":
-            filtered_dict['time'] = sp.Symbol('time')
+#     # perhaps a bit hacky, but some sbml models have symbols that are
+#     # predefined
+#     for symbol in free_symbols:
+#         if str(symbol) == "time":
+#             filtered_dict['time'] = sp.Symbol('time')
 
-    equation = sp.lambdify((filtered_dict.values()), equation, "jax")
-    equation = jax.jit(equation)
+#     equation = sp.lambdify((filtered_dict.values()), equation, "jax")
+#     equation = jax.jit(equation)
 
-    return equation, filtered_dict
+#     return equation, filtered_dict
 
 
 
