@@ -121,11 +121,11 @@ def save_parameter_initializations(model_name,dataset,id):
     return dataset
 
 
-def save_optimized_params(model_name,result,id):
+def save_optimized_params(model_name,result,id,output_filedir):
     """Saves parameter initializations in folder. Requires setting id string"""
     model_name=model_name.replace(".xml","")
     model_name=model_name.replace(".sbml","")
-    output_filedir="results/"+model_name+"/"
+    output_filedir=output_filedir+model_name+"/"
     if not os.path.exists(output_filedir):
         os.mkdir(output_filedir)
         filename=output_filedir+model_name+"_parameters_"+"id_"+id+".csv"
@@ -138,11 +138,11 @@ def save_optimized_params(model_name,result,id):
 
 
 
-def save_losses(model_name,result,id):
+def save_losses(model_name,result,id,output_filedir):
     """Saves parameter initializations in folder. Requires setting id string"""
     model_name=model_name.replace(".xml","")
     model_name=model_name.replace(".sbml","")
-    output_filedir="results/"+model_name+"/"
+    output_filedir=output_filedir+model_name+"/"
     if not os.path.exists(output_filedir):
         os.mkdir(output_filedir)
         filename=output_filedir+model_name+"_losses_"+"id_"+id+".csv"
@@ -153,11 +153,11 @@ def save_losses(model_name,result,id):
         result.to_csv(filename)
     return result
 
-def save_norms(model_name,result,id):
+def save_norms(model_name,result,id,output_filedir):
     """Saves parameter initializations in folder. Requires setting id string"""
     model_name=model_name.replace(".xml","")
     model_name=model_name.replace(".sbml","")
-    output_filedir="results/"+model_name+"/"
+    output_filedir=output_filedir+model_name+"/"
     if not os.path.exists(output_filedir):
         os.mkdir(output_filedir)
         filename=output_filedir+model_name+"_norms_"+"id_"+id+".csv"

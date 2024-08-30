@@ -3,6 +3,7 @@ import os
 import sys, os
 sys.path.append('/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes')
 # sys.path.append('/home/plent/Documenten/Gitlab/NeuralODEs')
+sys.path.append('/tudelft.net/staff-bulk/ewi/insy/DBL/plent/NeuralODEs/jax_neural_odes')
 from source.load_sbml.sbml_load import *
 from source.load_sbml.sbml_model import SBMLModel
 jax.config.update("jax_enable_x64", True)
@@ -21,8 +22,9 @@ def main():
     parser.add_argument('-t_end',"--final_time_point",type=float,required=True,help="Final timepoint for evaluation")
     parser.add_argument('-s',"--n_parameters",type=int,required=True,help="number of parameters to initialize")
     parser.add_argument('-i',"--id_run",type=int,required=True,help="identifier for when doing different runs")
+    parser.add_argument('-b',"--bounds",type=int,required=True,help="the bounds of the latin hypercube given [1.1,10,50,100]")
     # parser.add_argument('-d',"--data",type=str,required=True,help="time series data (NxT dataframe) used to fit")
-    # parser.add_argument('-o',"--output_dir",type=str,required=True,help="output directory for loss per iteration and the optimized parameters")
+    parser.add_argument('-o',"--output_dir",type=str,required=True,help="output directory for loss per iteration and the optimized parameters")
     # model_name="Raia_CancerResearch.xml"
     
     args=parser.parse_args()
@@ -32,12 +34,12 @@ def main():
     filepath="models/sbml_models/working_models/"+model_name
     lr=1e-3
     N=args.n_parameters
-    lb=0.01
-    ub=100
+    lb=1/args.bounds
+    ub=args.bounds
     # id="lhs_"+"N="+str(N)+"run_1"
     run_id="run_"+str(args.id_run)
-    id="lhs_"+"N="+str(N)+run_id+"_log_update"
-    loss_threshold=1e-3
+    id="lhs_"+"N="+str(N)+run_id+"bounds_"+str(args.bounds)
+    loss_threshold=1e-5
 
     ts=jnp.linspace(0,args.final_time_point,10)
 
@@ -58,7 +60,7 @@ def main():
     save_parameter_initializations(model_name,lhs_parameter_initializations,id=id)
 
 
-    ### If time
+    ### Load the model, jit it and and run
     model=SBMLModel(filepath)
     JaxKmodel = model.get_kinetic_model()
     JaxKmodel = jax.jit(JaxKmodel)
@@ -68,15 +70,10 @@ def main():
 
     print("# params",len(params))
 
-    # log_loss_func=jax.jit(create_log_params_log_loss_func(JaxKmodel))
+
     log_loss_func=jax.jit(create_log_params_means_centered_loss_func(JaxKmodel))
     loss_func=jax.jit(create_loss_func(JaxKmodel))
 
-
-
-
-    # print("N points sampled",np.shape(lhs_parameter_initializations)[0])
-    # save_parameter_initializations(model_name,lhs_parameter_initializations,id=id)
 
     @jax.jit
     def update(opt_state,params,ts,ys):
@@ -117,7 +114,7 @@ def main():
         params_init=lhs_parameter_initializations.iloc[init,:].to_dict()
         optimizer = optax.adabelief(lr)
 
-        clip_by_global=optax.clip_by_global_norm(np.log(4))
+        clip_by_global=optax.clip_by_global_norm(np.log(5))
         optimizer = optax.chain(optimizer,clip_by_global)
         opt_state = optimizer.init(params_init)
 
@@ -126,9 +123,9 @@ def main():
         gradient_norms=[]
 
         try:
-            for step in range(3000):
+            for step in range(2000):
                 opt_state,params_init,loss,grads=update_log(opt_state,params_init,ts,jnp.array(dataset))
-                # opt_state,params_init,loss,grads=update(opt_state,params_init,ts,jnp.array(dataset))
+
 
                 gradient_norms.append(global_norm(grads))
                 loss_per_iter.append(loss)
@@ -142,7 +139,7 @@ def main():
                     break
 
 
-                if step% 10==0:
+                if step% 50==0:
                     # print(f"global norm: {global_norm(grads)}")
                     print(f"Step {step}, Loss {loss}")
 
@@ -173,11 +170,11 @@ def main():
     # norms=pd.DataFrame(global_norm_dict)
     norms = pd.DataFrame({ key:pd.Series(value) for key, value in global_norm_dict.items() })
 
+    
 
-
-    save_losses(model_name,losses,id=id)
-    save_optimized_params(model_name,optimized_parameters,id=id)
-    save_norms(model_name,norms,id=id)
+    save_losses(model_name,losses,id=id,output_filedir=args.output_dir)
+    save_optimized_params(model_name,optimized_parameters,id=id,output_filedir=args.output_dir)
+    save_norms(model_name,norms,id=id,output_filedir=args.output_dir)
 
 if __name__=="__main__":
     main()
