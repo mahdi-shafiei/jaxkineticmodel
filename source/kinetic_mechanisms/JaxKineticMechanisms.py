@@ -316,3 +316,14 @@ class Jax_MM_Ordered_Bi_Bi:
         return numerator / denominator
 
 
+class Jax_MA_Irrev:
+    """Mass-action irreversible kinetic model."""
+    def __init__(self, substrate: str, k_fwd: str):
+        self.k_fwd = k_fwd
+        self.substrate = substrate
+
+    def __call__(self, eval_dict):
+        k_fwd = eval_dict[self.k_fwd]
+        substrate = eval_dict[self.substrate]
+
+        return k_fwd * substrate

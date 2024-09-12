@@ -521,3 +521,89 @@ class Jax_ADH_Reaction:
                        term8 + term9 + term10)
         
         return -exprs_cor*(numerator / denominator)
+    
+
+
+class Jax_ATPase:
+    """
+    JAX class to represent ATPase reaction with a potentially learnable ATPase ratio.
+    """
+    def __init__(self, substrate: str, product: str, ATPase_ratio: str):
+        self.substrate = substrate
+        self.product = product
+        self.ATPase_ratio = ATPase_ratio
+
+    def __call__(self, eval_dict):
+        # Fetch the relevant values from eval_dict
+        substrate = eval_dict[self.substrate]
+        product = eval_dict[self.product]
+        ATPase_ratio = eval_dict[self.ATPase_ratio]
+
+        # Compute the reaction rate
+        rate = ATPase_ratio * substrate / product
+
+        return rate
+    
+
+
+class Jax_MA_Rev_Bi:
+    """Mass-action reversible bi-bi kinetic model."""
+    def __init__(self,substrate1:str,substrate2:str,
+                  product1:str,product2:str,
+                    k_equilibrium: str, k_fwd: str):
+        self.k_equilibrium = k_equilibrium
+        self.k_fwd = k_fwd
+        self.substrate1=substrate1
+        self.substrate2=substrate2
+        self.product1=product1
+        self.product2=product2
+
+
+    def __call__(self, eval_dict):
+        k_equilibrium = eval_dict[self.k_equilibrium]
+        k_fwd = eval_dict[self.k_fwd]
+        substrate1 = eval_dict[self.substrate1]  # Assumed to be a list with two elements
+        substrate2=eval_dict[self.substrate2]
+        product1 = eval_dict[self.product1]  # Assumed to be a list with two elements
+        product2=eval_dict[self.product2]
+
+        return k_fwd * (substrate1*substrate2 - product1 * product2 / k_equilibrium)
+    
+
+class Jax_MA_Rev:
+    """Mass-action reversible kinetic model."""
+    def __init__(self, substrate: str, k: str, steady_state_substrate: str):
+        self.k = k
+        self.steady_state_substrate = steady_state_substrate
+        self.substrate = substrate
+
+    def __call__(self, eval_dict):
+        k = eval_dict[self.k]
+        steady_state_substrate = eval_dict[self.steady_state_substrate]
+        substrate = eval_dict[self.substrate]
+
+        return k * (steady_state_substrate - substrate)
+    
+
+
+class Jax_Amd1:
+    """Amd1 kinetic model."""
+    def __init__(self, substrate: str, product: str, modifier: str, vmax: str, k50: str, ki: str, k_atp: str):
+        self.vmax = vmax
+        self.k50 = k50
+        self.ki = ki
+        self.k_atp = k_atp
+        self.substrate = substrate
+        self.product = product
+        self.modifier = modifier
+
+    def __call__(self, eval_dict):
+        vmax = eval_dict[self.vmax]
+        k50 = eval_dict[self.k50]
+        ki = eval_dict[self.ki]
+        k_atp = eval_dict[self.k_atp]
+        substrate = eval_dict[self.substrate]  # AMP
+        product = eval_dict[self.product]  # ATP
+        modifier = eval_dict[self.modifier]  # PI
+
+        return vmax * substrate / (k50 * (1 + modifier / ki) / (product / k_atp) + substrate)
