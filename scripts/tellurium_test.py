@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 filepath = (
-    "models/sbml_models/working_models/Borghans_BiophysChem1997.xml"
+    "models/sbml_models/discrepancies/Lucarelli_CellSystems_2018.xml"
     # "working_models/Bertozzi2020.xml"
 )
 
@@ -20,7 +20,7 @@ plt.show()
 
 
 filepath = (
-    "models/sbml_models/working_models/Crauste_CellSystems2017.xml"
+    "models/sbml_models/discrepancies/Lucarelli_CellSystems_2018.xml"
     # "working_models/Bertozzi2020.xml"
 )
 
@@ -32,4 +32,3 @@ sol=model.simulate(0,15,1000)
 
 
 model.plot()
-plt.show()

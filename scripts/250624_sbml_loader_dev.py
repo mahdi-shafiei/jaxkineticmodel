@@ -17,7 +17,7 @@ logger.debug('Loading SBML model')
 
 # a simple sbml model
 filepath = (
-      "models/sbml_models/working_models/Zheng_PNAS2012.xml"
+      "models/sbml_models/discrepancies/Lucarelli_CellSystems_2018.xml"
       # "models/sbml_models/Novak2022.xml"
     #   "models/sbml_models/discrepancies/BIOMD0000000160_url.xml"
     # "models/sbml_models/failing_models/Beer_MolBioSystems2014.xml"
@@ -46,7 +46,7 @@ JaxKmodel = jax.jit(JaxKmodel)
 # # Simulation
 # ###
 
-ts = jnp.linspace(0,100,200)
+ts = jnp.linspace(0,10000,200)
 # #parameters are not yet defined
 params = get_global_parameters(model.model)
 params = {**model.local_params, **params}
@@ -75,7 +75,7 @@ print(np.shape(ys))
 #optional visual comparison for tellurium
 import tellurium as te
 model = te.loadSBMLModel(filepath)
-sol_tell = model.simulate(0, 100, 2000)
+sol_tell = model.simulate(0, 10000, 2000)
 time_tell=sol_tell['time']
 colnames=sol_tell.colnames
 print(np.shape(sol_tell))
