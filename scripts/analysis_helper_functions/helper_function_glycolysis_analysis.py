@@ -6,7 +6,6 @@ import jax.numpy as jnp
 from models.manual_implementations.glycolysis.glycolysis_model import *
 
 
-## helper functions
 def overwrite_y0_dict(y0_dict,dataset):
     """Overwrites the y0 dictionary with the values from the dataset"""
     ynew_dict=y0_dict.copy()
@@ -14,10 +13,10 @@ def overwrite_y0_dict(y0_dict,dataset):
 
     for met in ynew_dict.keys():
         if met in dataset_iv.keys():
-            ynew_dict[met]=dataset_iv[met]
+            if not np.isnan(dataset_iv[met]):
+                ynew_dict[met]=dataset_iv[met]
         
     return ynew_dict
-
 
 def prepare_glycolysis_model(dilution_rate,y0_dict,data_type="glucose_pulse"):
     """"""
@@ -41,6 +40,13 @@ def prepare_glycolysis_model(dilution_rate,y0_dict,data_type="glucose_pulse"):
                                                 fill_forward_nans_at_end=True)
         EC_glucose_interpolation_cubic=diffrax.CubicInterpolation(ts=jnp.array(time_points),coeffs=coeffs_ECglucose4)
         interpolated_mets={'ECglucose':EC_glucose_interpolation_cubic}
+
+        ECbiomass=[3.578710644677661, 3.7188905547226385, 3.7683658170914542, 3.7518740629685157, 3.001499250374813, 2.795352323838081, 1.8470764617691149, 1.4430284857571216]
+        D=[0.01,0.05,0.1,0.2,0.3,0.325,0.35,0.375]
+        ECbiomass_coeffs=diffrax.backward_hermite_coefficients(ts=jnp.array(D),ys=jnp.array(ECbiomass))
+        ECbiomass_interpolated= diffrax.CubicInterpolation(ts=jnp.array(D),coeffs=ECbiomass_coeffs)
+        interpolated_mets['ECbiomass']=ECbiomass_interpolated
+
         glycolyse=jax.jit(NeuralODE(glycolysis(interpolated_mets,metabolite_names,dilution_rate=float(dilution_rate))))
 
         dataset=dataset.drop(labels="ECglucose",axis=1)
@@ -51,6 +57,7 @@ def prepare_glycolysis_model(dilution_rate,y0_dict,data_type="glucose_pulse"):
     elif data_type=="glucose_pulse":
         dataset="vHeerden_trehalose_data_formatted.csv"
         dataset=pd.read_csv(filepath+dataset,index_col=0)
+        
 
 
         initial_values_dataset=dataset.iloc[0,:]
@@ -62,12 +69,23 @@ def prepare_glycolysis_model(dilution_rate,y0_dict,data_type="glucose_pulse"):
 
 
         time_points=[float(i) for i in dataset.index.to_list()]
-
+        
         #interpolate glucose extracellular
-        coeffs_ECglucose=diffrax.backward_hermite_coefficients(ts=jnp.array(time_points),ys=jnp.array(dataset['ECglucose']-22000.700453),
+        dataset['ECglucose']=110
+        coeffs_ECglucose=diffrax.backward_hermite_coefficients(ts=jnp.array(time_points),ys=jnp.array(dataset['ECglucose']),
                                                 fill_forward_nans_at_end=True)
         EC_glucose_interpolation_cubic=diffrax.CubicInterpolation(ts=jnp.array(time_points),coeffs=coeffs_ECglucose)
+        
         interpolated_mets={'ECglucose':EC_glucose_interpolation_cubic}
+
+
+        #interpolate extracellular biomass
+        ECbiomass=[3.578710644677661, 3.7188905547226385, 3.7683658170914542, 3.7518740629685157, 3.001499250374813, 2.795352323838081, 1.8470764617691149, 1.4430284857571216]
+        D=[0.01,0.05,0.1,0.2,0.3,0.325,0.35,0.375]
+        ECbiomass_coeffs=diffrax.backward_hermite_coefficients(ts=jnp.array(D),ys=jnp.array(ECbiomass))
+        ECbiomass_interpolated= diffrax.CubicInterpolation(ts=jnp.array(D),coeffs=ECbiomass_coeffs)
+        interpolated_mets['ECbiomass']=ECbiomass_interpolated
+
         glycolyse=jax.jit(NeuralODE(glycolysis(interpolated_mets,metabolite_names,dilution_rate=float(dilution_rate))))
 
         #format dataset to include initial conditions and remove core metabolism TCA cycle metabolites
@@ -86,6 +104,8 @@ def prepare_glycolysis_model(dilution_rate,y0_dict,data_type="glucose_pulse"):
         dataset.loc[0.00000,"ICDHAP"]=y0_dict['ICDHAP']
         dataset.loc[0.00000,"ICPYR"]=y0_dict['ICPYR']
         dataset.loc[0.00000,"ICG3P"]=y0_dict['ICG3P']
+        dataset.loc[0.0000,"ECETOH"]=y0_dict['ECETOH']
+        dataset.loc[0.0000,"ECglycerol"]=y0_dict['ECglycerol']
         dataset=dataset.drop(labels="ECglucose",axis=1)
         dataset=dataset[metabolite_names]
 
@@ -127,3 +147,93 @@ def divide_parameters_by_dilution_rate(params,interpolation_expression_dict,D):
     newparams['p_PDC1_Vmax'] =  params['p_PDC1_Vmax'] /interpolation_expression_dict['expr_interpolated_PDC'].evaluate(D) 
     newparams['p_ADH_VmADH'] = params['p_ADH_VmADH'] /interpolation_expression_dict['expr_interpolated_ADH'].evaluate(D) 
     return newparams
+
+
+
+def load_model_glucose_pulse_FF_datasets(dataset_name,dilution_rate,y0_dict):
+    """Loading specific datasets Specific datasets of the ff1 kind"""
+
+    metabolite_names=list(y0_dict.keys())
+    filepath="datasets/VanHeerden_Glucose_Pulse/"
+    dataset=pd.read_csv(filepath+dataset_name,index_col=0).T
+            
+
+
+    initial_values_dataset=dataset.iloc[0,:]
+
+    y0_dict_new=overwrite_y0_dict(y0_dict,initial_values_dataset)
+    y0=jnp.array(list(y0_dict_new.values()))
+
+
+    time_points=[float(i) for i in dataset.index.to_list()]
+
+    coeffs_ECglucose=diffrax.backward_hermite_coefficients(ts=jnp.array(time_points),ys=jnp.array(dataset['ECglucose']),
+                                            fill_forward_nans_at_end=True)
+    EC_glucose_interpolation_cubic=diffrax.CubicInterpolation(ts=jnp.array(time_points),coeffs=coeffs_ECglucose)
+    interpolated_mets={'ECglucose':EC_glucose_interpolation_cubic}
+
+    ECbiomass=[3.578710644677661, 3.7188905547226385, 3.7683658170914542, 3.7518740629685157, 3.001499250374813, 2.795352323838081, 1.8470764617691149, 1.4430284857571216]
+    D=[0.01,0.05,0.1,0.2,0.3,0.325,0.35,0.375]
+    ECbiomass_coeffs=diffrax.backward_hermite_coefficients(ts=jnp.array(D),ys=jnp.array(ECbiomass))
+    ECbiomass_interpolated= diffrax.CubicInterpolation(ts=jnp.array(D),coeffs=ECbiomass_coeffs)
+    interpolated_mets['ECbiomass']=ECbiomass_interpolated
+    glycolyse=jax.jit(NeuralODE(glycolysis(interpolated_mets,metabolite_names,dilution_rate=float(dilution_rate))))
+    #format dataset to include initial conditions and remove core metabolism TCA cycle metabolites
+
+
+
+    dataset['ICglyc'] = np.nan  # Add column with NaNs
+    dataset.iloc[0, dataset.columns.get_loc('ICglyc')] = y0_dict['ICglyc']  # Set first value
+
+    dataset['ICBPG'] = np.nan
+    dataset.iloc[0, dataset.columns.get_loc('ICBPG')] = y0_dict['ICBPG']
+
+    dataset['ICNAD'] = np.nan
+    dataset.iloc[0, dataset.columns.get_loc('ICNAD')] = y0_dict['ICNAD']
+
+    dataset['ICNADH'] = np.nan
+    dataset.iloc[0, dataset.columns.get_loc('ICNADH')] = y0_dict['ICNADH']
+
+    dataset['ICACE'] = np.nan
+    dataset.iloc[0, dataset.columns.get_loc('ICACE')] = y0_dict['ICACE']
+
+    dataset['ICETOH'] = np.nan
+    dataset.iloc[0, dataset.columns.get_loc('ICETOH')] = y0_dict['ICETOH']
+
+    dataset['ICPHOS'] = np.nan
+    dataset.iloc[0, dataset.columns.get_loc('ICPHOS')] = y0_dict['ICPHOS']
+
+    dataset['ICIMP'] = np.nan
+    dataset.iloc[0, dataset.columns.get_loc('ICIMP')] = y0_dict['ICINO']
+
+    dataset['ICINO'] = np.nan
+    dataset.iloc[0, dataset.columns.get_loc('ICINO')] = y0_dict['ICINO']
+
+    dataset['ICHYP'] = np.nan
+    dataset.iloc[0, dataset.columns.get_loc('ICHYP')] = y0_dict['ICHYP']
+
+    dataset['IC2PG'] = np.nan
+    dataset.iloc[0, dataset.columns.get_loc('IC2PG')] = y0_dict['IC2PG']
+
+    dataset['ICglucose'] = np.nan
+    dataset.iloc[0, dataset.columns.get_loc('ICglucose')] = y0_dict['ICglucose']
+
+    dataset['ICDHAP'] = np.nan
+    dataset.iloc[0, dataset.columns.get_loc('ICDHAP')] = y0_dict['ICDHAP']
+
+    dataset['ICPYR'] = np.nan
+    dataset.iloc[0, dataset.columns.get_loc('ICPYR')] = y0_dict['ICPYR']
+
+    dataset['ICG3P'] = np.nan
+    dataset.iloc[0, dataset.columns.get_loc('ICG3P')] = y0_dict['ICG3P']
+
+    dataset['ECETOH'] = np.nan
+    dataset.iloc[0, dataset.columns.get_loc('ECETOH')] = y0_dict['ECETOH']
+
+    dataset['ECglycerol'] = np.nan
+    dataset.iloc[0, dataset.columns.get_loc('ECglycerol')] = y0_dict['ECglycerol']
+
+
+    dataset=dataset.drop(labels="ECglucose",axis=1)
+    dataset=dataset[metabolite_names]
+    return glycolyse, time_points,y0_dict_new,dataset

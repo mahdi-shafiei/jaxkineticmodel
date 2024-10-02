@@ -15,6 +15,9 @@ from models.manual_implementations.glycolysis.glycolysis_model import *
 jax.config.update("jax_enable_x64", True)
 from source.parameter_estimation.training import create_log_params_means_centered_loss_func2,log_transform_parameters,exponentiate_parameters
 from scripts.analysis_helper_functions.helper_function_glycolysis_analysis import overwrite_y0_dict,prepare_glycolysis_model,update_parameters_by_dilution_rate,divide_parameters_by_dilution_rate
+from source.utils import get_logger
+
+logger = get_logger(__name__)
 
 
 expression_data=pd.read_csv("datasets/VanHeerden_Glucose_Pulse/PvanHoekExpressionData.csv",index_col=0)
@@ -37,33 +40,34 @@ for D_col, col in column_pairs:
 
 
 y0_dict={'ICG1P':0.064568,
-         "ICT6P":0.093705,
-         "ICtreh":63.312040,
-         'ICglucose':0.196003,
-         'ICG6P':0.716385,
-         'ICF6P':0.202293,
-         "ICFBP":0.057001,
-         "ICDHAP":0.048571,
-         "ICG3P":0.020586,
-         "ICglyc":0.1,
-         "ICGAP":0.006213,
-         "ICBPG":0.0001,
-         "IC3PG":2.311074,
-         "IC2PG":0.297534,
-          "ICPEP":1.171415,
-          "ICPYR":0.152195,
-          "ICACE":0.04,
-          "ICETOH":10.0,
-          "ICNADH":0.0106,
-          "ICNAD":1.5794,
-          "ICATP":3.730584,
-          "ICADP":1.376832,
-          "ICAMP":0.431427,
-          "ICPHOS":10,
-          "ICIMP":0.100,
-          "ICINO":0.100,
-          "ICHYP":1.5,
-          }
+        "ICT6P":0.093705,
+        "ICtreh":63.312040,
+        'ICglucose':0.196003,
+        'ICG6P':0.716385,
+        'ICF6P':0.202293,
+        "ICFBP":0.057001,
+        "ICDHAP":0.048571,
+        "ICG3P":0.020586,
+        "ICglyc":0.1,
+        "ICGAP":0.006213,
+        "ICBPG":0.0001,
+        "IC3PG":2.311074,
+        "IC2PG":0.297534,
+        "ICPEP":1.171415,
+        "ICPYR":0.152195,
+        "ICACE":0.04,
+        "ICETOH":10.0,
+        "ECETOH":0,
+        "ECglycerol":0.0,
+        "ICNADH":0.0106,
+        "ICNAD":1.5794,
+        "ICATP":3.730584,
+        "ICADP":1.376832,
+        "ICAMP":0.431427,
+        "ICPHOS":10,
+        "ICIMP":0.100,
+        "ICINO":0.100,
+        "ICHYP":1.5,}
 y0=jnp.array(list(y0_dict.values()))
 metabolite_names=list(y0_dict.keys())
 
@@ -81,6 +85,8 @@ glycolyse_SS_30,time_points_SS_30,y0_SS_30,dataset_SS_30=prepare_glycolysis_mode
 glycolyse_SS_325,time_points_SS_325,y0_SS_325,dataset_SS_325=prepare_glycolysis_model(data_type="steady_state",dilution_rate="0.325",y0_dict=y0_dict)
 glycolyse_SS_35,time_points_SS_35,y0_SS_35,dataset_SS_35=prepare_glycolysis_model(data_type="steady_state",dilution_rate="0.35",y0_dict=y0_dict)
 glycolyse_SS_375,time_points_SS_375,y0_SS_375,dataset_SS_375=prepare_glycolysis_model(data_type="steady_state",dilution_rate="0.375",y0_dict=y0_dict)
+
+logger.info("Datasets and models properly loaded")
 
 
 datasets={"GP1":jnp.array(dataset_GP1),"SS_01":jnp.array(dataset_SS_01),"SS_05":jnp.array(dataset_SS_05),
@@ -107,8 +113,7 @@ log_loss_func_SS_35=jax.jit(create_log_params_means_centered_loss_func2(glycolys
 log_loss_func_SS_375=jax.jit(create_log_params_means_centered_loss_func2(glycolyse_SS_375,loss_targets_steady_state))
 
 
-# params_after_fitting=pd.read_csv("results/EXP4_Glycolysis_Fitting_Datasets/0909_params_gradient_descent_federated.csv",index_col=0).to_dict()['0']
-# params=params_after_fitting
+params_literature=pd.read_csv("parameter_initializations/Glycolysis_model/parameter_initialization_glycolysis_literature_values.csv",index_col=0).to_dict()['0']
 
 
 lr=1e-3
@@ -116,8 +121,10 @@ lr=1e-3
 optimizer = optax.adabelief(lr)
 clip_by_global=optax.clip_by_global_norm(np.log(4))
 optimizer = optax.chain(optimizer,clip_by_global)
-opt_state = optimizer.init(params)
-params_init=params
+params_init=params_literature
+
+opt_state = optimizer.init(params_init)
+
 
 
 
@@ -142,6 +149,7 @@ grads_SS_325=jax.jit(jax.grad(log_loss_func_SS_325,0))
 grads_SS_35=jax.jit(jax.grad(log_loss_func_SS_35,0))
 grads_SS_375=jax.jit(jax.grad(log_loss_func_SS_375,0))
 
+logger.info("Gradient descent can start")
 
 ys=datasets
 ts=time_points
@@ -225,6 +233,6 @@ losses_per_iterations={"loss_per_iter1":loss_per_iter1,"loss_per_iter2":loss_per
                      "loss_per_iter7":loss_per_iter7,"loss_per_iter8":loss_per_iter8,
                     "loss_per_iter9":loss_per_iter9}
 losses_per_iterations_added=pd.DataFrame(losses_per_iterations)
-losses_per_iterations_added.to_csv("results/EXP4_Glycolysis_Fitting_Datasets/1109_losses_for_9_datasets.csv")
+losses_per_iterations_added.to_csv("results/EXP4_Glycolysis_Fitting_Datasets/1309_losses_for_9_datasets_literature_parameter_init.csv")
 params_to_save=pd.DataFrame(pd.Series(params_init))
-params_to_save.to_csv("results/EXP4_Glycolysis_Fitting_Datasets/1109_params_gradient_descent_federated.csv")
+params_to_save.to_csv("results/EXP4_Glycolysis_Fitting_Datasets/1309_params_gradient_descent_federated_literature_parameter_init.csv")

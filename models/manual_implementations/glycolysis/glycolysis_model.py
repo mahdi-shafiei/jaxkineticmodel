@@ -16,15 +16,8 @@ GLT_params={'p_GLT_KmGLTGLCi':1.0078,'p_GLT_KmGLTGLCo':1.0078,'p_GLT_VmGLT':8.13
 HXK1_params={"p_HXK1_Kadp": 0.3492,"p_HXK1_Katp": 0.0931,
     "p_HXK1_Keq": 3.7213e+03,"p_HXK1_Kg6p": 34.7029,
     "p_HXK1_Kglc": 0.3483,"p_HXK1_Kt6p": 0.0073,"p_HXK_Vmax": 1 * 6.2548 * (1 + 0) }
-
-
 NTH1_params={"p_NTH1_Ktre" : 2.1087,"p_NTH1_kcat" : 4.5132,"f_NTH1" : 0.0020,"p_NTH1_Vmax" : 4.5132 * 0.0020}
-
-
 PGI_params={ "p_PGI1_Keq": 0.9564,"p_PGI1_Kf6p": 7.2433,"p_PGI1_Kg6p": 33.0689,'p_PGI1_Vmax':1*2.3215*1}
-
-
-
 PGM1_params={"p_PGM1_Keq": 21.3955,"p_PGM1_Kg1p": 0.0653,"p_PGM1_Kg6p": 0.0324,"p_PGM1_Vmax":8.4574}
 TPS1_params={ "p_TPS1_Kg6p": 4.5359,"p_TPS1_Kudp_glc": 0.1268,"p_TPS1_Kpi": 0.7890,"p_TPS1_KmF6P": 1.5631,"p_TPS1_Vmax":9.6164e+03*0.0014}
 TPS2_params={"p_TPS2_Kt6p": 0.3686,"p_TPS2_Kpi": 0.7023,"p_TPS2_Vmax": 28.4097 * 0.0013}  # Calculated value for p_TPS2_Vmax
@@ -254,82 +247,83 @@ v_HPT1=Jax_MA_Irrev(substrate="ICHYP",k_fwd="p_Hpt1_k")
 
 
 
-
 class glycolysis():
     def __init__(self,
                   interpolate_dict:dict,
+
                   met_names:list,
                   dilution_rate:float):
        self.interpolate_dict=interpolate_dict
        self.met_names=met_names
        self.dilution_rate=dilution_rate
+       self.ECbiomass=self.interpolate_dict['ECbiomass'].evaluate(dilution_rate)
+
 
     def __call__(self,t,y,args):
         params=args
         y=dict(zip(self.met_names,y))
         D=self.dilution_rate #dilution rate. In steady state D=mu
         y['ECglucose']=self.interpolate_dict['ECglucose'].evaluate(t)
+        # y['ECglucose']=110
         eval_dict={**y,**params}
 
         #polysinks are know related to the dilution rate, like in the original model. We ensure positive values to ensure that the log transformation works
 
-
-
         #perhaps we could move this outside of the 
         
-        eval_dict['poly_sinkG6P']=np.abs(3.6854 * D**3 -   1.4119 * D**2 -  0.6312* D    - 0.0043) 
-        eval_dict['poly_sinkF6P']=np.abs(519.3740 * D**6 - 447.7990 * D**5 + 97.2843 * D**4 + 8.0698 * D**3 - 4.4005 * D**2 + 0.6254 * D - 0.0078)
-        eval_dict['poly_sinkGAP']=np.abs(170.8447 * D**6 - 113.2975 * D**5 + 2.6494 * D**4 + 10.2461 * D**3 - 1.8002 * D**2 + 0.1988 * D + 0.0012)
-        eval_dict['poly_sinkP3G']=np.abs(-0.2381* D**2 - 0.0210 * D -0.0034)
-        eval_dict['poly_sinkPEP']=np.abs(- 0.0637 * D**2 -   0.0617 * D   -  0.0008)
-        eval_dict['poly_sinkPYR']=np.abs(-8.4853e+03 * D**6 + 9.4027e+03 * D**5 - 3.8027e+03 * D**4 + 700.5 * D**3 - 60.26 * D**2 + 0.711 * D - 0.0356)
-        eval_dict['poly_sinkACE']=np.abs(118.8562 * D**6 - 352.3943 * D**5 + 245.6092 * D**4 - 75.2550 * D**3 + 11.1153 * D**2 - 1.0379 * D + 0.0119)
+        eval_dict['poly_sinkG6P']=jnp.abs(3.6854 * D**3 -   1.4119 * D**2 -  0.6312* D    - 0.0043) 
+        eval_dict['poly_sinkF6P']=jnp.abs(519.3740 * D**6 - 447.7990 * D**5 + 97.2843 * D**4 + 8.0698 * D**3 - 4.4005 * D**2 + 0.6254 * D - 0.0078)
+        eval_dict['poly_sinkGAP']=jnp.abs(170.8447 * D**6 - 113.2975 * D**5 + 2.6494 * D**4 + 10.2461 * D**3 - 1.8002 * D**2 + 0.1988 * D + 0.0012)
+        eval_dict['poly_sinkP3G']=jnp.abs(-0.2381* D**2 - 0.0210 * D -0.0034)
+        eval_dict['poly_sinkPEP']=jnp.abs(- 0.0637 * D**2 -   0.0617 * D   -  0.0008)
+        eval_dict['poly_sinkPYR']=jnp.abs(-8.4853e+03 * D**6 + 9.4027e+03 * D**5 - 3.8027e+03 * D**4 + 700.5 * D**3 - 60.26 * D**2 + 0.711 * D - 0.0356)
+        eval_dict['poly_sinkACE']=jnp.abs(118.8562 * D**6 - 352.3943 * D**5 + 245.6092 * D**4 - 75.2550 * D**3 + 11.1153 * D**2 - 1.0379 * D + 0.0119)
 
 
         ## calculate the expression given the dilution rate and update parameters
-
-
-
 
         rate_vGLT=v_GLT(eval_dict)
         rate_vHXK=v_HXK(eval_dict)
         rate_vNTH1=v_NTH1(eval_dict)
         rate_vPGI=v_PGI(eval_dict)
-
         rate_vsinkG6P=v_sinkG6P(eval_dict)
+        
         rate_vsinkF6P=v_sinkF6P(eval_dict)
         rate_vPGM1=v_PGM1(eval_dict)
         rate_vTPS1=v_TPS1(eval_dict)
         rate_vTPS2=v_TPS2(eval_dict)
         rate_vPFK=v_PFK(eval_dict)
+        
         rate_vALD=v_ALD(eval_dict)
-
         rate_TPI1=v_TPI1(eval_dict)
         rate_GP3DH=v_G3PDH(eval_dict)
         rate_PGK=v_PGK(eval_dict)
         rate_vsinkGAP=v_sinkGAP(eval_dict)
+        
         rate_GAPDH=v_GAPDH(eval_dict)
         rate_vsink3PGA=vsink3PGA(eval_dict)
         rate_HOR2=v_HOR2(eval_dict)
         rate_vGLycT=v_GlycT(eval_dict)
         rate_PGM=v_PGM(eval_dict)
+        
         rate_ENO=v_ENO(eval_dict)
         rate_vsinkPEP=vsinkPEP(eval_dict)
         rate_PYK1=v_PYK1(eval_dict)
         rate_vsinkPYR=vsinkPYR(eval_dict)
         rate_vPDC=v_PDC(eval_dict)
+        
         rate_ADH=v_ADH(eval_dict)
         rate_vsinkACE=vsinkACE(eval_dict)
         rate_ETOH_transport=v_EtohT(eval_dict)
         rate_vmitoNADH=v_mitoNADH(eval_dict)
-        
-        #modeling rates: new rates
         rate_ATPmito=v_ATPmito(eval_dict)
+        
         rate_ATPase=v_ATPase(eval_dict)
         rate_ADK1=v_ADK(eval_dict)
         rate_VacPi=v_VacPi(eval_dict)
         rate_AMD1=v_AMD1(eval_dict)
         rate_ADE1312=v_ADE1312(eval_dict)
+        
         rate_ISN1=v_ISN1(eval_dict)
         rate_PNP1=v_PNP1(eval_dict)
         rate_HPT1=v_HPT1(eval_dict)
@@ -362,8 +356,9 @@ class glycolysis():
         dICACE= +rate_vPDC -rate_ADH -rate_vsinkACE
 
         dICETOH=+rate_ADH -rate_ETOH_transport
+        
 
-
+        # dECETOH=+rate_ETOH_transport *3.7683658170914542 *0.002-((y['ECETOH']/3600)*D)
 
         #so it turns out G3PDH is the problematic one
         dICNAD=+rate_GP3DH -rate_GAPDH   +rate_ADH +rate_vmitoNADH 
@@ -378,20 +373,23 @@ class glycolysis():
         dINO=rate_ISN1-rate_PNP1
         dHYP=+rate_PNP1 -rate_HPT1
 
+        dECETOH=+rate_ETOH_transport*self.ECbiomass*0.002 - (y['ECETOH']/3600)*self.dilution_rate #ethanol production
+        dECglyc=+rate_vGLycT*self.ECbiomass*0.002 - (y['ECETOH']/3600)*self.dilution_rate #glycerol 
+
 
         return jnp.stack([dG1P,dT6P,dICTRE,dICglci,dICG6P,dICF6P,
                           dICFBP,dICDHAP,dICG3P,
                           dICGlyc,dICGAP,dICBPG,dIC3PG,
-                          dIC2PG,dICPEP,dICPYR,dICACE,dICETOH,dICNADH,
+                          dIC2PG,dICPEP,dICPYR,dICACE,dICETOH,dECETOH,dECglyc,dICNADH,
                           dICNAD,dATP,dADP,dAMP,dPHOS,dIMP,dINO,dHYP])#,dICPEP,dICPYR,dICACE])
 
 class NeuralODE():
     def __init__(self,func):
 
         self.func=func
-        self.rtol=1e-8
+        self.rtol=1e-9
         self.atol=1e-11
-        self.max_steps=200000
+        self.max_steps=300000
         
     def __call__(self,ts,y0,params):
         solution = diffrax.diffeqsolve(
@@ -399,7 +397,7 @@ class NeuralODE():
         diffrax.Kvaerno5(),
         t0=ts[0],
         t1=ts[-1],
-        dt0=1e-10,
+        dt0=1e-11,
         y0=y0,
         args=(params),
         stepsize_controller=diffrax.PIDController(rtol=self.rtol, atol=self.atol,pcoeff=0.4,icoeff=0.3,dcoeff=0),
