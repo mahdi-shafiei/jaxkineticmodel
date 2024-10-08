@@ -60,9 +60,11 @@ def get_initial_conditions(model):
 
             else:
                 initial_concentration_dict[specimen.id] = specimen.initial_concentration
+
         else:
             logger.warn(f"Constant and Boundary condition boolean are not set for {specimen}")
     return initial_concentration_dict
+
 
 
 def get_global_parameters(model):
@@ -95,6 +97,9 @@ def get_initial_assignments(model,global_parameters,assignment_rules,y0):
                 sympy_expr=np.float64(sympy_expr)
             initial_assignments[init_assign.id]=sympy_expr
     return initial_assignments
+
+
+
         
 def overwrite_init_conditions_with_init_assignments(model,global_parameters,assignment_rules,y0):
     """y0 values are initialized in sbml, but some models also define initial assignments
@@ -194,7 +199,7 @@ def get_constant_boundary_species(model):
             if model.getLevel() == 2:
                 constant_boundary_dict[specimen.id] = specimen.initial_concentration
     
-    print(constant_boundary_dict)
+    logger.info(constant_boundary_dict)
     return constant_boundary_dict
 
 
@@ -565,3 +570,5 @@ def time_dependency_symbols(v_symbol_dictionaries, t):
     return time_dependencies
 #   time_dependencies=time_dependency_symbols(v_symbol_dictionaries,t)
 #   return time_dependencies
+
+

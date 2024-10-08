@@ -99,10 +99,10 @@ for sbml_file in sbml_files:
         for i,k in enumerate(S.index):
             print(i,k)
             name="["+k+"]"
-            plt.plot(ts,sol_tellurium[name],label=name)
-            plt.plot(ts,ys[k],label=S.index[i],linewidth=2,linestyle="--")
-        plt.legend()
-        plt.show()
+        #     plt.plot(ts,sol_tellurium[name],label=name)
+        #     plt.plot(ts,ys[k],label=S.index[i],linewidth=2,linestyle="--")
+        # plt.legend()
+        # plt.show()
 
         S_tellurium = tellurium_model.getFullStoichiometryMatrix()
         if np.sum(np.abs(S_tellurium) - np.abs(np.array(S))) == 0:

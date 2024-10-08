@@ -12,55 +12,55 @@ jax.config.update("jax_enable_x64", True)
 
 
 
-def create_fluxes_v(model):
-    """This function defines the jax jitted equations that are used in TorchKinModel
-    class
-    """
-    # retrieve whatever is important
-    nreactions = model.getNumReactions()
+# def create_fluxes_v(model):
+#     """This function defines the jax jitted equations that are used in TorchKinModel
+#     class
+#     """
+#     # retrieve whatever is important
+#     nreactions = model.getNumReactions()
 
-    species_ic = get_initial_conditions(model)
-    global_parameters = get_global_parameters(model)
+#     species_ic = get_initial_conditions(model)
+#     global_parameters = get_global_parameters(model)
 
-    compartments = get_compartments(model)
-    constant_boundaries = get_constant_boundary_species(model)
+#     compartments = get_compartments(model)
+#     constant_boundaries = get_constant_boundary_species(model)
 
-    lambda_functions = get_lambda_function_dictionary(model)
-    assignments_rules = get_assignment_rules_dictionary(model)
-    rate_rules=get_rate_rules_dictionary(model)
-    event_rules=get_events_dictionary(model)
+#     lambda_functions = get_lambda_function_dictionary(model)
+#     assignments_rules = get_assignment_rules_dictionary(model)
+#     rate_rules=get_rate_rules_dictionary(model)
+#     event_rules=get_events_dictionary(model)
 
 
-    v = {}
-    v_symbol_dict = {}  # all symbols that are used in the equation.
-    local_param_dict = {}  # local parameters with the reaction it belongs to as a new parameter
+#     v = {}
+#     v_symbol_dict = {}  # all symbols that are used in the equation.
+#     local_param_dict = {}  # local parameters with the reaction it belongs to as a new parameter
 
-    for reaction in model.reactions:
-        local_parameters = get_local_parameters(reaction)
-        # print(local_parameters)
-        # reaction_species = get_reaction_species(reaction)
-        nested_dictionary_vi = {'species': species_ic,
-                                'globals': global_parameters,
-                                'locals': local_parameters,
-                                'compartments': compartments,
-                                'boundary': constant_boundaries,
-                                'lambda_functions': lambda_functions,
-                                'boundary_assignments': assignments_rules,
-                                "rate_rules":rate_rules,
-                                "event_rules":event_rules}  # add functionality
+#     for reaction in model.reactions:
+#         local_parameters = get_local_parameters(reaction)
+#         # print(local_parameters)
+#         # reaction_species = get_reaction_species(reaction)
+#         nested_dictionary_vi = {'species': species_ic,
+#                                 'globals': global_parameters,
+#                                 'locals': local_parameters,
+#                                 'compartments': compartments,
+#                                 'boundary': constant_boundaries,
+#                                 'lambda_functions': lambda_functions,
+#                                 'boundary_assignments': assignments_rules,
+#                                 "rate_rules":rate_rules,
+#                                 "event_rules":event_rules}  # add functionality
 
-        vi_rate_law = get_string_expression(reaction)
+#         vi_rate_law = get_string_expression(reaction)
 
-        vi, filtered_dict = sympify_lambidify_and_jit_equation(vi_rate_law, nested_dictionary_vi)
+#         vi, filtered_dict = sympify_lambidify_and_jit_equation(vi_rate_law, nested_dictionary_vi)
         
-        v[reaction.id] = vi  # the jitted equation
-        v_symbol_dict[reaction.id] = filtered_dict
+#         v[reaction.id] = vi  # the jitted equation
+#         v_symbol_dict[reaction.id] = filtered_dict
 
-        # here
-        for key in local_parameters.keys():
-            newkey = "lp." + str(reaction.id) + "." + key
-            local_param_dict[newkey] = local_parameters[key]
-    return v, v_symbol_dict, local_param_dict
+#         # here
+#         for key in local_parameters.keys():
+#             newkey = "lp." + str(reaction.id) + "." + key
+#             local_param_dict[newkey] = local_parameters[key]
+#     return v, v_symbol_dict, local_param_dict
 
 
 
@@ -71,7 +71,8 @@ class JaxKineticModel:
                  S,
                  flux_point_dict,
                  species_names,
-                 reaction_names):  # params,
+                 reaction_names,
+                 compartment_values,):  # params,
         """Initialize given the following arguments:
         v: the flux functions given as lambidified jax functions,
         S: a stoichiometric matrix. For now only support dense matrices, but later perhaps add for sparse
@@ -85,15 +86,18 @@ class JaxKineticModel:
         self.flux_point_dict = flux_point_dict  # this is ugly but wouldnt know how to do it another wa
         self.species_names = np.array(species_names)
         self.reaction_names = np.array(reaction_names)
+        self.compartment_values=jnp.array(compartment_values)
 
     def __call__(self, t, y, args):
         """I explicitly add params to call for gradient calculations. Find out whether this is actually necessary"""
         params, local_params, time_dict = args
+
+        #evaluate the time dictionary values at time t (for event functions e.g.)
         time_dict = time_dict(t)
+
+ 
         
-
-        # @partial(jax.jit, static_argnums=2)
-
+        #function evaluates the flux vi given y, parameter, local parameters, time dictionary
         def apply_func(i, y, flux_point_dict, local_params, time_dict):
 
             if len(flux_point_dict) != 0:
@@ -106,20 +110,18 @@ class JaxKineticModel:
             parameters = params[i]
 
             eval_dict = {**y, **parameters, **local_params, **time_dict}
-
             vi = self.func[i](**eval_dict)
             return vi
 
         # Vectorize the application of the functions
         indices = np.arange(len(self.func))
 
-        # v = jax.vmap(lambda i:apply_func(i,y,self.flux_point_dict[i]))(indices)
-
         v = jnp.stack([apply_func(i, y, self.flux_point_dict[i],
                                   local_params[i],
                                   time_dict[i])
                        for i in self.reaction_names])  # perhaps there is a way to vectorize this in a better way
         dY = jnp.matmul(self.stoichiometry, v)  # dMdt=S*v(t)
+        dY=dY/self.compartment_values
         return dY
 
 
@@ -130,12 +132,14 @@ class NeuralODE:
                  v,
                  S,
                  met_point_dict,
-                 v_symbol_dictionaries):
+                 v_symbol_dictionaries,
+                 compartment_values,):
         self.func = JaxKineticModel(v,
                                     jnp.array(S),
                                     met_point_dict,
                                     list(S.index),
-                                    list(S.columns))
+                                    list(S.columns),
+                                    compartment_values)
         self.reaction_names = list(S.columns)
         self.v_symbol_dictionaries = v_symbol_dictionaries
         self.Stoichiometry = S
@@ -149,6 +153,7 @@ class NeuralODE:
             return time_dependencies
         
 
+        ## time dependencies: a function that return for all fluxes whether there is a time dependency
         self.time_dict = jax.jit(wrap_time_symbols)
 
     def __call__(self, ts, y0, params):

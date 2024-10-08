@@ -17,7 +17,7 @@ logger.debug('Loading SBML model')
 
 # a simple sbml model
 filepath = (
-      "models/sbml_models/discrepancies/Lucarelli_CellSystems_2018.xml"
+      "models/sbml_models/discrepancies/Bachmann_MSB2011.xml"
       # "models/sbml_models/Novak2022.xml"
     #   "models/sbml_models/discrepancies/BIOMD0000000160_url.xml"
     # "models/sbml_models/failing_models/Beer_MolBioSystems2014.xml"
@@ -37,7 +37,8 @@ JaxKmodel = model.get_kinetic_model()
 
 JaxKmodel = jax.jit(JaxKmodel)
 
-# it is probably not wise to pass param_point_dict directly to model,
+# it is probably not wise to pass param_point_dict directly to mo
+# del,
 # because then when we perform gradient calculations, we might
 # actually get different gradients for the same parameters
 
@@ -46,45 +47,38 @@ JaxKmodel = jax.jit(JaxKmodel)
 # # Simulation
 # ###
 
-ts = jnp.linspace(0,10000,200)
+ts = jnp.linspace(0,100,2000)
 # #parameters are not yet defined
 params = get_global_parameters(model.model)
 params = {**model.local_params, **params}
-print("params",len(params))
 
 
 JaxKmodel(ts=jnp.array([0]),
           y0=model.y0,
           params=params)
 # # # print(v_local_param_dict)
+
 ys = JaxKmodel(ts=ts,
-               y0=model.y0,
-               params=params)
+            y0=model.y0,
+            params=params)
 ys=pd.DataFrame(ys,columns=S.index)
 
-print(np.shape(ys))
-# for i in range(len(model.S.index)):
-#     plt.plot(ts, ys[:, i], label=model.S.index[i])
 
-# # plt.plot(ts,ys[:,4],label=species_names[4])
-# plt.legend()
-# # 
-# plt.show()
 
 
 #optional visual comparison for tellurium
 import tellurium as te
 model = te.loadSBMLModel(filepath)
-sol_tell = model.simulate(0, 10000, 2000)
+sol_tell = model.simulate(0, 100, 2000)
 time_tell=sol_tell['time']
 colnames=sol_tell.colnames
-print(np.shape(sol_tell))
 
-for name in S.index:
-      print(name)
+
+for name in S.index[2:]:
+
       name_tell="["+name+"]"
       plt.plot(time_tell,sol_tell[name_tell],label=name_tell)
-      plt.plot(ts,ys[name],label=name,linewidth=2,linestyle="--")
+      plt.plot(ts,ys[name],label=name,linewidth=2,linestyle="--") 
 
 
 plt.legend()

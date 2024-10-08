@@ -30,10 +30,7 @@ class SBMLModel:
         self.y0 = jnp.array(list(self.y0))
 
         
-
-        
-        
-        self.v, self.v_symbol_dictionaries, self.local_params = self._create_fluxes_v()
+        self.v, self.v_symbol_dictionaries, self.local_params,self.compartment_values = self._create_fluxes_v()
         self.met_point_dict = self._construct_flux_pointer_dictionary()
 
     @staticmethod
@@ -58,6 +55,7 @@ class SBMLModel:
         logger.info(f" number of constant boundary metabolites: {model.getNumSpeciesWithBoundaryCondition()}")
         logger.info(f" number of lambda function definitions: {len(model.function_definitions)}")
         logger.info(f" number of assignment rules: {model.getNumRules()}")
+        logger.info(f" number of event rules: {model.getNumEvents()}")
 
         return model
 
@@ -104,7 +102,9 @@ class SBMLModel:
         """Retrieves the species initial concentrations
         from the SBML model. If a species is a constant boundary condition,
         then it should be passed as a parameter instead of an initial condition,
-        since it does not have a rate law"""
+        since it does not have a rate law
+        
+        also """
         species = self.model.getListOfSpecies()
         initial_concentration_dict = {}
         for specimen in species:
@@ -119,10 +119,36 @@ class SBMLModel:
                     continue #not a boundary, but still a constant
                 elif not specimen.getBoundaryCondition() and not specimen.getConstant():
                     initial_concentration_dict[specimen.id] = specimen.initial_concentration
+
             else:
                 logger.warn(f"{specimen.id} constant/boundary attribute not set. Assume that boundary is constant")
                 continue
+
         return initial_concentration_dict
+    
+    def _get_compartments_initial_conditions(self,compartments):
+        """Returns a list of the compartment values of the initial conditions. This is necessary in the dMdt to properly scale. """
+        species = self.model.getListOfSpecies()
+        compartment_list=[]
+
+        for specimen in species:
+            if specimen.isSetConstant() and specimen.isSetBoundaryCondition():
+            # there are also non-stationary boundary conditions, deal with this later.
+                if specimen.getConstant() and specimen.getBoundaryCondition():
+                    print("Constant Boundary Specimen ", specimen.id)
+                    continue
+                elif specimen.getBoundaryCondition() and not specimen.getConstant():
+                    continue
+                elif not specimen.getBoundaryCondition() and specimen.getConstant():
+                    continue #not a boundary, but still a constant
+                elif not specimen.getBoundaryCondition() and not specimen.getConstant():
+                    compartment_list.append(compartments[specimen.compartment])
+
+        compartment_list=jnp.array(compartment_list)
+        return compartment_list
+
+                    
+
 
     def _create_fluxes_v(self):
         """This function defines the jax jitted equations that are used in TorchKinModel
@@ -134,10 +160,16 @@ class SBMLModel:
         species_ic = self._get_initial_conditions()
         global_parameters = get_global_parameters(self.model)
         compartments = get_compartments(self.model)
+        compartment_list=self._get_compartments_initial_conditions(compartments)
+
+
         constant_boundaries = get_constant_boundary_species(self.model)
 
         lambda_functions = get_lambda_function_dictionary(self.model)
         assignments_rules = get_assignment_rules_dictionary(self.model)
+        event_rules=get_events_dictionary(self.model)
+
+
 
         v = {}
         v_symbol_dict = {}  # all symbols that are used in the equation.
@@ -156,6 +188,7 @@ class SBMLModel:
                                     'boundary_assignments': assignments_rules}  # add functionality
 
             vi_rate_law = get_string_expression(reaction)
+
             # print(vi_rate_law)
             vi, filtered_dict = sympify_lambidify_and_jit_equation(vi_rate_law, nested_dictionary_vi)
 
@@ -166,7 +199,7 @@ class SBMLModel:
             for key in local_parameters.keys():
                 newkey = "lp." + str(reaction.id) + "." + key
                 local_param_dict[newkey] = local_parameters[key]
-        return v, v_symbol_dict, local_param_dict
+        return v, v_symbol_dict, local_param_dict,compartment_list
 
     def _construct_flux_pointer_dictionary(self):
         """In jax, the values that are used need to be pointed directly in y."""
@@ -182,7 +215,8 @@ class SBMLModel:
     def get_kinetic_model(self):
         return NeuralODE(v=self.v, S=self.S,
                          met_point_dict=self.met_point_dict,
-                         v_symbol_dictionaries=self.v_symbol_dictionaries)
+                         v_symbol_dictionaries=self.v_symbol_dictionaries,
+                         compartment_values=self.compartment_values)
 
 
 def get_global_parameters(model):
@@ -294,6 +328,7 @@ def sympify_lambidify_and_jit_equation(equation, nested_local_dict):
     equation = equation.subs(boundaries)
     equation = equation.subs({"pi":sp.pi})
 
+
     # free symbols are used for lambdifying
     free_symbols = list(equation.free_symbols)
 
@@ -303,6 +338,7 @@ def sympify_lambidify_and_jit_equation(equation, nested_local_dict):
     # predefined
     for symbol in free_symbols:
         if str(symbol) == "time":
+            logger.info("time")
             filtered_dict['time'] = sp.Symbol('time')
 
     equation = sp.lambdify((filtered_dict.values()), equation, "jax")
@@ -519,8 +555,46 @@ def overwrite_init_conditions_with_init_assignments(model,y0):
     assignment_rules=get_assignment_rules_dictionary(model)
     global_params=get_global_parameters(model)
     initial_assignments=get_initial_assignments(model,global_params,assignment_rules,y0)
+    
     # initial_assignments=get_initial_assignments(model,params)
     for key in initial_assignments.keys():
         if key in y0.keys():
             y0[key]=initial_assignments[key]
     return y0
+
+def get_events_dictionary(model):
+    """There are many type of events. For now I only add a few and the rest will throw a warning"""
+    num_events=model.getNumEvents()
+    events_dict={}
+    if model.getLevel()==2 and num_events!=0:
+        for i in range(num_events):
+            event = model.getEvent(i)
+            
+            # Print the trigger
+            trigger = event.getTrigger()
+            if trigger is not None:
+                logger.info(f"Trigger: {libsbml.formulaToString(trigger.getMath())}")
+                trigger_event=libsbml.formulaToL3String(trigger.getMath())
+
+                #need to replace && for proper reading in sympy
+                trigger_event=trigger_event.replace("&&","&")
+                leaf_nodes=[]
+                leaf_nodes=get_leaf_nodes(trigger.getMath(),leaf_nodes)
+                symbols={leaf_node:sp.Symbol(leaf_node) for leaf_node in leaf_nodes}
+
+                expr=sp.sympify(trigger_event,locals=symbols)
+                if event.isSetId():
+                    events_dict[event.id]=expr
+                if event.isSetName():
+                    events_dict[event.name]=expr
+
+            # Print the delay (if any)
+            delay = event.getDelay()
+            if delay is not None:
+                logger.warn("sbml model has delay event, but this is not supported yet, output might be different")
+                
+            # Print the priority (if any)
+            priority = event.getPriority()
+            if priority is not None:
+                logger.warn("sbml model has priority event,but this is not supported yet, output might be different")
+    return events_dict
