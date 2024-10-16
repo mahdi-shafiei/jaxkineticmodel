@@ -1,0 +1,14 @@
+site_name: JaxKineticModel
+nav:
+  - Home: index.md
+  - Building models: building_models.md
+extra_javascript:
+  - https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js
+  
+markdown_extensions:
+  - admonition
+  - codehilite
+  - footnotes
+  
+  
+ 
