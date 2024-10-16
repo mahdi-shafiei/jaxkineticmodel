@@ -1,7 +1,10 @@
 
 # %reload_ext autoreload
+import sys
+sys.path.insert(0,"/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes")
 from source.kinetic_mechanisms.JaxKineticMechanisms import  *
 from source.kinetic_mechanisms.JaxKineticMechanismsCustom import *
+from source.kinetic_mechanisms.JaxKineticModifiers import *
 ## set up a small term system for state variables
 # S=pd.DataFrame(np.array([[-1,1,2]]),index=['ICglucose'],columns=['v_GLT','v_HXK','v_NTH1'])
 import diffrax
@@ -148,38 +151,38 @@ print("n_parameters",len(params))
 ##
 v_GLT=Jax_Facilitated_Diffusion(substrate_extracellular='ECglucose',product_intracellular='ICglucose',vmax="p_GLT_VmGLT",km_internal='p_GLT_KmGLTGLCi',km_external='p_GLT_KmGLTGLCo')
 
-v_HXK=Jax_Rev_BiBi_MM_w_Inhibition(substrate1='ICATP',substrate2="ICglucose",product1="ICADP",product2="ICATP",modifier="ICT6P",vmax="p_HXK_Vmax", k_equilibrium="p_HXK1_Keq", km_substrate1="p_HXK1_Katp", 
+v_HXK=Jax_MM_Rev_BiBi_w_Inhibition(substrate1='ICATP',substrate2="ICglucose",product1="ICADP",product2="ICATP",modifier="ICT6P",vmax="p_HXK_Vmax", k_equilibrium="p_HXK1_Keq", km_substrate1="p_HXK1_Katp", 
                                            km_substrate2="p_HXK1_Kglc",
                                            km_product1="p_HXK1_Kadp", km_product2="p_HXK1_Kg6p", ki_inhibitor="p_HXK1_Kt6p")
 
 
 
-v_NTH1=Jax_Irrev_MM_Uni(substrate='ICtreh',vmax='p_NTH1_Vmax',km_substrate='p_NTH1_Ktre')
-v_PGI=Jax_Rev_UniUni_MM(substrate='ICG6P',product='ICF6P',vmax='p_PGI1_Vmax',k_equilibrium='p_PGI1_Keq',km_substrate='p_PGI1_Kg6p',km_product='p_PGI1_Kf6p')
+v_NTH1=Jax_MM_Irrev_Uni(substrate='ICtreh',vmax='p_NTH1_Vmax',km_substrate='p_NTH1_Ktre')
+v_PGI=Jax_MM_Rev_UniUni(substrate='ICG6P',product='ICF6P',vmax='p_PGI1_Vmax',k_equilibrium='p_PGI1_Keq',km_substrate='p_PGI1_Kg6p',km_product='p_PGI1_Kf6p')
 v_sinkG6P=Jax_MM_Sink(substrate='ICG6P',v_sink='poly_sinkG6P',km_sink='km_sinkG6P')
 v_sinkF6P=Jax_MM_Sink(substrate='ICF6P',v_sink='poly_sinkF6P',km_sink='km_sinkF6P')
-v_PGM1=Jax_Rev_UniUni_MM(substrate='ICG1P',product='ICG6P',vmax='p_PGM1_Vmax',k_equilibrium='p_PGM1_Keq',km_substrate='p_PGM1_Kg1p',km_product='p_PGM1_Kg6p') #to do v_TPS1 for 2nd rate law
+v_PGM1=Jax_MM_Rev_UniUni(substrate='ICG1P',product='ICG6P',vmax='p_PGM1_Vmax',k_equilibrium='p_PGM1_Keq',km_substrate='p_PGM1_Kg1p',km_product='p_PGM1_Kg6p') #to do v_TPS1 for 2nd rate law
 
 # inhibitor_TPS1=SimpleInhibitor(k_I='p_TPS1_Kpi')
 activator_TPS1=SimpleActivator(k_A="p_TPS1_KmF6P")
-v_TPS1=Jax_Irrev_MM_Bi_w_Modifiers(substrate1="ICG6P",substrate2="ICG1P",modifiers_list=['ICF6P'],vmax="p_TPS1_Vmax",km_substrate1="p_TPS1_Kg6p",
+v_TPS1=Jax_MM_Irrev_Bi_w_Modifiers(substrate1="ICG6P",substrate2="ICG1P",modifiers_list=['ICF6P'],vmax="p_TPS1_Vmax",km_substrate1="p_TPS1_Kg6p",
                                   km_substrate2="p_TPS1_Kudp_glc",modifiers=[activator_TPS1])
 
-# v_TPS1=Jax_Irrev_MM_Bi(substrate1="ICG6P",substrate2="ICG1P",vmax="p_TPS1_Vmax",km_substrate1="p_TPS1_Kg6p",km_substrate2="p_TPS1_Kudp_glc")
-v_TPS2=Jax_Irrev_MM_Bi_w_Inhibition(substrate="ICT6P",product="ICPHOS",vmax="p_TPS2_Vmax", km_substrate1="p_TPS2_Kt6p", ki="p_TPS2_Kpi")
+# v_TPS1=Jax_MM_Irrev_Bi(substrate1="ICG6P",substrate2="ICG1P",vmax="p_TPS1_Vmax",km_substrate1="p_TPS1_Kg6p",km_substrate2="p_TPS1_Kudp_glc")
+v_TPS2=Jax_MM_Irrev_Bi_w_Inhibition(substrate="ICT6P",product="ICPHOS",vmax="p_TPS2_Vmax", km_substrate1="p_TPS2_Kt6p", ki="p_TPS2_Kpi")
 
 
 
-v_PFK=Jax_Specific(substrate1="ICF6P",substrate2="ICATP",product1="ICFBP",modifier="ICAMP",vmax="p_PFK_Vmax",kr_F6P="p_PFK_Kf6p", kr_ATP="p_PFK_Katp", gr="p_PFK_gR",c_ATP="p_PFK_Catp", ci_ATP="p_PFK_Ciatp", ci_AMP="p_PFK_Camp", 
+v_PFK=Jax_PFK(substrate1="ICF6P",substrate2="ICATP",product1="ICFBP",modifier="ICAMP",vmax="p_PFK_Vmax",kr_F6P="p_PFK_Kf6p", kr_ATP="p_PFK_Katp", gr="p_PFK_gR",c_ATP="p_PFK_Catp", ci_ATP="p_PFK_Ciatp", ci_AMP="p_PFK_Camp", 
                            ci_F26BP="p_PFK_Cf26bp", ci_F16BP="p_PFK_Cf16bp", l="p_PFK_L", 
                            kATP="p_PFK_Kiatp", kAMP="p_PFK_Kamp", F26BP ="p_PFK_F26BP",
                            kF26BP = "p_PFK_Kf26bp", kF16BP = "p_PFK_Kf16bp")
-v_ALD=Jax_Rev_MM_UniBi(substrate='ICFBP',product1='ICGAP',product2='ICDHAP',vmax="p_FBA1_Vmax", k_equilibrium="p_FBA1_Keq", km_substrate="p_FBA1_Kf16bp",
+v_ALD=Jax_MM_Rev_UniBi(substrate='ICFBP',product1='ICGAP',product2='ICDHAP',vmax="p_FBA1_Vmax", k_equilibrium="p_FBA1_Keq", km_substrate="p_FBA1_Kf16bp",
                                     km_product1="p_FBA1_Kglyceral3p", km_product2="p_FBA1_Kdhap" )
-v_TPI1=Jax_Rev_UniUni_MM(substrate="ICDHAP",product="ICGAP",vmax="p_TPI1_Vmax",k_equilibrium="p_TPI1_Keq", km_substrate="p_TPI1_Kdhap",
+v_TPI1=Jax_MM_Rev_UniUni(substrate="ICDHAP",product="ICGAP",vmax="p_TPI1_Vmax",k_equilibrium="p_TPI1_Keq", km_substrate="p_TPI1_Kdhap",
                                 km_product="p_TPI1_Kglyceral3p")
 v_sinkGAP=Jax_MM_Sink(substrate="ICGAP",v_sink="poly_sinkGAP",km_sink="km_sinkGAP")
-v_G3PDH=Jax_Rev_BiBi_MM_w_Activation(substrate1="ICDHAP",substrate2="ICNADH",product1="ICG3P",product2="ICNAD",modifiers=['ICFBP', 'ICATP', 'ICADP'],vmax="p_GPD1_Vmax", k_equilibrium="p_GPD1_Keq", 
+v_G3PDH=Jax_MM_Rev_BiBi_w_Activation(substrate1="ICDHAP",substrate2="ICNADH",product1="ICG3P",product2="ICNAD",modifiers=['ICFBP', 'ICATP', 'ICADP'],vmax="p_GPD1_Vmax", k_equilibrium="p_GPD1_Keq", 
                                              km_substrate1="p_GPD1_Kdhap", km_substrate2="p_GPD1_Knadh",
                                              km_product1="p_GPD1_Kglyc3p", km_product2="p_GPD1_Knad",
                                                ka1="p_GPD1_Kf16bp", ka2="p_GPD1_Katp", ka3="p_GPD1_Kadp")
@@ -187,7 +190,7 @@ v_GAPDH=Jax_MM_Ordered_Bi_Tri(substrate1="ICGAP",substrate2="ICNAD",substrate3="
                               vmax="p_GAPDH_Vmax", k_equilibrium="p_TDH1_Keq", km_substrate1="p_TDH1_Kglyceral3p",
                                       km_substrate2="p_TDH1_Knad", ki="p_TDH1_Kpi", 
                                       km_product1="p_TDH1_Kglycerate13bp", km_product2="p_TDH1_Knadh") #might exchange this mechanism by a BiBi mechanism, since modeling Phos is a bit too much
-v_PGK=Jax_Rev_BiBi_MM(substrate1="ICBPG",substrate2="ICADP",product1="IC3PG",product2="ICATP",vmax="p_PGK_VmPGK",k_equilibrium="p_PGK_KeqPGK", 
+v_PGK=Jax_MM_Rev_BiBi(substrate1="ICBPG",substrate2="ICADP",product1="IC3PG",product2="ICATP",vmax="p_PGK_VmPGK",k_equilibrium="p_PGK_KeqPGK", 
                                km_substrate1="p_PGK_KmPGKBPG", km_substrate2="p_PGK_KmPGKADP", 
                                km_product1="p_PGK_KmPGKP3G", km_product2="p_PGK_KmPGKATP")
 vsink3PGA=Jax_MM_Sink(substrate='IC3PG',v_sink='poly_sinkP3G',km_sink='km_sinkP3G')
@@ -197,16 +200,16 @@ vsink3PGA=Jax_MM_Sink(substrate='IC3PG',v_sink='poly_sinkP3G',km_sink='km_sinkP3
 
 #hor2: might not be quite correct
 HOR2_inhibition_Pi=SimpleInhibitor(k_I="p_HOR2_Kpi")
-v_HOR2=Jax_Irrev_MM_Uni_w_Modifiers(substrate="ICG3P",vmax="p_HOR2_Vmax",km_substrate="p_HOR2_Kglyc3p",modifiers_list=["ICPHOS"],modifiers=[HOR2_inhibition_Pi])
+v_HOR2=Jax_MM_Irrev_Uni_w_Modifiers(substrate="ICG3P",vmax="p_HOR2_Vmax",km_substrate="p_HOR2_Kglyc3p",modifiers_list=["ICPHOS"],modifiers=[HOR2_inhibition_Pi])
 v_GlycT=Jax_Diffusion(substrate="ICglyc",enzyme="f_GLYCEROL_e",transport_coef="p_GlycerolTransport")
-v_PGM=Jax_Rev_UniUni_MM(substrate="IC3PG",product="IC2PG",vmax="p_PGM_Vm", k_equilibrium="p_PGM_Keq",
+v_PGM=Jax_MM_Rev_UniUni(substrate="IC3PG",product="IC2PG",vmax="p_PGM_Vm", k_equilibrium="p_PGM_Keq",
                                  km_substrate="p_PGM_K3pg", km_product="p_PGM_K2pg")
 
-v_ENO=Jax_Rev_UniUni_MM(substrate="IC2PG",product="ICPEP",vmax="p_ENO1_Vm",k_equilibrium="p_ENO1_Keq",
+v_ENO=Jax_MM_Rev_UniUni(substrate="IC2PG",product="ICPEP",vmax="p_ENO1_Vm",k_equilibrium="p_ENO1_Keq",
                                 km_substrate="p_ENO1_K2pg", km_product="p_ENO1_Kpep")
 
 vsinkPEP = Jax_MM_Sink(substrate="ICPEP",v_sink="poly_sinkPEP", km_sink="km_sinkPEP") #reverse sign in stoichiometry
-v_PYK1=Jax_Hill_Bi_Irreversible_Activation(substrate1="ICPEP",substrate2="ICADP",activator="ICFBP",product="ICATP",vmax="p_PYK1_Vm", hill="p_PYK1_hill",
+v_PYK1=Jax_Hill_Irreversible_Bi_Activation(substrate1="ICPEP",substrate2="ICADP",activator="ICFBP",product="ICATP",vmax="p_PYK1_Vm", hill="p_PYK1_hill",
                                                   k_substrate1="p_PYK1_Kpep", k_substrate2="p_PYK1_Kadp",
                                                   k_product="p_PYK1_Katp", k_activator="p_PYK1_Kf16bp", l="p_PYK1_L")
 vsinkPYR=Jax_MM_Sink(substrate="ICPYR",v_sink="poly_sinkPYR", km_sink="km_sinkPYR")
@@ -215,9 +218,9 @@ v_PDC=Jax_Hill_Irreversible_Inhibition(substrate="ICPYR",inhibitor="ICPHOS",vmax
 
 
 
-v_mitoNADH=Jax_MM(substrate="ICNADH",vmax="p_mitoNADHVmax",km="p_mitoNADHKm") #I think this can be replaced by Jax_Irrev_MM_Uni
+v_mitoNADH=Jax_MM(substrate="ICNADH",vmax="p_mitoNADHVmax",km="p_mitoNADHKm") #I think this can be replaced by Jax_MM_Irrev_Uni
 
-v_ADH = Jax_ADH_Reaction(NAD="ICNAD",ETOH="ICETOH",NADH="ICNADH",ACE="ICACE",
+v_ADH = Jax_ADH(NAD="ICNAD",ETOH="ICETOH",NADH="ICNADH",ACE="ICACE",
     vmax='p_ADH_VmADH',
     k_equilibrium='p_ADH_KeqADH',km_substrate1='p_ADH_KiADHNAD',
     km_substrate2='p_ADH_KmADHETOH',km_product1='p_ADH_KmADHACE',
@@ -230,7 +233,7 @@ vsinkACE=Jax_MM_Sink(substrate="ICACE",v_sink="poly_sinkACE",km_sink="km_sinkACE
 v_EtohT = Jax_Diffusion(substrate="ICETOH",enzyme="f_ETOH_e", transport_coef="p_kETOHtransport")
 
 #new 
-v_ATPmito=Jax_Irrev_MM_Bi("ICADP","ICPHOS",vmax="p_mitoVmax",km_substrate1="p_mitoADPKm",
+v_ATPmito=Jax_MM_Irrev_Bi("ICADP","ICPHOS",vmax="p_mitoVmax",km_substrate1="p_mitoADPKm",
                                   km_substrate2="p_mitoPiKm")
 v_ATPase=Jax_ATPase("ICATP","ICADP",ATPase_ratio="p_ATPase_ratio")
 v_ADK=Jax_MA_Rev_Bi(substrate1="ICADP",substrate2="ICADP",product1="ICATP",product2="ICAMP",k_equilibrium="p_ADK1_Keq",k_fwd="p_ADK1_k")

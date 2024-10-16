@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 
 
-class Jax_Irrev_MM_Uni:
+class Jax_MM_Irrev_Uni:
     """Irreversible Michaelis-Menten kinetics (uni-substrate), adapted to JAX."""
     def __init__(self,
                  substrate:str,
@@ -26,7 +26,7 @@ class Jax_Irrev_MM_Uni:
 
 
 
-class Jax_Facilitated_Diffusion():
+class Jax_Facilitated_Diffusion:
     """facilitated diffusion formula, taken from 
     Lao-Martil, D., Schmitz, J. P., Teusink, B., & van Riel, N. A. (2023). Elucidating yeast glycolytic dynamics at steady state growth and glucose pulses through
      kinetic metabolic modeling. Metabolic engineering, 77, 128-142.
@@ -59,7 +59,7 @@ class Jax_Facilitated_Diffusion():
         return numerator/denominator
     
 
-class Jax_Rev_UniUni_MM:
+class Jax_MM_Rev_UniUni:
     """Reversible Michaelis-Menten"""
     def __init__(self,substrate:str,product:str, vmax: str, k_equilibrium: str, km_substrate: str, km_product: str):
         self.vmax = vmax
@@ -116,7 +116,7 @@ class Jax_MM_Sink:
     
 
 
-class Jax_Irrev_MM_Bi:
+class Jax_MM_Irrev_Bi:
     def __init__(self, substrate1:str,
                  substrate2:str,
                  vmax: str,
@@ -144,7 +144,7 @@ class Jax_Irrev_MM_Bi:
     
 
 
-class Jax_Rev_MM_UniBi:
+class Jax_MM_Rev_UniBi:
     """Uni Bi reversible MM reaction of the form A-->B+C"""
     def __init__(self, 
                  substrate:str,
@@ -178,7 +178,7 @@ class Jax_Rev_MM_UniBi:
         return numerator / denominator
 
 
-class Jax_Rev_BiBi_MM:
+class Jax_MM_Rev_BiBi:
     """Reversible BiBi Michaelis-Menten Kinetics"""
     def __init__(self, 
                  substrate1:str,

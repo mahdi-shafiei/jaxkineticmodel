@@ -4,7 +4,7 @@ import jax.numpy as jnp
 
 
 
-class Jax_Irrev_MM_Bi_w_Modifiers:
+class Jax_MM_Irrev_Bi_w_Modifiers:
     """Michaelis-Menten equation with modifiers: can be activator or inhibition
     the names of the modifiers concentrations should be added as strings as well as classes, in the same order as the classes"""
     def __init__(self,substrate1:str,
@@ -42,7 +42,7 @@ class Jax_Irrev_MM_Bi_w_Modifiers:
         return v
     
 
-class Jax_Specific:
+class Jax_PFK:
     """Specifically designed for PFK (for which the functional expression we retrieved from:
     Metabolic Engineering 77 (2023) 128–142
     Available online 23 March 2023
@@ -116,7 +116,7 @@ class Jax_Specific:
 
 
 
-class Jax_Rev_BiBi_MM_w_Activation:
+class Jax_MM_Rev_BiBi_w_Activation:
     """Specific Rev BiBi MM with 3 modifiers for G3PDH"""
     def __init__(self, 
                  substrate1:str,
@@ -228,7 +228,7 @@ class Jax_MM_Ordered_Bi_Tri:
     
 
 
-class Jax_Irrev_MM_Uni_w_Modifiers:
+class Jax_MM_Irrev_Uni_w_Modifiers:
     """Irreversible Michaelis-Menten model with modifiers."""
     def __init__(self, 
                  substrate: str, 
@@ -260,7 +260,7 @@ class Jax_Irrev_MM_Uni_w_Modifiers:
     
 
 
-class Jax_Hill_Bi_Irreversible_Activation:
+class Jax_Hill_Irreversible_Bi_Activation:
     """Hill Bi-substrate irreversible model with activation. (PYK1)"""
     def __init__(self, 
                  substrate1: str, 
@@ -348,7 +348,7 @@ class Jax_Hill_Irreversible_Inhibition:
     
 
 
-class Jax_Irrev_MM_Bi_w_Inhibition:
+class Jax_MM_Irrev_Bi_w_Inhibition:
     """Irreversible Michaelis-Menten Bi-substrate model with inhibition."""
     def __init__(self, 
                  substrate: str, 
@@ -378,7 +378,7 @@ class Jax_Irrev_MM_Bi_w_Inhibition:
     
 
 
-class Jax_Rev_BiBi_MM_w_Inhibition:
+class Jax_MM_Rev_BiBi_w_Inhibition:
     """Reversible Bi-Bi Michaelis-Menten model with inhibition."""
     def __init__(self, 
                  substrate1: str, 
@@ -434,7 +434,7 @@ class Jax_Rev_BiBi_MM_w_Inhibition:
         return v
     
 
-class Jax_ADH_Reaction:
+class Jax_ADH:
     """JAX class for the ADH reaction with detailed rate expression."""
     
     def __init__(self, 
