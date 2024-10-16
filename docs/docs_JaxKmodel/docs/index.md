@@ -4,7 +4,7 @@
 
 ## Installation
 
-## Minimal example
+## Minimal simulation example
 
 ## Reference
 

@@ -1,4 +1,4 @@
-site_name: JaxKineticModel
+site_name: McLovin's documentation
 nav:
   - Home: index.md
   - Building models: building_models.md
@@ -10,5 +10,4 @@ markdown_extensions:
   - codehilite
   - footnotes
   
-  
- 
+
