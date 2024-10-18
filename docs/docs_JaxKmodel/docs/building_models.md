@@ -1,8 +1,11 @@
 # Building models
 
-$$\frac{dm(t)}{dt}=S\cdot v(t,\theta,y_0)$$
+
+## Introduction to kinetic modelling
+
+## Building models: a tutorial
+#### The `Reaction` object
 
 
 
-![mclovin](images/mclovin.png)
 
