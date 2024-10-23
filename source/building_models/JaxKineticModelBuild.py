@@ -5,10 +5,28 @@ import numpy as np
 from collections import Counter
 import diffrax
 import pandas as pd
+import sympy as sp
 
 from source.utils import get_logger
 logger = get_logger(__name__)
 
+
+
+class BoundaryCondition:
+    """Class to evaluate boundary conditions, similar in form to Diffrax. For most purposes the interpolation in diffrax is perfectly fine.
+        For now we only will consider boundary conditions that are dependent on t. 
+        
+        #To do: think about how to expand this class to include metabolite dependencies in expression (could be easier to jax.jit)"""
+    def __init__(self,
+                 expression:str):
+        self.expression=sp.sympify(expression)
+    
+        self.expression=sp.lambdify(sp.Symbol('t'),self.expression,"jax")
+
+
+    def evaluate(self,t):
+        return self.expression(t)
+        # return 
 
 
 
@@ -54,6 +72,9 @@ class JaxKineticModel_Build:
         self.parameter_names=self._flatten([reaction.parameters for reaction in self.reactions])
         self._check_parameter_uniqueness()
 
+        self.boundary_conditions={}
+
+
 
     def _get_stoichiometry(self):
         """Build stoichiometric matrix from reactions """
@@ -87,38 +108,59 @@ class JaxKineticModel_Build:
             if k!=1:
                 logger.info(f"parameter {self.parameter_names[k]} is in multiple reactions.")
 
+    def add_boundary(self,metabolite_name,boundary_condition):
+        """Add a metabolite boundary condition
+        input: metabolite name, boundary condition object or diffrax interpolation object"""
+
+        self.boundary_conditions.update({metabolite_name:boundary_condition})
+        index=self.species_names.index(metabolite_name)
+        # self.S=jnp.delete(self.S,index)
+        self.species_names.remove(metabolite_name)
+        self.S=jnp.delete(self.S,index,axis=0)
+        self.stoichiometric_matrix=self.stoichiometric_matrix.drop(labels=metabolite_name,axis=0)
+        self.compartment_values=jnp.delete(self.compartment_values,index)
+
+        
 
 
-    
+
     def __call__(self,t,y,args):
-        params=args
+        params,boundary_conditions=args
+
         y=dict(zip(self.species_names,y))
+        if boundary_conditions:
+            for key, value in boundary_conditions.items():
+                boundary_conditions[key] = value.evaluate(t)
+
+
+        #we construct this dictionary, and then overwrite
 
         # Think about how to vectorize the evaluation of mechanism.call
-        eval_dict = {**y,**params}
+        eval_dict = {**y,**params,**boundary_conditions}
         v=jnp.stack([self.v[i](eval_dict) for i in range(len(self.reaction_names))])
-
         dY = jnp.matmul(self.S, v)
         dY=dY/self.compartment_values
+
+
         return dY
     
 
-class NeuralODE:
-    func: JaxKineticModel_Build
+class NeuralODEBuild:
 
     def __init__(self,
-                 v,
-                 compartment_values):
-        self.func = JaxKineticModel_Build(v,compartment_values)
-        self.parameter_names=self.func.parameter_names
-        self.stoichiometric_matrix=self.func.stoichiometric_matrix
-        self.reaction_names = list(self.func.stoichiometric_matrix.columns)
-        self.species_names=list(self.func.stoichiometric_matrix.index)
-        self.Stoichiometry = self.func.S
+                 func):
+        self.func = func
+        self.parameter_names=func.parameter_names
+        self.stoichiometric_matrix=func.stoichiometric_matrix
+        self.reaction_names = list(func.stoichiometric_matrix.columns)
+        self.species_names=list(func.stoichiometric_matrix.index)
+        self.Stoichiometry = func.S
+        self.boundary_conditions={}
+        
 
         self.max_steps=200000
-        self.rtol=1e-7
-        self.atol=1e-9
+        self.rtol=1e-8
+        self.atol=1e-11
 
         ## time dependencies: a function that return for all fluxes whether there is a time dependency
 
@@ -129,9 +171,9 @@ class NeuralODE:
             diffrax.Kvaerno5(),
             t0=ts[0],
             t1=ts[-1],
-            dt0=1e-6,
+            dt0=1e-8,
             y0=y0,
-            args=(params),
+            args=(params,self.boundary_conditions),
             stepsize_controller=diffrax.PIDController(rtol=self.rtol, atol=self.atol,pcoeff=0.4,icoeff=0.3,dcoeff=0),
             saveat=diffrax.SaveAt(ts=ts),
             max_steps=self.max_steps

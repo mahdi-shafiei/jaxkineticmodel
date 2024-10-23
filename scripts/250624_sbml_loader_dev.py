@@ -17,7 +17,7 @@ logger.debug('Loading SBML model')
 
 # a simple sbml model
 filepath = (
-      "models/sbml_models/discrepancies/Bachmann_MSB2011.xml"
+      "models/sbml_models/working_models/simple_sbml.xml"
       # "models/sbml_models/Novak2022.xml"
     #   "models/sbml_models/discrepancies/BIOMD0000000160_url.xml"
     # "models/sbml_models/failing_models/Beer_MolBioSystems2014.xml"
@@ -47,7 +47,7 @@ JaxKmodel = jax.jit(JaxKmodel)
 # # Simulation
 # ###
 
-ts = jnp.linspace(0,100,2000)
+ts = jnp.linspace(0,10,2000)
 # #parameters are not yet defined
 params = get_global_parameters(model.model)
 params = {**model.local_params, **params}
@@ -67,19 +67,19 @@ ys=pd.DataFrame(ys,columns=S.index)
 
 
 #optional visual comparison for tellurium
-import tellurium as te
-model = te.loadSBMLModel(filepath)
-sol_tell = model.simulate(0, 100, 2000)
-time_tell=sol_tell['time']
-colnames=sol_tell.colnames
+# import tellurium as te
+# model = te.loadSBMLModel(filepath)
+# sol_tell = model.simulate(0, 100, 2000)
+# time_tell=sol_tell['time']
+# colnames=sol_tell.colnames
 
 
-for name in S.index[2:]:
+# for name in S.index[2:]:
 
-      name_tell="["+name+"]"
-      plt.plot(time_tell,sol_tell[name_tell],label=name_tell)
-      plt.plot(ts,ys[name],label=name,linewidth=2,linestyle="--") 
+#       name_tell="["+name+"]"
+#       plt.plot(time_tell,sol_tell[name_tell],label=name_tell)
+#       plt.plot(ts,ys[name],label=name,linewidth=2,linestyle="--") 
 
 
-plt.legend()
-plt.show()
+# plt.legend()
+# plt.show()

@@ -98,10 +98,14 @@ v3=jkm.Reaction(
     mechanism=jm.Jax_MM_Irrev_Uni(substrate="m2",vmax="C_Vmax",km_substrate="C_Km"),
     )
 
-# initialized the kinetic model object, which is termed NeuralODE. 
+
 reactions=[v1,v2,v3]
-compartment_values={'c':1.0,}
-kmodel=jkm.NeuralODE(reactions,compartment_values)
+compartment_values={'c':1}
+
+
+# initialized the kinetic model object, and then make it a simulation object through jkm.NeuralODE
+kmodel=jkm.JaxKineticModel_Build(reactions,compartment_values)
+kmodel_sim=jkm.NeuralODE(kmodel)
 print(kmodel.stoichiometric_matrix)
 ```
 The stoichiometric matrix is automatically constructed from the reactions.
@@ -116,13 +120,14 @@ One can first jax.jit the model **[2]** and solve the ODEs using the diffrax pac
 
 ```python
 #define the time interval, and the initial conditions
+
 ts=jnp.linspace(0,10,1000)
 y0=jnp.array([2,0,0,0])
 params=dict(zip(kmodel.parameter_names,jnp.array([1,1,1,1,1.5,1])))
 
 #jit the kmodel object. This results in a slow initial solve, but a c-compiled solve
-kmodel=jax.jit(kmodel)
-ys=kmodel(ts,y0,params)
+kmodel_sim=jax.jit(kmodel_sim)
+ys=kmodel_sim(ts,y0,params)
 ys=pd.DataFrame(ys,columns=kmodel.species_names)
 
 fig,ax=plt.subplots(figsize=(4,4))
@@ -133,7 +138,7 @@ ax.plot(ts,ys['m4'],label="m4")
 ax.set_xlabel("Time (in seconds)")
 ax.set_ylabel("Concentration (in mM)")
 ax.legend()
-fig.savefig("docs/docs/images/timeseries_example.png")
+
 ```
 
 ![timeseries](images/timeseries_example.png)
@@ -141,16 +146,86 @@ fig.savefig("docs/docs/images/timeseries_example.png")
 #### On jit-compiling kinetic models
 When you simulated a jit-compiled kinetic model for a certain time-range (e.g., `jnp.linspace(0,10,1000)` and you want to elongate this, it is best to not change the number of timepoints (e.g, `jnp.linspace(0,1000,1000)`. Otherwise, the kinetic models needs to be recompiled.  
 ## Boundary conditions
+Boundary conditions can be either constant or not constant. Both are implemented as a `BoundaryCondition` class
 #### Constant boundary conditions
+Suppose for the system above, we want to make metabolite \\(m_1\\) a constant boundary condition. We can redefine the species by replacing it with a value
 
+
+
+    
+
+
+```python
+kmodel=jkm.JaxKineticModel_Build(reactions,compartment_values)
+kmodel.add_boundary('m1',jkm.BoundaryCondition(2))
+print(kmodel.stoichiometric_matrix)
+
+#recompile and simulate
+kmodel_sim=jkm.NeuralODE(kmodel)
+ts=jnp.linspace(0,10,1000)
+
+#we remove m1 from y0, as this is now not evaluated by solving
+y0=jnp.array([0,0,0])
+params=dict(zip(kmodel.parameter_names,jnp.array([1,1,1,1,1.5,1])))
+
+#jit the kmodel object. This results in a slow initial solve, but a c-compiled solve
+kmodel_sim=jax.jit(kmodel_sim)
+ys=kmodel_sim(ts,y0,params)
+ys=pd.DataFrame(ys,columns=kmodel.species_names)
+
+#plot
+fig,ax=plt.subplots(figsize=(4,4))
+ax.plot(ts,ys['m2'],label="m2")
+ax.plot(ts,ys['m3'],label="m3")
+ax.plot(ts,ys['m4'],label="m4")
+ax.set_xlabel("Time (in seconds)")
+ax.set_ylabel("Concentration (in mM)")
+ax.legend()
+
+```
+
+
+![timeseries](images/timeseries_example_boundary.png)
 #### Non-constant boundary conditions
+For non-constant boundary conditions, you can use the `BoundaryCondition` class as before. You can use for example the interpolation abstract classes from [Diffrax](https://docs.kidger.site/diffrax/api/interpolation/). For analytic expression dependent on time t, these can be done as follows:
 
+```python
+
+
+# initialized the kinetic model object, and then make it a simulation object through jkm.NeuralODE
+kmodel=jkm.JaxKineticModel_Build(reactions,compartment_values)
+kmodel.add_boundary('m1',jkm.BoundaryCondition('0.1*sin(t)'))
+print(kmodel.stoichiometric_matrix)
+
+kmodel_sim=jkm.NeuralODE(kmodel)
+ts=jnp.linspace(0,10,1000)
+
+#we remove m1 from y0, as this is now not evaluated by solving
+y0=jnp.array([0,0,0])
+params=dict(zip(kmodel.parameter_names,jnp.array([1,1,1,1,1.5,1])))
+
+#jit the kmodel object. This results in a slow initial solve, but a c-compiled solve
+kmodel_sim=jax.jit(kmodel_sim)
+ys=kmodel_sim(ts,y0,params)
+ys=pd.DataFrame(ys,columns=kmodel.species_names)
+
+fig,ax=plt.subplots(figsize=(4,4))
+ax.plot(ts,ys['m2'],label="m2")
+ax.plot(ts,ys['m3'],label="m3")
+ax.plot(ts,ys['m4'],label="m4")
+ax.set_xlabel("Time (in seconds)")
+ax.set_ylabel("Concentration (in mM)")
+ax.legend()
+
+```
+![timeseries](images/timeseries_example_boundary_sin.png)
 ## Saving models
-
+To do (or remove)
 
 
 ## References
 [1] Kidger, P. (2022). On neural differential equations. arXiv preprint arXiv:2202.02435.
+
 [2] Bradbury, J., Frostig, R., Hawkins, P., Johnson, M. J., Leary, C., Maclaurin, D., ... & Zhang, Q. (2018). JAX: composable transformations of Python+ NumPy programs.
 
 
