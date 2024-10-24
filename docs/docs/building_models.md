@@ -105,7 +105,7 @@ compartment_values={'c':1}
 
 # initialized the kinetic model object, and then make it a simulation object through jkm.NeuralODE
 kmodel=jkm.JaxKineticModel_Build(reactions,compartment_values)
-kmodel_sim=jkm.NeuralODE(kmodel)
+kmodel_sim=jkm.NeuralODEBuild(kmodel)
 print(kmodel.stoichiometric_matrix)
 ```
 The stoichiometric matrix is automatically constructed from the reactions.
@@ -138,7 +138,7 @@ ax.plot(ts,ys['m4'],label="m4")
 ax.set_xlabel("Time (in seconds)")
 ax.set_ylabel("Concentration (in mM)")
 ax.legend()
-
+plt.show()
 ```
 
 ![timeseries](images/timeseries_example.png)
