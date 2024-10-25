@@ -253,8 +253,9 @@ def get_constant_boundary_species(model):
     species = model.getListOfSpecies()
     for specimen in species:
         if specimen.getBoundaryCondition():
+
             if model.getLevel() == 2:
-                print("Assume that boundary is constant for level 2")
+                logger.info(f"Assume that boundary {specimen.id} is constant for level 2")
                 constant_boundary_dict[specimen.id] = specimen.initial_concentration
 
             constant_boundary_dict[specimen.id] = specimen.initial_concentration

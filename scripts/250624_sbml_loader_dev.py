@@ -47,7 +47,7 @@ JaxKmodel = jax.jit(JaxKmodel)
 # # Simulation
 # ###
 
-ts = jnp.linspace(0,10,2000)
+ts = jnp.linspace(0,1,2000)
 # #parameters are not yet defined
 params = get_global_parameters(model.model)
 params = {**model.local_params, **params}
