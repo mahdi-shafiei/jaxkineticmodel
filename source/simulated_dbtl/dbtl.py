@@ -292,7 +292,7 @@ class DesignBuildTestLearnCycle:
             _, _, r_value, _, _ = scipy.stats.linregress(np.array(y_predicted),np.array(validation_values[target]))
             if plotting==True:
                 fig,ax=plt.subplots(figsize=(3,3))
-                ax.scatter(validation_values['t6p'],y_predicted)
+                ax.scatter(validation_values[target],y_predicted)
                 ax.plot([0, 1], [0, 1], transform=ax.transAxes,linestyle='--',c='black')
                 ax.set_title("R2 validation set")
                 ax.set_xlabel("True (simulated values)")

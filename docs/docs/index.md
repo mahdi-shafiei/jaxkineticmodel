@@ -1,7 +1,7 @@
 # Summary
 
 ## Introduction
-![mclovin](images/mclovin.png)
+A package for building, simulating and training kinetic models.
 
 ## Installation
 
