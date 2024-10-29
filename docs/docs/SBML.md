@@ -3,7 +3,7 @@
 ## SBML loader and simulation
 SBML models can be loaded and simulated as follows. 
 
-```python
+```python3
 import matplotlib.pyplot as plt
 import os
 import sys, os
@@ -36,7 +36,7 @@ ys=pd.DataFrame(ys,columns=S.index)
 
 
 ## Percentage of similar models
-Status report on a large collection of SBML models loaded from [biomodels]('https://www.ebi.ac.uk/biomodels/') and from a benchmark collection **[1]**. Discrepancies are models where we compared the output from JaxKineticModel to a simulation using tellurium **[2]**, a popular tool in systems biology. Discrepancies could be there because of numerical differences in the results, or potentially a missing feature in our current implementation (certain event rules are not implemented yet.)
+Status report on a large collection of SBML models loaded from [biomodels](https://www.ebi.ac.uk/biomodels/) and from a benchmark collection **[1]**. Discrepancies are models where we compared the output from JaxKineticModel to a simulation using tellurium **[2]**, a popular tool in systems biology. Discrepancies could be there because of numerical differences in the results, or potentially a missing feature in our current implementation (certain event rules are not implemented yet.)
 
 | **Category**             | **Number of working models**                         
 |----------------------------------|-------------------------------------------------

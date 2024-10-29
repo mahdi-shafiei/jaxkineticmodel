@@ -13,7 +13,6 @@ import optax
 from source.parameter_estimation.training import *
 import time
 import argparse
-from source.parameter_estimation.jacobian import *
 
 
 def main():

@@ -131,7 +131,9 @@ class DesignBuildTestLearnCycle:
         return strains
 
     def BUILD_simulate_strains(self, strains_perturbed, plot=False):
-        """Simulates perturbations with respect to the reference strain. Takes the mean value of the last 10 simulated steps. We then save this into the designs_per_cycle status  """
+        """Simulates perturbations with respect to the reference strain. 
+        Takes the mean value of the last 10 simulated steps. 
+        We then save this into the designs_per_cycle status  """
         
         # Simulate the reference strain
         ys_ref = self.kinetic_model(self.timespan, self.initial_conditions, self.parameters)

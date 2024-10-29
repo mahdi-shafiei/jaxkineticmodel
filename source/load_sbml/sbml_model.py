@@ -111,7 +111,7 @@ class SBMLModel:
             if specimen.isSetConstant() and specimen.isSetBoundaryCondition():
             # there are also non-stationary boundary conditions, deal with this later.
                 if specimen.getConstant() and specimen.getBoundaryCondition():
-                    print("Constant Boundary Specimen ", specimen.id)
+                    logger.info(f"Constant Boundary Specimen {specimen.id}")
                     continue
                 elif specimen.getBoundaryCondition() and not specimen.getConstant():
                     continue
@@ -135,7 +135,7 @@ class SBMLModel:
             if specimen.isSetConstant() and specimen.isSetBoundaryCondition():
             # there are also non-stationary boundary conditions, deal with this later.
                 if specimen.getConstant() and specimen.getBoundaryCondition():
-                    print("Constant Boundary Specimen ", specimen.id)
+                    logger.info(f"Constant Boundary Specimen {specimen.id}")
                     continue
                 elif specimen.getBoundaryCondition() and not specimen.getConstant():
                     continue
