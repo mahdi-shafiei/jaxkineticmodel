@@ -8,11 +8,11 @@ The `Trainer` object requires a few inputs. First, it requires a `SBMLModel` or 
 First, we load the necessary functions 
 
 ```python3
-from source.parameter_estimation.initialize_parameters import generate_bounds,latinhypercube_sampling
+from jaxkineticmodel.parameter_estimation.initialize_parameters import generate_bounds,latinhypercube_sampling
 import optax
-from source.parameter_estimation.training import Trainer
-from source.load_sbml.sbml_load import *
-from source.load_sbml.sbml_model import SBMLModel
+from jaxkineticmodel.parameter_estimation.training import Trainer
+from jaxkineticmodel.load_sbml.sbml_load import *
+from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
 import jax.numpy as jnp
 import jax
 import numpy as np
@@ -20,7 +20,7 @@ import diffrax
 import matplotlib.pyplot as plt
 import pandas as pd
 import logging
-from source.load_sbml.jax_kinetic_model import NeuralODE
+from jaxkineticmodel.load_sbml.jax_kinetic_model import NeuralODE
 ```
 
 Then, we load the model, data and initialize the trainer object. 

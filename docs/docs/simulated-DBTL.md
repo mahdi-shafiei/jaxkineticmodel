@@ -9,21 +9,21 @@ DBTL cycles are widely used in the optimization of microorganisms for producing 
 ## Usage
 Import required functions
 ```python
-from source.kinetic_mechanisms import JaxKineticMechanisms as jm
-from source.building_models import JaxKineticModelBuild as jkm
-from source.load_sbml.sbml_load import *
-from source.load_sbml.sbml_model import SBMLModel
+from jaxkineticmodel.kinetic_mechanisms import JaxKineticMechanisms as jm
+from jaxkineticmodel.building_models import JaxKineticModelBuild as jkm
+from jaxkineticmodel.load_sbml.sbml_load import *
+from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
 import jax.numpy as jnp
 import jax
 import numpy as np
-from source.utils import get_logger
+from jaxkineticmodel.utils import get_logger
 logger = get_logger(__name__)
 
 import matplotlib.pyplot as plt
 import pandas as pd
 import itertools
 
-from source.simulated_dbtl.dbtl import DesignBuildTestLearnCycle
+from jaxkineticmodel.simulated_dbtl.dbtl import DesignBuildTestLearnCycle
 import xgboost as xgb
 
 ```

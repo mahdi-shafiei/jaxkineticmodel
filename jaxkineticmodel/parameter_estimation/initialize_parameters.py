@@ -1,5 +1,5 @@
-from source.load_sbml.sbml_load import *
-from source.load_sbml.sbml_model import SBMLModel
+from jaxkineticmodel.load_sbml.sbml_load import *
+from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
 import os
 
 

@@ -53,6 +53,7 @@ dependencies = [
     "sympy>=1.13.3",
     "xgboost==2.1.2",
     "python-libsbml==5.20.4",
+    "scikit-optimize>=0.10.2",
 ]
 
 authors = [

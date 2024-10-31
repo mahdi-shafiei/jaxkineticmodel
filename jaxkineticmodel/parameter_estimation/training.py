@@ -8,12 +8,12 @@ jax.config.update("jax_enable_x64", True)
 import optax
 import jax.numpy as jnp 
 import numpy
-from source.load_sbml.jax_kinetic_model import NeuralODE
-from source.load_sbml.sbml_model import SBMLModel
-from source.load_sbml.sbml_load import *
+from jaxkineticmodel.load_sbml.jax_kinetic_model import NeuralODE
+from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
+from jaxkineticmodel.load_sbml.sbml_load import *
 from scipy.stats import qmc
 import logging
-from source.building_models import JaxKineticModelBuild as jkm
+from jaxkineticmodel.building_models import JaxKineticModelBuild as jkm
 
 logger = logging.getLogger(__name__)
 

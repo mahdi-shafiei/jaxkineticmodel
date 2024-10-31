@@ -2,9 +2,9 @@
 # %reload_ext autoreload
 import sys
 sys.path.insert(0,"/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes")
-from source.kinetic_mechanisms.JaxKineticMechanisms import  *
-from source.kinetic_mechanisms.JaxKineticMechanismsCustom import *
-from source.kinetic_mechanisms.JaxKineticModifiers import *
+from jaxkineticmodel.kinetic_mechanisms.JaxKineticMechanisms import  *
+from jaxkineticmodel.kinetic_mechanisms.JaxKineticMechanismsCustom import *
+from jaxkineticmodel.kinetic_mechanisms.JaxKineticModifiers import *
 ## set up a small term system for state variables
 # S=pd.DataFrame(np.array([[-1,1,2]]),index=['ICglucose'],columns=['v_GLT','v_HXK','v_NTH1'])
 import diffrax

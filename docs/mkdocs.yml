@@ -1,8 +1,8 @@
-site_name: JaxKineticModel documentation
+site_name: jaxkineticmodel documentation
 nav:
   - Home: index.md
   - Building models: building_models.md
-  - SBML models: SBML.md
+  - Loading SBML models: SBML.md
   - Training models: training_models.md
   - Simulated-DBTL: simulated-DBTL.md
   - Glycolysis: glycolysis.md
