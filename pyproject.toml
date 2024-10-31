@@ -20,3 +20,56 @@ level = "INFO"
 [tool.logging.loggers."matplotlib"]
 level = "INFO"
 
+
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["jaxkineticmodel"]
+
+
+
+[project]
+name = "JaxKineticModel"
+version = "0.0.1"
+readme = "README.md"
+requires-python = ">=3.9"
+description = "A tool for building, training, and simulating metabolic kinetic models in Jax/Diffrax"
+
+dependencies = [
+    "diffrax==0.6.0",
+    "equinox==0.11.8",
+    "functions==0.7.0",
+    "jax>=0.4.13",
+    "jaxlib>=0.4.30",
+    "matplotlib>=3.9.2",
+    #"numpy>=2.0.2",
+    "optax==0.2.3",
+    "pandas>=1.1.4",
+    "scikit_learn==1.5.2",
+    "scipy>=1.11.1",
+    "sympy>=1.13.3",
+    "xgboost==2.1.2",
+    "python-libsbml==5.20.4",
+]
+
+authors = [
+  { name="Paul van Lent", email="p.h.vanlent@tudelft.nl" },
+  {name="Leon Planken",email="l.r.planken@tudelft.nl"}
+]
+
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache License",
+    "Operating System :: OS Independent",
+]
+
+#[project.urls]
+#Homepage = "https://github.com/pypa/sampleproject"
+#Issues = "https://github.com/pypa/sampleproject/issues"
+
+
+
