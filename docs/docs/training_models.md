@@ -85,7 +85,7 @@ fig.savefig("docs/docs/images/loss_per_iter_extended.png",bbox_inches="tight")
 
 
 ```
-![loss_extended](images/loss_per_iter.png)
+![loss_extended](images/loss_per_iter_extended.png)
 
 
 ## References

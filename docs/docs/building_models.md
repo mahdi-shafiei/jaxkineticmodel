@@ -18,8 +18,8 @@ We will describe below how you can build your own models that are compatible wit
 Models can be built in a reaction-centric manner. The `Reaction` object requires setting five inputs: name of the reaction, stoichiometry of the reaction, compartments of the species involved, and it's mechanism. 
 
 ```python
-from jaxkineticmodels.kinetic_mechanisms import JaxKineticMechanisms as jm
-from jaxkineticmodels.building_models import JaxKineticModelBuild as jkm
+from jaxkineticmodel.kinetic_mechanisms import JaxKineticMechanisms as jm
+from jaxkineticmodel.building_models import JaxKineticModelBuild as jkm
 
 import jax.numpy as jnp
 import jax

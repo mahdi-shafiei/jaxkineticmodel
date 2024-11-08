@@ -7,8 +7,8 @@ SBML models can be loaded and simulated as follows.
 import matplotlib.pyplot as plt
 import os
 import sys, os
-from jaxkineticmodels.load_sbml.sbml_load import *
-from jaxkineticmodels.load_sbml.sbml_model import SBMLModel
+from jaxkineticmodel.load_sbml.sbml_load import *
+from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
 
 
 filepath = (
