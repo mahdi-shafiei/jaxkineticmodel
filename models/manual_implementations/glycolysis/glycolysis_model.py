@@ -1,7 +1,7 @@
 
 # %reload_ext autoreload
-import sys
-sys.path.insert(0,"/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes")
+# import sys
+# sys.path.insert(0,"/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes")
 from jaxkineticmodel.kinetic_mechanisms.JaxKineticMechanisms import  *
 from jaxkineticmodel.kinetic_mechanisms.JaxKineticMechanismsCustom import *
 from jaxkineticmodel.kinetic_mechanisms.JaxKineticModifiers import *

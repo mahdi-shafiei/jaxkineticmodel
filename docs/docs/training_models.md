@@ -63,6 +63,7 @@ ax.set_yscale("log")
 
 ![loss](images/loss_per_iter.png)
 
+<span style="font-size: 0.8em;"><b>Figure 1:</b> Loss per iteration for five initializations.</span>
 #### Additional rounds
 Suppose the fit is not to your liking, or we first want to do a pre-optimization of a large set of initialization and then filter, one can simply continue the optimization as follows
 
@@ -87,6 +88,6 @@ fig.savefig("docs/docs/images/loss_per_iter_extended.png",bbox_inches="tight")
 ```
 ![loss_extended](images/loss_per_iter_extended.png)
 
-
+<span style="font-size: 0.8em;"><b>Figure 2:</b> Loss per iteration for five initializations, extended with 500 rounds of gradient descent.</span>
 ## References
 [1] Smallbone, K., & Stanford, N. J. (2013). Kinetic modeling of metabolic pathways: Application to serine biosynthesis. Systems Metabolic Engineering: Methods and Protocols, 113-121.

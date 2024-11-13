@@ -5,6 +5,7 @@ DBTL cycles are widely used in the optimization of microorganisms for producing 
 
 ![sim-dbtl](images/dbtl_figure.png)
 
+<span style="font-size: 0.8em;"><b>Figure 1:</b> The design-build-test-learn cycle of iterative metabolic engineering, a widely adopted paradigm for strain engineering.</span>
 
 ## Usage
 Import required functions
@@ -107,7 +108,7 @@ dbtl_cycle.LEARN_validate_model(samples=12,
 ``` 
 ![plot_validate](images/validate.png)
 
-
+<span style="font-size: 0.8em;"><b>Figure 2:</b> Model performance (true versups predicted values).</span>
  
 
 

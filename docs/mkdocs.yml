@@ -5,7 +5,7 @@ nav:
   - Loading SBML models: SBML.md
   - Training models: training_models.md
   - Simulated-DBTL: simulated-DBTL.md
-  - Glycolysis: glycolysis.md
+  - Custom models: glycolysis.md
 
 extra_javascript:
   - https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js

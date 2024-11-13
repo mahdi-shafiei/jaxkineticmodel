@@ -143,6 +143,8 @@ plt.show()
 
 ![timeseries](images/timeseries_example.png)
 
+<span style="font-size: 0.8em;"><b>Figure 1:</b> ODE simulation.</span>
+
 #### On jit-compiling kinetic models
 When you simulated a jit-compiled kinetic model for a certain time-range (e.g., `jnp.linspace(0,10,1000)` and you want to elongate this, it is best to not change the number of timepoints (e.g, `jnp.linspace(0,1000,1000)`. Otherwise, the kinetic models needs to be recompiled.  
 ## Boundary conditions
@@ -186,6 +188,9 @@ ax.legend()
 
 
 ![timeseries](images/timeseries_example_boundary.png)
+
+<span style="font-size: 0.8em;"><b>Figure 2:</b> ODE simulation with \\(m1=constant\\).</span>
+
 #### Non-constant boundary conditions
 For non-constant boundary conditions, you can use the `BoundaryCondition` class as before. You can use for example the interpolation abstract classes from [Diffrax](https://docs.kidger.site/diffrax/api/interpolation/). For analytic expression dependent on time t, these can be done as follows:
 
@@ -219,6 +224,13 @@ ax.legend()
 
 ```
 ![timeseries](images/timeseries_example_boundary_sin.png)
+
+<span style="font-size: 0.8em;"><b>Figure 3:</b> ODE simulation with \\(m1=0.1sin(t)\\).</span>
+
+
+## Building custom models
+When building kinetic models, it is not uncommon that \\(\frac{dm(t)}{dt}\\) is not fully based on the evaluation of \\(S\cdot v(t)\\). For these cases, one can still use the kinetic mechanisms described above but with a manual setup of the ODEs. We have provided a custom implementation of glycolysis in [Custom models](glycolysis.md) as an example.
+
 ## Saving models
 To do (or remove)
 

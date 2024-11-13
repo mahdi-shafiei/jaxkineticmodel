@@ -4,13 +4,13 @@ import sys, os
 sys.path.append('/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes')
 # sys.path.append('/home/plent/Documenten/Gitlab/NeuralODEs')
 sys.path.append('/tudelft.net/staff-bulk/ewi/insy/DBL/plent/NeuralODEs/jax_neural_odes')
-from source.load_sbml.sbml_load import *
-from source.load_sbml.sbml_model import SBMLModel
+from jaxkineticmodel.load_sbml.sbml_load import *
+from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
 jax.config.update("jax_enable_x64", True)
-from source.utils import get_logger
-from source.parameter_estimation.initialize_parameters import *
+from jaxkineticmodel.utils import get_logger
+from jaxkineticmodel.parameter_estimation.initialize_parameters import *
 import optax
-from source.parameter_estimation.training import *
+from jaxkineticmodel.parameter_estimation.training import *
 import time
 import argparse
 
