@@ -181,7 +181,9 @@ v_ALD=Jax_MM_Rev_UniBi(substrate='ICFBP',product1='ICGAP',product2='ICDHAP',vmax
                                     km_product1="p_FBA1_Kglyceral3p", km_product2="p_FBA1_Kdhap" )
 v_TPI1=Jax_MM_Rev_UniUni(substrate="ICDHAP",product="ICGAP",vmax="p_TPI1_Vmax",k_equilibrium="p_TPI1_Keq", km_substrate="p_TPI1_Kdhap",
                                 km_product="p_TPI1_Kglyceral3p")
+
 v_sinkGAP=Jax_MM_Sink(substrate="ICGAP",v_sink="poly_sinkGAP",km_sink="km_sinkGAP")
+
 v_G3PDH=Jax_MM_Rev_BiBi_w_Activation(substrate1="ICDHAP",substrate2="ICNADH",product1="ICG3P",product2="ICNAD",modifiers=['ICFBP', 'ICATP', 'ICADP'],vmax="p_GPD1_Vmax", k_equilibrium="p_GPD1_Keq", 
                                              km_substrate1="p_GPD1_Kdhap", km_substrate2="p_GPD1_Knadh",
                                              km_product1="p_GPD1_Kglyc3p", km_product2="p_GPD1_Knad",
