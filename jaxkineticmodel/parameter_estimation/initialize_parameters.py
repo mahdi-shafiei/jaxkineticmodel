@@ -6,12 +6,6 @@ import os
 import numpy as np
 import pandas as pd
 from scipy.stats import qmc
-from skopt.space import Space
-from skopt.sampler import Sobol
-from skopt.sampler import Lhs
-from skopt.sampler import Halton
-from skopt.sampler import Hammersly
-from skopt.sampler import Grid
 
 ## contains parameter initializations within bounds and some helpers for generating synthetic data
 

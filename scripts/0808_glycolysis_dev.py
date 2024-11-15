@@ -5,11 +5,9 @@ import sys
 sys.path.insert(0,"/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes")
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 import diffrax
 import jax.numpy as jnp
 import jax
-import equinox as eqx
 import optax
 
 from source.kinetic_mechanisms.JaxKineticMechanisms import *

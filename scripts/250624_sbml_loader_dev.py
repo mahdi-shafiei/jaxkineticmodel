@@ -1,7 +1,5 @@
-import matplotlib.pyplot as plt
-import os
 
-import sys, os
+import sys
 sys.path.append('/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes')
 from source.load_sbml.sbml_load import *
 from source.load_sbml.sbml_model import SBMLModel

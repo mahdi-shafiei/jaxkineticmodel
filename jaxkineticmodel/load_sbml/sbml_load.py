@@ -1,5 +1,4 @@
 import sympy as sp
-import jax
 import libsbml
 import jax.numpy as jnp
 import numpy as np
@@ -7,7 +6,6 @@ import pandas as pd
 import re
 import collections
 import os
-from sympy import Max
 #Suddenly this jaxkineticmodel.utils doesnt load anymore without adding path directly. Make an init file?
 import sys
 sys.path.append('/home/plent/Documenten/Gitlab/NeuralODEs/symplectic_adjoint/')

@@ -1,14 +1,11 @@
 
 
-import sys, os
+import sys
 import jax
-import diffrax
 sys.path.append('/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes')
 jax.config.update("jax_enable_x64", True)
 import optax
 import jax.numpy as jnp 
-import numpy
-from jaxkineticmodel.load_sbml.jax_kinetic_model import NeuralODE
 from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
 from jaxkineticmodel.load_sbml.sbml_load import *
 from scipy.stats import qmc

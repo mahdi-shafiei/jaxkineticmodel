@@ -1,18 +1,12 @@
 import jaxlib.xla_extension
-import sympy as sp
 import jax.numpy as jnp
-from sympy.utilities.lambdify import lambdify
 import jax
 import numpy as np
-import equinox as eqx
-import matplotlib.pyplot as plt
 import sys
-from diffrax import diffeqsolve, ODETerm, Dopri5, SaveAt
 sys.path.append('/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes')
-from functools import partial
 
-import libsbml
-import sys, os
+import sys
+import os
 sys.path.append('/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes')
 from source.load_sbml.sbml_load import *
 from source.load_sbml.sbml_model import SBMLModel
@@ -23,7 +17,6 @@ from source.load_sbml.sbml_load import *
 import tellurium as te
 
 jax.config.update("jax_enable_x64", True)
-from source.utils import get_logger
 
 
 def calc_euclidean(actual, predic):

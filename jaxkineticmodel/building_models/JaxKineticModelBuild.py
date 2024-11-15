@@ -1,12 +1,10 @@
-from jaxkineticmodel.kinetic_mechanisms import JaxKineticMechanisms as jm
+
 import jax.numpy as jnp
-import jax
 import numpy as np
 from collections import Counter
 import diffrax
 import pandas as pd
 import sympy as sp
-
 from jaxkineticmodel.utils import get_logger
 logger = get_logger(__name__)
 

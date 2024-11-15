@@ -2,9 +2,7 @@
 # sys.path.append("/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes")
 
 from jaxkineticmodel.load_sbml.sbml_load import *
-from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
 import jax
-import matplotlib.pyplot as plt
 
 
 class Jacobian:

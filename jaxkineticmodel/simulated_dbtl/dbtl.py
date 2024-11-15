@@ -1,22 +1,16 @@
 
 
-from jaxkineticmodel.kinetic_mechanisms import JaxKineticMechanisms as jm
-from jaxkineticmodel.building_models import JaxKineticModelBuild as jkm
 from jaxkineticmodel.load_sbml.sbml_load import *
-from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
 import jax.numpy as jnp
 import jax
 import numpy as np
 from jaxkineticmodel.utils import get_logger
 logger = get_logger(__name__)
-import diffrax 
 import matplotlib.pyplot as plt
 import pandas as pd
-import itertools
 import scipy
 import sklearn
 import xgboost as xgb
-from xgboost import XGBClassifier,XGBRegressor
 
 
 
@@ -94,7 +88,7 @@ class DesignBuildTestLearnCycle:
                 pass 
             else:
                 return_message="None"
-                logger.error(f"Length of list of occurences of promoters is not matching ")
+                logger.error("Length of list of occurences of promoters is not matching ")
         else:
             return_message="equal probabilities"
             self.library_units['probability']=np.ones(rows)/rows

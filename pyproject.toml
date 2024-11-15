@@ -57,7 +57,8 @@ dependencies = [
 
 authors = [
   { name="Paul van Lent", email="p.h.vanlent@tudelft.nl" },
-  {name="Leon Planken",email="l.r.planken@tudelft.nl"}
+  {name="Leon Planken",email="l.r.planken@tudelft.nl"},
+  {name="Thomas Abeel", email="t.abeel@tudelft.nl"}
 ]
 
 

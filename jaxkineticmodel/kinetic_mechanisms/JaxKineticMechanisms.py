@@ -1,4 +1,3 @@
-import jax.numpy as jnp
 
 
 class Jax_MM_Irrev_Uni:

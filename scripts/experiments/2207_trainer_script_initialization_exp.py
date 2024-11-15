@@ -1,12 +1,9 @@
-import matplotlib.pyplot as plt
-import os
-import sys, os
+import sys
 sys.path.append('/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes')
 # sys.path.append('/home/plent/Documenten/Gitlab/NeuralODEs')
 from source.load_sbml.sbml_load import *
 from source.load_sbml.sbml_model import SBMLModel
 jax.config.update("jax_enable_x64", True)
-from source.utils import get_logger
 from source.parameter_estimation.initialize_parameters import *
 import optax
 from source.parameter_estimation.training import *

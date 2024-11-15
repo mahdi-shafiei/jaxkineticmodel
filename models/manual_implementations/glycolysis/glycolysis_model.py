@@ -8,7 +8,6 @@ from jaxkineticmodel.kinetic_mechanisms.JaxKineticModifiers import *
 ## set up a small term system for state variables
 # S=pd.DataFrame(np.array([[-1,1,2]]),index=['ICglucose'],columns=['v_GLT','v_HXK','v_NTH1'])
 import diffrax
-import numpy as np
 
 # S=pd.DataFrame(np.array([[1,-1]]),index=['ICglucose'],columns=['v_GLT','v_HXK'])
 
