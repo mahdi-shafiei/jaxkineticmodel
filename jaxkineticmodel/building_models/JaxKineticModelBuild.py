@@ -10,11 +10,11 @@ logger = get_logger(__name__)
 
 
 class BoundaryCondition:
-    """Class to evaluate boundary conditions, similar in form to Diffrax. For most purposes the interpolation in diffrax is 
+    """Class to evaluate boundary conditions, similar in form to Diffrax. For most purposes the interpolation in diffrax is
     perfectly fine.
     For now we only will consider boundary conditions that are dependent on t.
 
-    #To do: think about how to expand this class to include metabolite dependencies in expression 
+    #To do: think about how to expand this class to include metabolite dependencies in expression
     # (could be easier to jax.jit)"""
 
     def __init__(self, expression: str):
@@ -82,7 +82,7 @@ class JaxKineticModel_Build:
         return [x for xs in xss for x in xs]
 
     def _get_compartments_species(self):
-        """Retrieve compartments for species and do a consistency check 
+        """Retrieve compartments for species and do a consistency check
         that compartments are properly defined for each species"""
         comp_dict = {}
         for reaction in self.reactions:

@@ -1,6 +1,7 @@
 class Jax_MM_Irrev_Bi_w_Modifiers:
     """Michaelis-Menten equation with modifiers: can be activator or inhibition
-    the names of the modifiers concentrations should be added as strings as well as classes, in the same order as the classes"""
+    the names of the modifiers concentrations should be added as strings as well as classes,
+    in the same order as the classes"""
 
     def __init__(
         self,
@@ -46,8 +47,11 @@ class Jax_PFK:
     """Specifically designed for PFK (for which the functional expression we retrieved from:
     Metabolic Engineering 77 (2023) 128–142
     Available online 23 March 2023
-    1096-7176/© 2023 The Authors. Published by Elsevier Inc. on behalf of International Metabolic Engineering Society. This is an open access article under the CC
-    BY license (http://creativecommons.org/licenses/by/4.0/).Elucidating yeast glycolytic dynamics at steady state growth and glucose
+    1096-7176/© 2023 The Authors. Published by Elsevier Inc. on behalf of International Metabolic Engineering Society.
+    This is an open access article under the CC
+    BY license (http://creativecommons.org/licenses/by/4.0/).
+
+    Elucidating yeast glycolytic dynamics at steady state growth and glucose
     pulses through kinetic metabolic modeling
 
     Think of reducing the equation by assuming AMP, ATP, ADP are constant
