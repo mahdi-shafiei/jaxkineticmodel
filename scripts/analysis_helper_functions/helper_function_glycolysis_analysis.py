@@ -3,7 +3,7 @@ import numpy as np
 import diffrax
 import jax
 import jax.numpy as jnp
-from models.manual_implementations.glycolysis.glycolysis_model import *
+from models.manual_implementations.glycolysis.glycolysis_model import glycolysis,NeuralODE
 
 
 def overwrite_y0_dict(y0_dict, dataset):
@@ -171,7 +171,7 @@ def load_model_glucose_pulse_FF_datasets(dataset_name, dilution_rate, y0_dict):
     initial_values_dataset = dataset.iloc[0, :]
 
     y0_dict_new = overwrite_y0_dict(y0_dict, initial_values_dataset)
-    y0 = jnp.array(list(y0_dict_new.values()))
+
 
     time_points = [float(i) for i in dataset.index.to_list()]
 

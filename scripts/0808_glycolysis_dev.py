@@ -1,6 +1,6 @@
-import sys
 
-sys.path.insert(0, "/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes")
+
+
 import pandas as pd
 import numpy as np
 import diffrax
@@ -8,25 +8,18 @@ import jax.numpy as jnp
 import jax
 import optax
 
-from source.kinetic_mechanisms.JaxKineticMechanisms import *
-from source.kinetic_mechanisms.JaxKineticMechanismsCustom import *
-from source.kinetic_mechanisms.JaxKineticModifiers import *
-from source.parameter_estimation.training import *
-
-jax.config.update("jax_enable_x64", True)
+from jaxkineticmodel.kinetic_mechanisms.JaxKineticMechanisms import *
+from jaxkineticmodel.kinetic_mechanisms.JaxKineticMechanismsCustom import *
+from jaxkineticmodel.kinetic_mechanisms.JaxKineticModifiers import *
+from jaxkineticmodel.parameter_estimation.training import exponentiate_parameters,log_transform_parameters,global_norm
 
 
-# get time points
+## set up a small term system for state variables
 glycolysis_data = pd.read_csv("datasets/VanHeerden_Glucose_Pulse/FF1_timeseries_format.csv", index_col=0).T
 time_points = [int(i) for i in glycolysis_data.index.to_list()]
 
 
-# %reload_ext autoreload
-from source.kinetic_mechanisms.JaxKineticMechanisms import *
-from source.kinetic_mechanisms.JaxKineticMechanismsCustom import *
-## set up a small term system for state variables
-# S=pd.DataFrame(np.array([[-1,1,2]]),index=['ICglucose'],columns=['v_GLT','v_HXK','v_NTH1'])
-
+jax.config.update("jax_enable_x64", True)
 
 # S=pd.DataFrame(np.array([[1,-1]]),index=['ICglucose'],columns=['v_GLT','v_HXK'])
 
