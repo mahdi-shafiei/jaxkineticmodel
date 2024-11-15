@@ -73,9 +73,9 @@ def get_global_parameters(model):
     global_parameter_dict = {}
     for param in params:
         if param.isSetConstant():
-            if param.getConstant() == True:
+            if param.getConstant() is True:
                 global_parameter_dict[param.id] = param.value
-            if param.getConstant() == False:
+            if param.getConstant() is False:
                 global_parameter_dict[param.id] = param.value
     return global_parameter_dict
 
@@ -91,7 +91,7 @@ def get_initial_assignments(model, global_parameters, assignment_rules, y0):
             math_string = libsbml.formulaToL3String(math)
             sympy_expr = sp.sympify(math_string, locals={**assignment_rules, **global_parameters})
             # sympy_expr=sympy_expr.subs(global_parameters)
-            if type(sympy_expr) != float:
+            if type(sympy_expr) is not float:
                 sympy_expr = sympy_expr.subs(global_parameters)
                 sympy_expr = sympy_expr.subs(y0)
                 sympy_expr = np.float64(sympy_expr)
@@ -175,13 +175,15 @@ def get_constant_boundary_species(model):
     for specimen in species:
         if specimen.isSetConstant() and specimen.isSetBoundaryCondition():
             if specimen.getBoundaryCondition() and specimen.getConstant():
-                ## if it is both a boundary condition and a constant, then we pass it as a constant boundary that will be filled into the sympy equation
+                # if it is both a boundary condition and a constant, 
+                #then we pass it as a constant boundary that will be filled into the sympy equation
                 print("constant boundary", specimen.id)
                 constant_boundary_dict[specimen.id] = specimen.initial_concentration
 
             elif specimen.getConstant() and not specimen.getBoundaryCondition():
                 print("constant non-boundary", specimen.id)
-                ## if it is not a boundary condition but it is a constant, then we pass it as a constant boundary that will be filled into the sympy equation
+                # if it is not a boundary condition but it is a constant, 
+                # then we pass it as a constant boundary that will be filled into the sympy equation
 
                 constant_boundary_dict[specimen.id] = specimen.initial_concentration
             elif (
@@ -194,7 +196,7 @@ def get_constant_boundary_species(model):
                 # print(specimen.get)
                 continue
         else:
-            logger.warn("Constant and Boundary conditions were not set, for level 2 we assume that boundary is constant")
+            logger.warn(("Constant and Boundary conditions were not set for level 2 we assume that boundary is constant"))
             #     print(specimen)
             if model.getLevel() == 2:
                 constant_boundary_dict[specimen.id] = specimen.initial_concentration
@@ -204,7 +206,8 @@ def get_constant_boundary_species(model):
 
 
 def get_local_parameters(reaction):
-    """Some sbml models also have local parameters (locally defined for reactions), this function retrieves them for an individual reaction, removing the chance
+    """Some sbml models also have local parameters (locally defined for reactions), 
+    this function retrieves them for an individual reaction, removing the chance
     similarly named parameters are overwritten"""
     r = reaction.getKineticLaw()
     local_parameter_dict = {param.id: param.value for param in r.getListOfParameters()}
@@ -403,7 +406,7 @@ def get_leaf_nodes(node, leaf_nodes):
     """Finds the leaf nodes of the mathml expression."""
     if node.getNumChildren() == 0:
         name = node.getName()
-        if name != None:
+        if name is not None:
             leaf_nodes.append(name)
         # print(node.getName())
     else:
@@ -433,15 +436,14 @@ def get_lambda_function_dictionary(model):
     """Stop giving these functions confusing names...
     it returns a dictionary with all lambda functions"""
     functional_dict = {}
-    symbolic_function_dict = {}
+
 
     for function in model.function_definitions:
         id = function.getId()
         math = function.getMath()
         n_nodes = math.getNumChildren()
         string_math = libsbml.formulaToL3String(math.getChild(n_nodes - 1))
-        symbols = []
-        leaf_nodes = []
+
         sp_symbols = {}
         math_nodes = []
         for i in range(function.getNumArguments()):
@@ -474,7 +476,7 @@ def get_assignment_rules_dictionary(model):
             math_nodes = get_leaf_nodes(math, leaf_nodes=leaf_nodes)
             sp_symbols = {node: sp.Symbol(node) for node in math_nodes}
             expr = sp.sympify(string_math, locals=sp_symbols)
-            rule_x = sp.lambdify(math_nodes, expr, "jax")
+            # rule_x = sp.lambdify(math_nodes, expr, "jax")
 
             assignment_dict[id] = expr
         # print("the expression: ",id,expr)
@@ -499,7 +501,7 @@ def get_rate_rules_dictionary(model):
             # sympyfying and jitting
             temp_dict = {}
             for math_node in math_nodes:
-                if model.getReaction(math_node) != None:
+                if model.getReaction(math_node) is not None:
                     reaction = model.getReaction(math_node)
                     math = reaction.getKineticLaw()
                     string_math = libsbml.formulaToL3String(math.getMath())

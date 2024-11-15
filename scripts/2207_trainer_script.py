@@ -1,17 +1,19 @@
-import sys
 
-sys.path.append("/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes")
-# sys.path.append('/home/plent/Documenten/Gitlab/NeuralODEs')
-sys.path.append("/tudelft.net/staff-bulk/ewi/insy/DBL/plent/NeuralODEs/jax_neural_odes")
-from jaxkineticmodel.load_sbml.sbml_load import *
-from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
-
-jax.config.update("jax_enable_x64", True)
-from jaxkineticmodel.parameter_estimation.initialize_parameters import *
-import optax
-from jaxkineticmodel.parameter_estimation.training import *
+import pandas as pd
 import time
+import jaxkineticmodel.parameter_estimation.training as train
+import jaxkineticmodel.parameter_estimation.initialize_parameters as init_params
+import optax
+
 import argparse
+
+import numpy as np
+from jaxkineticmodel.load_sbml.sbml_load import get_global_parameters
+from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
+import jax
+import jax.numpy as jnp
+jax.config.update("jax_enable_x64", True)
+
 
 
 def main():
@@ -51,16 +53,16 @@ def main():
 
     ts = jnp.linspace(0, args.final_time_point, 10)
 
-    dataset, params = generate_dataset(filepath, ts)
+    dataset, params = init_params.generate_dataset(filepath, ts)
 
-    bounds = generate_bounds(params, lower_bound=lb, upper_bound=ub)
+    bounds = init_params.generate_bounds(params, lower_bound=lb, upper_bound=ub)
     # uniform_parameter_initializations=uniform_sampling(bounds,N)
-    lhs_parameter_initializations = latinhypercube_sampling(bounds, args.n_parameters)
+    lhs_parameter_initializations = init_params.latinhypercube_sampling(bounds, args.n_parameters)
 
     # filter
 
-    save_dataset(model_name, dataset)
-    save_parameter_initializations(model_name, lhs_parameter_initializations, id=id)
+    init_params.save_dataset(model_name, dataset)
+    init_params.save_parameter_initializations(model_name, lhs_parameter_initializations, id=id)
 
     ### Load the model, jit it and and run
     model = SBMLModel(filepath)
@@ -72,8 +74,8 @@ def main():
 
     print("# params", len(params))
 
-    log_loss_func = jax.jit(create_log_params_means_centered_loss_func(JaxKmodel))
-    loss_func = jax.jit(create_loss_func(JaxKmodel))
+    log_loss_func = jax.jit(train.create_log_params_means_centered_loss_func(JaxKmodel))
+    loss_func = jax.jit(train.create_loss_func(JaxKmodel))
 
     @jax.jit
     def update(opt_state, params, ts, ys):
@@ -88,7 +90,7 @@ def main():
     def update_log(opt_state, params, ts, ys):
         """Update rule for the gradients for log-transformed parameters. Can only be applied
         to nonnegative parameters"""
-        log_params = log_transform_parameters(params)
+        log_params = train.log_transform_parameters(params)
         loss = log_loss_func(log_params, ts, ys)
 
         grads = jax.jit(jax.grad(log_loss_func, 0))(log_params, ts, ys)  # loss w.r.t. parameters
@@ -96,7 +98,7 @@ def main():
 
         # we perform updates in log space, but only return params in lin space
         log_params = optax.apply_updates(log_params, updates)
-        lin_params = exponentiate_parameters(log_params)
+        lin_params = train.exponentiate_parameters(log_params)
         return opt_state, lin_params, loss, grads
 
     loss_per_iteration_dict = {}
@@ -120,7 +122,7 @@ def main():
             for step in range(2000):
                 opt_state, params_init, loss, grads = update_log(opt_state, params_init, ts, jnp.array(dataset))
 
-                gradient_norms.append(global_norm(grads))
+                gradient_norms.append(train.global_norm(grads))
                 loss_per_iter.append(loss)
 
                 if loss < loss_threshold:
@@ -139,7 +141,7 @@ def main():
             optimized_parameters_dict[init] = params_init
             global_norm_dict[init] = gradient_norms
 
-        except:
+        except:  # noqa: E722
             print(f"init {init} could not be optimized")
             loss_per_iteration_dict[init] = loss_per_iter
             loss_per_iteration_dict[init].append(-1)
@@ -158,9 +160,9 @@ def main():
     # norms=pd.DataFrame(global_norm_dict)
     norms = pd.DataFrame({key: pd.Series(value) for key, value in global_norm_dict.items()})
 
-    save_losses(model_name, losses, id=id, output_filedir=args.output_dir)
-    save_optimized_params(model_name, optimized_parameters, id=id, output_filedir=args.output_dir)
-    save_norms(model_name, norms, id=id, output_filedir=args.output_dir)
+    init_params.save_losses(model_name, losses, id=id, output_filedir=args.output_dir)
+    init_params.save_optimized_params(model_name, optimized_parameters, id=id, output_filedir=args.output_dir)
+    init_params.save_norms(model_name, norms, id=id, output_filedir=args.output_dir)
 
 
 if __name__ == "__main__":

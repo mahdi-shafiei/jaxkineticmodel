@@ -1,19 +1,19 @@
-from jaxkineticmodel.load_sbml.sbml_load import *
+
 import jax.numpy as jnp
 import jax
 import numpy as np
 from jaxkineticmodel.utils import get_logger
 
-logger = get_logger(__name__)
 import matplotlib.pyplot as plt
 import pandas as pd
 import scipy
 import sklearn
 import xgboost as xgb
-
+logger = get_logger(__name__)
 
 class DesignBuildTestLearnCycle:
-    """A class that represents a metabolic engineering process. The underlying process is a kinetic model (parameterized and with initial conditions). Can be used
+    """A class that represents a metabolic engineering process. The underlying process is a kinetic model 
+    (parameterized and with initial conditions). Can be used
     to simulate scenarios that might occur in true optimization processes
     Input:
     1.  A model: either build or SBML
@@ -66,7 +66,8 @@ class DesignBuildTestLearnCycle:
         return elementary_actions
 
     def DESIGN_assign_probabilities(self, occurence_list=None):
-        """This functions assigns a probability to each element in the action list. Can be viewed as changing concentrations in a library design"""
+        """This functions assigns a probability to each element in the action list. 
+        Can be viewed as changing concentrations in a library design"""
         rows, cols = np.shape(self.library_units)
         if occurence_list is not None:
             if len(occurence_list) == rows:
@@ -152,15 +153,18 @@ class DesignBuildTestLearnCycle:
 
         return simulated_values
 
-        ### We now have simulated values that are strains. We want to have synthetic data that can be used to learn features in the data of importance
+        ### We now have simulated values that are strains. W
+        # We want to have synthetic data that can be used to learn features in the data of importance
 
         ### we need to have a few functions:
         # a function that formats the generated dataset given the reference parameter set as well as values (TEST)
         # a function that can add noise to the measurements (TEST add noise)
 
     def TEST_add_noise(self, values, percentage, type="homoschedastic"):
-        """add noise to the training set, to see the effect of noise models on performance. Includes homoschedastic or heteroschedastic noise for a certain percentage.
-        Other experiment specific noise models could be added as well. One then needs to model the noise w.r.t to its screening value"""
+        """add noise to the training set, to see the effect of noise models on performance.
+        Includes homoschedastic or heteroschedastic noise for a certain percentage.
+        Other experiment specific noise models could be added as well.
+        One then needs to model the noise w.r.t to its screening value"""
 
         noised_values = {}
         if type == "homoschedastic":
@@ -172,7 +176,8 @@ class DesignBuildTestLearnCycle:
                 noised_values[targ] = values_new
 
         if type == "heteroschedastic":
-            # We assume that the noise level is given by X_m=D*X_true +X_true, where D is the percentage of deviation. We now model this as a simple gaussian, dependent on percentage*Xtrue
+            # We assume that the noise level is given by X_m=D*X_true +X_true, where D is the percentage of deviation.
+            # We now model this as a simple gaussian, dependent on percentage*Xtrue
             for targ in self.target:
                 values_new = np.random.normal(values[targ], percentage * np.array(values[targ]))
                 values_new[values_new < 0] = 0
@@ -181,7 +186,8 @@ class DesignBuildTestLearnCycle:
         return noised_values
 
     def TEST_format_dataset(self, strain_designs, production_values, reference_parameters):
-        """Function that given strain designs and a reference strain (parameter set) formats the datasets as a pandas df for further use in ML/BO or whatever,
+        """Function that given strain designs and a reference strain (parameter set) formats the datasets as a pandas 
+        df for further use in ML/BO or whatever,
         the index will be coded with a cycle status coding. The last column is the.
         """
 
@@ -198,7 +204,8 @@ class DesignBuildTestLearnCycle:
 
     ### Now the learning  and recommendation phase
     ### We would like an elegant way to include ML methods from outside the function (e.g., sklearn, xgboost)
-    ### Or should we actually make an additional structure on top of Design-Build-Test-Learn-Cycle? The sort of Automated Lab structure
+    ### Or should we actually make an additional structure on top of Design-Build-Test-Learn-Cycle?
+    #  The sort of Automated Lab structure
 
     ### following extra function required
 
@@ -262,7 +269,7 @@ class DesignBuildTestLearnCycle:
             y_predicted = self.ml_model.predict(validation_set)
 
             _, _, r_value, _, _ = scipy.stats.linregress(np.array(y_predicted), np.array(validation_values[target]))
-            if plotting == True:
+            if plotting is True:
                 fig, ax = plt.subplots(figsize=(3, 3))
                 ax.scatter(validation_values[target], y_predicted)
                 ax.plot([0, 1], [0, 1], transform=ax.transAxes, linestyle="--", c="black")

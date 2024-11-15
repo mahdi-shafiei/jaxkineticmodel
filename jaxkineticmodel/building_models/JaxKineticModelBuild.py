@@ -92,12 +92,14 @@ class JaxKineticModel_Build:
                 else:
                     if comp_dict[species] != values:
                         logger.error(
-                            f"Species {species} has ambiguous compartment values, please check consistency in the reaction definition"
+                            (f"Species {species} has ambiguous compartment values, "
+                            f"please check consistency in the reaction definition")
                         )
         return comp_dict
 
     def _check_parameter_uniqueness(self):
-        """Checks whether parameters are unique. Throws info if not, since some compounds might be governed by global (process) parameters"""
+        """Checks whether parameters are unique.
+        Throws info if not, since some compounds might be governed by global (process) parameters"""
         count_list = Counter(self.parameter_names).values()
         for count, k in enumerate(count_list):
             if k != 1:

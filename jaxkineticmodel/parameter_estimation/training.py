@@ -1,16 +1,18 @@
-import sys
-import jax
 
-sys.path.append("/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes")
-jax.config.update("jax_enable_x64", True)
+import jax
 import optax
-import jax.numpy as jnp
 from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
-from jaxkineticmodel.load_sbml.sbml_load import *
+from jaxkineticmodel.load_sbml.sbml_load import get_global_parameters
 from scipy.stats import qmc
 import logging
 from jaxkineticmodel.building_models import JaxKineticModelBuild as jkm
+import numpy as np
+import jax.numpy as jnp
+import pandas as pd
 
+
+
+jax.config.update("jax_enable_x64", True)
 logger = logging.getLogger(__name__)
 
 
@@ -254,7 +256,8 @@ def create_log_params_means_centered_loss_func(model):
 
 def create_log_params_means_centered_loss_func2(model, to_include: list):
     """Loss function for log transformed parameters.
-    We do a simple input scaling using the mean per state variable (we add 1 everywhere to prevent division by zero). Furthermore, we allow for not every state variable to be learned (sometimes it is not in the model for example)"""
+    We do a simple input scaling using the mean per state variable (we add 1 everywhere to prevent division by zero). 
+    Furthermore, we allow for not every state variable to be learned (sometimes it is not in the model for example)"""
 
     def loss_func(params, ts, ys):
         params = exponentiate_parameters(params)

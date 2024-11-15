@@ -2,21 +2,17 @@ import jaxlib.xla_extension
 import jax.numpy as jnp
 import jax
 import numpy as np
-import sys
-
-sys.path.append("/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes")
-
-import sys
+from jaxkineticmodel.load_sbml.sbml_load import get_global_parameters
+from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
+import pandas as pd
 import os
+from jaxkineticmodel.utils import get_logger
 
-sys.path.append("/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes")
-from source.load_sbml.sbml_load import *
-from source.load_sbml.sbml_model import SBMLModel
+logger = get_logger(__name__)
 
 
-from source.load_sbml.sbml_load import *
 
-import tellurium as te
+import tellurium as te  # noqa: E402
 
 jax.config.update("jax_enable_x64", True)
 

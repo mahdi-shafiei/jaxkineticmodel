@@ -1,12 +1,14 @@
-import sys
-
-sys.path.append("/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes")
-from source.load_sbml.sbml_load import *
-from source.load_sbml.sbml_model import SBMLModel
 
 
+
+from jaxkineticmodel.utils import get_logger
+from jaxkineticmodel.load_sbml.sbml_load import get_global_parameters
+from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
+import jax
+import jax.numpy as jnp
+import pandas as pd
 jax.config.update("jax_enable_x64", True)
-from source.utils import get_logger
+
 
 logger = get_logger(__name__)
 

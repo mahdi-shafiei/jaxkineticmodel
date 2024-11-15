@@ -1,6 +1,9 @@
 # sys.path.append("/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes")
 
-from jaxkineticmodel.load_sbml.sbml_load import *
+from jaxkineticmodel.load_sbml.sbml_load import separate_params
+from jaxkineticmodel.load_sbml.sbml_load import construct_param_point_dictionary,separate_params_jac
+import numpy as np
+import jax.numpy as jnp
 import jax
 
 
@@ -41,7 +44,8 @@ class Jacobian:
         This ensures higher initialization success for training and is cheap to evaluate.
 
         Input:
-        y_i: the state at time=t. One note: initial values might not be good for a stability check. You might prefer to take the final point in a dataset!
+        y_i: the state at time=t. One note: initial values might not be good for a stability check. 
+        You might prefer to take the final point in a dataset!
 
         parameter_initializations: a pandas dataframe with parameter initializations from a latin hypercube sampling
         rule: type of filtering to perform. Right now we support three rules:
@@ -70,7 +74,8 @@ class Jacobian:
         y_t: values at time t
 
         parameter_initializations: a pandas dataframe with parameter initializations from a latin hypercube sampling
-        period bounds (list [lb,ub] in proper units): used to filter for dynamics where an estimate of the period of damped oscillations is available. Imaginary eigenvalus are check according to
+        period bounds (list [lb,ub] in proper units): used to filter for dynamics where an estimate of the period of 
+        damped oscillations is available. Imaginary eigenvalus are check according to
         2pi/T_lb <=Im(λ_i)<= 2pi/Tub.
         """
         eigvals = []
@@ -92,25 +97,3 @@ class Jacobian:
         filtered_parameters = parameter_initializations.iloc[oscillation_parameter_indices, :]
         return filtered_parameters
 
-        # elif rule == "stability_oscillation":
-        #     stable_negative = eigvals.real < (0 + epsilon)
-        #     positive_imaginary = eigvals.imag > 0
-
-        #     stable_parameters_indices=np.where(np.sum(stable_negative,axis=1)==len(stable_negative[0,:]))[0]
-        #     oscillation_parameter_indices=np.where(np.sum(positive_imaginary,axis=1)>=1)[0]
-        #     indices=np.intersect1d(stable_parameters_indices,oscillation_parameter_indices)
-        #     filtered_parameters=parameter_initializations.iloc[indices,:]
-
-        # elif rule == "oscillation":
-        #     logger.info("Periodicity not implemented yet")
-        #     close_to_zero_real = np.abs(eigvals.real) <= epsilon
-        #     positive_imaginary = eigvals.imag > 0
-
-        #     stable_parameters_indices=np.where(np.sum(close_to_zero_real,axis=1)==len(close_to_zero_real[0,:]))[0]
-        #     oscillation_parameter_indices=np.where(np.sum(positive_imaginary,axis=1)>=1)[0]
-        #     indices=np.intersect1d(stable_parameters_indices,oscillation_parameter_indices)
-        #     filtered_parameters=parameter_initializations.iloc[indices,:]
-        #     # periodic_indices = np.where(np.sum(close_to_zero_real & positive_imaginary, axis=1) == eigvals.shape[1])[0]
-        #     # filtered_parameters = parameter_initializations.iloc[periodic_indices, :]
-        # else:
-        #     raise ValueError("Unsupported filtering rule. Supported rules are: 'stability', 'stability_oscillation', 'oscillation'.")

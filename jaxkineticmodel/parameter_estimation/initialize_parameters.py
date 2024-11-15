@@ -1,6 +1,7 @@
-from jaxkineticmodel.load_sbml.sbml_load import *
+from jaxkineticmodel.load_sbml.sbml_load import get_global_parameters
 from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
 import os
+import jax
 
 
 import numpy as np
@@ -159,24 +160,11 @@ def save_norms(model_name, result, id, output_filedir):
     return result
 
 
-def create_sample_model_func(log_loss_func, ts, ys):
-    """Creates an evaluation function to evaluate whether a parameter set is feasible"""
-
-    def evaluate_sample_model(parameter_set):
-        try:
-            loss = log_loss_func(parameter_set, ts, ys)
-            success = 1
-        except:
-            # print("d")
-            success = 0
-        return success
-
-    return evaluate_sample_model
-
 
 def sequential_sampling(sample_func, parameter_seeds, N_samples):
     """Samples until N of feasible samples is reached,
-    sample_func: the function that checks feasibility of the parameter. Right now this is simply the loss function. We might think about doing it in an alternative way (like largest eigenvalue of the jacobian)
+    sample_func: the function that checks feasibility of the parameter. Right now this is simply the loss function. 
+    We might think about doing it in an alternative way (like largest eigenvalue of the jacobian)
 
 
     parameter seeds: the parameters initialized using lhs,

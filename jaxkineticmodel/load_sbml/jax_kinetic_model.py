@@ -2,9 +2,9 @@ import diffrax
 import numpy as np
 import jax.numpy as jnp
 import jax
-from .sbml_load import construct_param_point_dictionary, separate_params
-from .sbml_load import time_dependency_symbols
-from .sbml_load import *
+from jaxkineticmodel.load_sbml.sbml_load import construct_param_point_dictionary, separate_params
+from jaxkineticmodel.load_sbml.sbml_load import time_dependency_symbols
+
 
 jax.config.update("jax_enable_x64", True)
 
@@ -74,7 +74,8 @@ class JaxKineticModel:
         v: the flux functions given as lambidified jax functions,
         S: a stoichiometric matrix. For now only support dense matrices, but later perhaps add for sparse
         params: kinetic parameters
-        flux_point_dict: a dictionary for each vi that tells what the corresponding metabolites should be in y. Should be matched to S.
+        flux_point_dict: a dictionary for each vi that tells what the
+          corresponding metabolites should be in y. Should be matched to S.
         ##A pointer dictionary?
         """
         self.func = v
@@ -108,8 +109,6 @@ class JaxKineticModel:
             return vi
 
         # Vectorize the application of the functions
-        indices = np.arange(len(self.func))
-
         v = jnp.stack(
             [apply_func(i, y, self.flux_point_dict[i], local_params[i], time_dict[i]) for i in self.reaction_names]
         )  # perhaps there is a way to vectorize this in a better way

@@ -123,7 +123,8 @@ class SBMLModel:
         return initial_concentration_dict
 
     def _get_compartments_initial_conditions(self, compartments):
-        """Returns a list of the compartment values of the initial conditions. This is necessary in the dMdt to properly scale."""
+        """Returns a list of the compartment values of 
+        the initial conditions. This is necessary in the dMdt to properly scale."""
         species = self.model.getListOfSpecies()
         compartment_list = []
 
@@ -160,6 +161,7 @@ class SBMLModel:
         lambda_functions = get_lambda_function_dictionary(self.model)
         assignments_rules = get_assignment_rules_dictionary(self.model)
         event_rules = get_events_dictionary(self.model)
+        
 
         v = {}
         v_symbol_dict = {}  # all symbols that are used in the equation.
@@ -256,7 +258,8 @@ def get_constant_boundary_species(model):
 
 
 def get_local_parameters(reaction):
-    """Some sbml models also have local parameters (locally defined for reactions), this function retrieves them for an individual reaction, removing the chance
+    """Some sbml models also have local parameters (locally defined for reactions), 
+    this function retrieves them for an individual reaction, removing the chance
     similarly named parameters are overwritten"""
     r = reaction.getKineticLaw()
     local_parameter_dict = {param.id: param.value for param in r.getListOfParameters()}
@@ -380,7 +383,7 @@ def get_leaf_nodes(node, leaf_nodes):
     """Finds the leaf nodes of the mathml expression."""
     if node.getNumChildren() == 0:
         name = node.getName()
-        if name != None:
+        if name is not None:
             leaf_nodes.append(name)
         # print(node.getName())
     else:
@@ -402,7 +405,7 @@ def get_lambda_function_dictionary(model):
         math = function.getMath()
         n_nodes = math.getNumChildren()
         string_math = replace_piecewise(libsbml.formulaToL3String(math.getChild(n_nodes - 1)))
-        symbols = []
+
         leaf_nodes = []
         sp_symbols = {}
         math_nodes = get_leaf_nodes(math, leaf_nodes=leaf_nodes)
@@ -533,7 +536,7 @@ def get_initial_assignments(model, global_parameters, assignment_rules, y0):
             math_string = replace_piecewise(libsbml.formulaToL3String(math))
             sympy_expr = sp.sympify(math_string, locals={**assignment_rules, **global_parameters})
             # sympy_expr=sympy_expr.subs(global_parameters)
-            if type(sympy_expr) != float:
+            if type(sympy_expr) is not float:
                 sympy_expr = sympy_expr.subs(global_parameters)
                 sympy_expr = sympy_expr.subs(y0)
                 sympy_expr = np.float64(sympy_expr)
