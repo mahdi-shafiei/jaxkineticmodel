@@ -9,7 +9,6 @@ from .sbml_load import *
 jax.config.update("jax_enable_x64", True)
 
 
-
 # def create_fluxes_v(model):
 #     """This function defines the jax jitted equations that are used in TorchKinModel
 #     class
@@ -50,7 +49,7 @@ jax.config.update("jax_enable_x64", True)
 #         vi_rate_law = get_string_expression(reaction)
 
 #         vi, filtered_dict = sympify_lambidify_and_jit_equation(vi_rate_law, nested_dictionary_vi)
-        
+
 #         v[reaction.id] = vi  # the jitted equation
 #         v_symbol_dict[reaction.id] = filtered_dict
 
@@ -61,16 +60,16 @@ jax.config.update("jax_enable_x64", True)
 #     return v, v_symbol_dict, local_param_dict
 
 
-
-
-
 class JaxKineticModel:
-    def __init__(self, v,
-                 S,
-                 flux_point_dict,
-                 species_names,
-                 reaction_names,
-                 compartment_values,):  # params,
+    def __init__(
+        self,
+        v,
+        S,
+        flux_point_dict,
+        species_names,
+        reaction_names,
+        compartment_values,
+    ):  # params,
         """Initialize given the following arguments:
         v: the flux functions given as lambidified jax functions,
         S: a stoichiometric matrix. For now only support dense matrices, but later perhaps add for sparse
@@ -84,20 +83,17 @@ class JaxKineticModel:
         self.flux_point_dict = flux_point_dict  # this is ugly but wouldnt know how to do it another wa
         self.species_names = np.array(species_names)
         self.reaction_names = np.array(reaction_names)
-        self.compartment_values=jnp.array(compartment_values)
+        self.compartment_values = jnp.array(compartment_values)
 
     def __call__(self, t, y, args):
         """I explicitly add params to call for gradient calculations. Find out whether this is actually necessary"""
         params, local_params, time_dict = args
 
-        #evaluate the time dictionary values at time t (for event functions e.g.)
+        # evaluate the time dictionary values at time t (for event functions e.g.)
         time_dict = time_dict(t)
 
- 
-        
-        #function evaluates the flux vi given y, parameter, local parameters, time dictionary
+        # function evaluates the flux vi given y, parameter, local parameters, time dictionary
         def apply_func(i, y, flux_point_dict, local_params, time_dict):
-
             if len(flux_point_dict) != 0:
                 y = y[flux_point_dict]
                 species = self.species_names[flux_point_dict]
@@ -114,42 +110,37 @@ class JaxKineticModel:
         # Vectorize the application of the functions
         indices = np.arange(len(self.func))
 
-        v = jnp.stack([apply_func(i, y, self.flux_point_dict[i],
-                                  local_params[i],
-                                  time_dict[i])
-                       for i in self.reaction_names])  # perhaps there is a way to vectorize this in a better way
+        v = jnp.stack(
+            [apply_func(i, y, self.flux_point_dict[i], local_params[i], time_dict[i]) for i in self.reaction_names]
+        )  # perhaps there is a way to vectorize this in a better way
         dY = jnp.matmul(self.stoichiometry, v)  # dMdt=S*v(t)
-        dY=dY/self.compartment_values
+        dY = dY / self.compartment_values
         return dY
 
 
 class NeuralODE:
     func: JaxKineticModel
 
-    def __init__(self,
-                 v,
-                 S,
-                 met_point_dict,
-                 v_symbol_dictionaries,
-                 compartment_values,):
-        self.func = JaxKineticModel(v,
-                                    jnp.array(S),
-                                    met_point_dict,
-                                    list(S.index),
-                                    list(S.columns),
-                                    compartment_values)
+    def __init__(
+        self,
+        v,
+        S,
+        met_point_dict,
+        v_symbol_dictionaries,
+        compartment_values,
+    ):
+        self.func = JaxKineticModel(v, jnp.array(S), met_point_dict, list(S.index), list(S.columns), compartment_values)
         self.reaction_names = list(S.columns)
         self.v_symbol_dictionaries = v_symbol_dictionaries
         self.Stoichiometry = S
 
-        self.max_steps=300000
-        self.rtol=1e-7
-        self.atol=1e-10
+        self.max_steps = 300000
+        self.rtol = 1e-7
+        self.atol = 1e-10
 
         def wrap_time_symbols(t):
             time_dependencies = time_dependency_symbols(v_symbol_dictionaries, t)
             return time_dependencies
-        
 
         ## time dependencies: a function that return for all fluxes whether there is a time dependency
         self.time_dict = jax.jit(wrap_time_symbols)
@@ -158,9 +149,9 @@ class NeuralODE:
         global_params, local_params = separate_params(params)
 
         # ensures that global params are loaded flux specific (necessary for jax)
-        global_params = construct_param_point_dictionary(self.v_symbol_dictionaries,
-                                                         self.reaction_names,
-                                                         global_params)  # this is required,
+        global_params = construct_param_point_dictionary(
+            self.v_symbol_dictionaries, self.reaction_names, global_params
+        )  # this is required,
 
         solution = diffrax.diffeqsolve(
             diffrax.ODETerm(self.func),
@@ -170,10 +161,9 @@ class NeuralODE:
             dt0=1e-11,
             y0=y0,
             args=(global_params, local_params, self.time_dict),
-            stepsize_controller=diffrax.PIDController(rtol=self.rtol, atol=self.atol,pcoeff=0.4,icoeff=0.3,dcoeff=0),
+            stepsize_controller=diffrax.PIDController(rtol=self.rtol, atol=self.atol, pcoeff=0.4, icoeff=0.3, dcoeff=0),
             saveat=diffrax.SaveAt(ts=ts),
-            max_steps=self.max_steps
+            max_steps=self.max_steps,
         )
-
 
         return solution.ys

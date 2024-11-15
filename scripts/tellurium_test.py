@@ -6,11 +6,9 @@ filepath = (
     # "working_models/Bertozzi2020.xml"
 )
 
-model=te.loadSBMLModel(filepath)
-sol=model.simulate(0,5,1000)
+model = te.loadSBMLModel(filepath)
+sol = model.simulate(0, 5, 1000)
 # b=time.time()
-
-
 
 
 model.plot()
@@ -22,11 +20,9 @@ filepath = (
     # "working_models/Bertozzi2020.xml"
 )
 
-model=te.loadSBMLModel(filepath)
-sol=model.simulate(0,15,1000)
+model = te.loadSBMLModel(filepath)
+sol = model.simulate(0, 15, 1000)
 # b=time.time()
-
-
 
 
 model.plot()

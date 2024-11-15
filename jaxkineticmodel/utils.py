@@ -4,10 +4,11 @@ import sys
 import tomllib
 import os
 
+
 def get_logger(name):
     package_root = os.path.dirname(os.path.dirname(__file__))  # Adjust as needed to reach package root
     toml_path = os.path.join(package_root, "pyproject.toml")
-    if not getattr(get_logger, 'configured', False):
+    if not getattr(get_logger, "configured", False):
         with open(toml_path, "rb") as f:
             config = tomllib.load(f).get("tool", {}).get("logging", {})
         if not config:
@@ -17,15 +18,15 @@ def get_logger(name):
         # dictConfig(). We set them manually now.
 
         console_handler = logging.StreamHandler(sys.stdout)
-        format_dict = config.pop('formatters', {}).get('formatter', {})
+        format_dict = config.pop("formatters", {}).get("formatter", {})
         if format_dict:
-            formatter = logging.Formatter(format_dict.get('format'))
-            if 'default_time_format' in format_dict:
-                formatter.default_time_format = format_dict['default_time_format']
+            formatter = logging.Formatter(format_dict.get("format"))
+            if "default_time_format" in format_dict:
+                formatter.default_time_format = format_dict["default_time_format"]
             console_handler.setFormatter(formatter)
         logging.getLogger().addHandler(console_handler)
 
         logging.config.dictConfig(config)
-        setattr(get_logger, 'configured', True)
+        setattr(get_logger, "configured", True)
 
     return logging.getLogger(name)

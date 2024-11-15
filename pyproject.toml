@@ -20,6 +20,11 @@ level = "INFO"
 [tool.logging.loggers."matplotlib"]
 level = "INFO"
 
+[tool.ruff]
+line-length = 127
+
+[tool.ruff.lint]
+extend-select=["E501"]
 
 
 [build-system]
