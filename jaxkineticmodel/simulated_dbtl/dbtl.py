@@ -1,4 +1,3 @@
-
 import jax.numpy as jnp
 import jax
 import numpy as np
@@ -9,10 +8,12 @@ import pandas as pd
 import scipy
 import sklearn
 import xgboost as xgb
+
 logger = get_logger(__name__)
 
+
 class DesignBuildTestLearnCycle:
-    """A class that represents a metabolic engineering process. The underlying process is a kinetic model 
+    """A class that represents a metabolic engineering process. The underlying process is a kinetic model
     (parameterized and with initial conditions). Can be used
     to simulate scenarios that might occur in true optimization processes
     Input:
@@ -66,7 +67,7 @@ class DesignBuildTestLearnCycle:
         return elementary_actions
 
     def DESIGN_assign_probabilities(self, occurence_list=None):
-        """This functions assigns a probability to each element in the action list. 
+        """This functions assigns a probability to each element in the action list.
         Can be viewed as changing concentrations in a library design"""
         rows, cols = np.shape(self.library_units)
         if occurence_list is not None:
@@ -186,7 +187,7 @@ class DesignBuildTestLearnCycle:
         return noised_values
 
     def TEST_format_dataset(self, strain_designs, production_values, reference_parameters):
-        """Function that given strain designs and a reference strain (parameter set) formats the datasets as a pandas 
+        """Function that given strain designs and a reference strain (parameter set) formats the datasets as a pandas
         df for further use in ML/BO or whatever,
         the index will be coded with a cycle status coding. The last column is the.
         """

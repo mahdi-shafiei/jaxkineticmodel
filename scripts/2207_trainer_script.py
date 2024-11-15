@@ -1,4 +1,3 @@
-
 import pandas as pd
 import time
 import jaxkineticmodel.parameter_estimation.training as train
@@ -12,8 +11,8 @@ from jaxkineticmodel.load_sbml.sbml_load import get_global_parameters
 from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
 import jax
 import jax.numpy as jnp
-jax.config.update("jax_enable_x64", True)
 
+jax.config.update("jax_enable_x64", True)
 
 
 def main():

@@ -92,8 +92,10 @@ class JaxKineticModel_Build:
                 else:
                     if comp_dict[species] != values:
                         logger.error(
-                            (f"Species {species} has ambiguous compartment values, "
-                            f"please check consistency in the reaction definition")
+                            (
+                                f"Species {species} has ambiguous compartment values, "
+                                f"please check consistency in the reaction definition"
+                            )
                         )
         return comp_dict
 

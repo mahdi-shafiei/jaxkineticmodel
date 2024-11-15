@@ -160,10 +160,9 @@ def save_norms(model_name, result, id, output_filedir):
     return result
 
 
-
 def sequential_sampling(sample_func, parameter_seeds, N_samples):
     """Samples until N of feasible samples is reached,
-    sample_func: the function that checks feasibility of the parameter. Right now this is simply the loss function. 
+    sample_func: the function that checks feasibility of the parameter. Right now this is simply the loss function.
     We might think about doing it in an alternative way (like largest eigenvalue of the jacobian)
 
 

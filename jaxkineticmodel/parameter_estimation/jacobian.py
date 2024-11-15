@@ -1,7 +1,7 @@
 # sys.path.append("/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes")
 
 from jaxkineticmodel.load_sbml.sbml_load import separate_params
-from jaxkineticmodel.load_sbml.sbml_load import construct_param_point_dictionary,separate_params_jac
+from jaxkineticmodel.load_sbml.sbml_load import construct_param_point_dictionary, separate_params_jac
 import numpy as np
 import jax.numpy as jnp
 import jax
@@ -44,7 +44,7 @@ class Jacobian:
         This ensures higher initialization success for training and is cheap to evaluate.
 
         Input:
-        y_i: the state at time=t. One note: initial values might not be good for a stability check. 
+        y_i: the state at time=t. One note: initial values might not be good for a stability check.
         You might prefer to take the final point in a dataset!
 
         parameter_initializations: a pandas dataframe with parameter initializations from a latin hypercube sampling
@@ -74,7 +74,7 @@ class Jacobian:
         y_t: values at time t
 
         parameter_initializations: a pandas dataframe with parameter initializations from a latin hypercube sampling
-        period bounds (list [lb,ub] in proper units): used to filter for dynamics where an estimate of the period of 
+        period bounds (list [lb,ub] in proper units): used to filter for dynamics where an estimate of the period of
         damped oscillations is available. Imaginary eigenvalus are check according to
         2pi/T_lb <=Im(λ_i)<= 2pi/Tub.
         """
@@ -96,4 +96,3 @@ class Jacobian:
         # and max_imag_eigvals>=(2*np.pi/period_bounds[0]))[0]
         filtered_parameters = parameter_initializations.iloc[oscillation_parameter_indices, :]
         return filtered_parameters
-

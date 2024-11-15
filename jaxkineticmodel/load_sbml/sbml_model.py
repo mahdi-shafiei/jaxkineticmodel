@@ -123,7 +123,7 @@ class SBMLModel:
         return initial_concentration_dict
 
     def _get_compartments_initial_conditions(self, compartments):
-        """Returns a list of the compartment values of 
+        """Returns a list of the compartment values of
         the initial conditions. This is necessary in the dMdt to properly scale."""
         species = self.model.getListOfSpecies()
         compartment_list = []
@@ -161,7 +161,6 @@ class SBMLModel:
         lambda_functions = get_lambda_function_dictionary(self.model)
         assignments_rules = get_assignment_rules_dictionary(self.model)
         event_rules = get_events_dictionary(self.model)
-        
 
         v = {}
         v_symbol_dict = {}  # all symbols that are used in the equation.
@@ -258,7 +257,7 @@ def get_constant_boundary_species(model):
 
 
 def get_local_parameters(reaction):
-    """Some sbml models also have local parameters (locally defined for reactions), 
+    """Some sbml models also have local parameters (locally defined for reactions),
     this function retrieves them for an individual reaction, removing the chance
     similarly named parameters are overwritten"""
     r = reaction.getKineticLaw()

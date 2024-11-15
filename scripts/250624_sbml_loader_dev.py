@@ -1,12 +1,10 @@
-
-
-
 from jaxkineticmodel.utils import get_logger
 from jaxkineticmodel.load_sbml.sbml_load import get_global_parameters
 from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
 import jax
 import jax.numpy as jnp
 import pandas as pd
+
 jax.config.update("jax_enable_x64", True)
 
 

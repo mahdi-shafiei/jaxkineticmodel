@@ -11,7 +11,6 @@ from jaxkineticmodel.utils import get_logger
 logger = get_logger(__name__)
 
 
-
 import tellurium as te  # noqa: E402
 
 jax.config.update("jax_enable_x64", True)

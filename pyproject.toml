@@ -29,7 +29,7 @@ docstring-code-format = true  # code snippets in docstrings will be formatted
 
 [tool.ruff.lint]
 # Add the `line-too-long` rule to the enforced rule set.
-extend-select = ["E501","F405"]
+extend-select = ["E501","F405","E402"]
 
 [build-system]
 requires = ["setuptools>=61.0"]

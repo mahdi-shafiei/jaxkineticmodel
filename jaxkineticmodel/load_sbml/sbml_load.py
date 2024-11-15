@@ -175,14 +175,14 @@ def get_constant_boundary_species(model):
     for specimen in species:
         if specimen.isSetConstant() and specimen.isSetBoundaryCondition():
             if specimen.getBoundaryCondition() and specimen.getConstant():
-                # if it is both a boundary condition and a constant, 
-                #then we pass it as a constant boundary that will be filled into the sympy equation
+                # if it is both a boundary condition and a constant,
+                # then we pass it as a constant boundary that will be filled into the sympy equation
                 print("constant boundary", specimen.id)
                 constant_boundary_dict[specimen.id] = specimen.initial_concentration
 
             elif specimen.getConstant() and not specimen.getBoundaryCondition():
                 print("constant non-boundary", specimen.id)
-                # if it is not a boundary condition but it is a constant, 
+                # if it is not a boundary condition but it is a constant,
                 # then we pass it as a constant boundary that will be filled into the sympy equation
 
                 constant_boundary_dict[specimen.id] = specimen.initial_concentration
@@ -206,7 +206,7 @@ def get_constant_boundary_species(model):
 
 
 def get_local_parameters(reaction):
-    """Some sbml models also have local parameters (locally defined for reactions), 
+    """Some sbml models also have local parameters (locally defined for reactions),
     this function retrieves them for an individual reaction, removing the chance
     similarly named parameters are overwritten"""
     r = reaction.getKineticLaw()
@@ -436,7 +436,6 @@ def get_lambda_function_dictionary(model):
     """Stop giving these functions confusing names...
     it returns a dictionary with all lambda functions"""
     functional_dict = {}
-
 
     for function in model.function_definitions:
         id = function.getId()
