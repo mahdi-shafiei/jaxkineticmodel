@@ -21,10 +21,12 @@ class Jax_MM_Irrev_Uni:
 
 class Jax_Facilitated_Diffusion:
     """facilitated diffusion formula, taken from
-    Lao-Martil, D., Schmitz, J. P., Teusink, B., & van Riel, N. A. (2023). Elucidating yeast glycolytic dynamics at steady state growth and glucose pulses through
+    Lao-Martil, D., Schmitz, J. P., Teusink, B., & van Riel, N. A. (2023). Elucidating yeast glycolytic dynamics at steady 
+    state growth and glucose pulses through
      kinetic metabolic modeling. Metabolic engineering, 77, 128-142.
 
-     Class works slightly different than in torch. We have to simply include the names of the reaction parameter so that call recognizes them"""
+     Class works slightly different than in torch. We have to simply include the names 
+     of the reaction parameter so that call recognizes them"""
 
     def __init__(
         self, substrate_extracellular: str, product_intracellular: str, vmax: str, km_internal: str, km_external: str

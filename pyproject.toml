@@ -21,11 +21,12 @@ level = "INFO"
 level = "INFO"
 
 [tool.ruff]
+# Set the maximum line length to 79.
 line-length = 127
 
 [tool.ruff.lint]
-extend-select=["E501"]
-
+# Add the `line-too-long` rule to the enforced rule set.
+extend-select = ["E501"]
 
 [build-system]
 requires = ["setuptools>=61.0"]
