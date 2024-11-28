@@ -2,10 +2,12 @@
 
 
 ## Metabolic kinetic modelling
-The time evolution of metabolic states are often described by a set of Ordinary Differential Equations (ODEs)
+The time evolution of metabolic states are often described by a set of 
+Ordinary Differential Equations (ODEs):
 $$\frac{dm(t)}{dt}=S\cdot v(t,m(t),\theta)$$
 
-\\(S\\) is the stoichiometric matrix that describes the mass balances of a metabolic system. The fluxes \\(v\\) are described by reaction mechanisms, typically of some form like Michaelis-Menten or Hill equations. These mechanisms are parameterized by \\(\theta\\). By providing the initial values of the metabolic states, the ODEs can be solved using a numerical solver
+\\(S\\) is the stoichiometric matrix that describes the mass balances of 
+a metabolic system. The fluxes \\(v\\) are described by reaction mechanisms, typically of some form like Michaelis-Menten or Hill equations. These mechanisms are parameterized by \\(\theta\\). By providing the initial values of the metabolic states, the ODEs can be solved using a numerical solver:
 $$m(T)=m(0)+\int_0^T S\cdot v(t,m(t),\theta)dt$$
 
 We will describe below how you can build your own models that are compatible with Jax/Diffrax **[1]**. 
@@ -15,27 +17,10 @@ We will describe below how you can build your own models that are compatible wit
 ## The `Reaction` object
 
 ##### A reaction-centric approach
-Models can be built in a reaction-centric manner. The `Reaction` object requires setting five inputs: name of the reaction, stoichiometry of the reaction, compartments of the species involved, and it's mechanism. 
+Models can be built in a reaction-centric manner. Initializing a `Reaction` object requires five inputs: name of the reaction, names of the species involved, stoichiometry of the reaction, compartments of the species involved, and the reaction's mechanism. 
 
 ```python
-from jaxkineticmodel.kinetic_mechanisms import JaxKineticMechanisms as jm
-from jaxkineticmodel.building_models import JaxKineticModelBuild as jkm
-
-import jax.numpy as jnp
-import jax
-import numpy as np
-import diffrax 
-import matplotlib.pyplot as plt
-import pandas as pd
-
-
-ReactionA=jkm.Reaction(
-    name="ReactionA",
-    species=['A','B'],
-    stoichiometry=[-1,1],
-    compartments=['c','c'],
-    mechanism=jm.Jax_MM_Irrev_Uni(substrate="A",vmax="A_Vmax",km_substrate="A_Km"),
-    )
+{!code/building_models.py!lines=1-18}
 ```
 The `mechanism` is another class that describes the flux function, which depends on metabolite states and parameters. Parameters are pointed towards with unique symbols. The reaction object is implemented in a way that own-implemented flux functions can be used. We have also implemented a set of general flux functions that are often used in systems biology. 
 
@@ -71,42 +56,7 @@ Here, we show an example of how to build kinetic models using the reaction objec
 
 Three metabolic fluxes need to be modelled
 ```python
-
-
-#Add reactions v1 to v3
-v1=jkm.Reaction(
-    name="v1",
-    species=['m1','m2'],
-    stoichiometry=[-1,1],
-    compartments=['c','c'],
-    mechanism=jm.Jax_MM_Irrev_Uni(substrate="m1",vmax="A_Vmax",km_substrate="A_Km"),
-    )
-
-v2=jkm.Reaction(
-    name="v2",
-    species=['m2','m3'],
-    stoichiometry=[-1,1],
-    compartments=['c','c'],
-    mechanism=jm.Jax_MM_Irrev_Uni(substrate="m2",vmax="B_Vmax",km_substrate="B_Km"),
-    )
-
-v3=jkm.Reaction(
-    name="v3",
-    species=['m2','m4'],
-    stoichiometry=[-1,1],
-    compartments=['c','c'],
-    mechanism=jm.Jax_MM_Irrev_Uni(substrate="m2",vmax="C_Vmax",km_substrate="C_Km"),
-    )
-
-
-reactions=[v1,v2,v3]
-compartment_values={'c':1}
-
-
-# initialized the kinetic model object, and then make it a simulation object through jkm.NeuralODE
-kmodel=jkm.JaxKineticModel_Build(reactions,compartment_values)
-kmodel_sim=jkm.NeuralODEBuild(kmodel)
-print(kmodel.stoichiometric_matrix)
+{!code/building_models.py!lines=20-53}
 ```
 The stoichiometric matrix is automatically constructed from the reactions.
 
@@ -119,26 +69,7 @@ The stoichiometric matrix is automatically constructed from the reactions.
 One can first jax.jit the model **[2]** and solve the ODEs using the diffrax package **[1]**, which contains many nice numerical solvers.
 
 ```python
-#define the time interval, and the initial conditions
-
-ts=jnp.linspace(0,10,1000)
-y0=jnp.array([2,0,0,0])
-params=dict(zip(kmodel.parameter_names,jnp.array([1,1,1,1,1.5,1])))
-
-#jit the kmodel object. This results in a slow initial solve, but a c-compiled solve
-kmodel_sim=jax.jit(kmodel_sim)
-ys=kmodel_sim(ts,y0,params)
-ys=pd.DataFrame(ys,columns=kmodel.species_names)
-
-fig,ax=plt.subplots(figsize=(4,4))
-ax.plot(ts,ys['m1'],label="m1")
-ax.plot(ts,ys['m2'],label="m2")
-ax.plot(ts,ys['m3'],label="m3")
-ax.plot(ts,ys['m4'],label="m4")
-ax.set_xlabel("Time (in seconds)")
-ax.set_ylabel("Concentration (in mM)")
-ax.legend()
-plt.show()
+{!code/building_models.py!lines=55-74}
 ```
 
 ![timeseries](images/timeseries_example.png)
@@ -153,37 +84,8 @@ Boundary conditions can be either constant or not constant. Both are implemented
 Suppose for the system above, we want to make metabolite \\(m_1\\) a constant boundary condition. We can redefine the species by replacing it with a value
 
 
-
-    
-
-
 ```python
-kmodel=jkm.JaxKineticModel_Build(reactions,compartment_values)
-kmodel.add_boundary('m1',jkm.BoundaryCondition(2))
-print(kmodel.stoichiometric_matrix)
-
-#recompile and simulate
-kmodel_sim=jkm.NeuralODE(kmodel)
-ts=jnp.linspace(0,10,1000)
-
-#we remove m1 from y0, as this is now not evaluated by solving
-y0=jnp.array([0,0,0])
-params=dict(zip(kmodel.parameter_names,jnp.array([1,1,1,1,1.5,1])))
-
-#jit the kmodel object. This results in a slow initial solve, but a c-compiled solve
-kmodel_sim=jax.jit(kmodel_sim)
-ys=kmodel_sim(ts,y0,params)
-ys=pd.DataFrame(ys,columns=kmodel.species_names)
-
-#plot
-fig,ax=plt.subplots(figsize=(4,4))
-ax.plot(ts,ys['m2'],label="m2")
-ax.plot(ts,ys['m3'],label="m3")
-ax.plot(ts,ys['m4'],label="m4")
-ax.set_xlabel("Time (in seconds)")
-ax.set_ylabel("Concentration (in mM)")
-ax.legend()
-
+{!code/building_models.py!lines=76-100}
 ```
 
 
@@ -195,33 +97,7 @@ ax.legend()
 For non-constant boundary conditions, you can use the `BoundaryCondition` class as before. You can use for example the interpolation abstract classes from [Diffrax](https://docs.kidger.site/diffrax/api/interpolation/). For analytic expression dependent on time t, these can be done as follows:
 
 ```python
-
-
-# initialized the kinetic model object, and then make it a simulation object through jkm.NeuralODE
-kmodel=jkm.JaxKineticModel_Build(reactions,compartment_values)
-kmodel.add_boundary('m1',jkm.BoundaryCondition('0.1*sin(t)'))
-print(kmodel.stoichiometric_matrix)
-
-kmodel_sim=jkm.NeuralODE(kmodel)
-ts=jnp.linspace(0,10,1000)
-
-#we remove m1 from y0, as this is now not evaluated by solving
-y0=jnp.array([0,0,0])
-params=dict(zip(kmodel.parameter_names,jnp.array([1,1,1,1,1.5,1])))
-
-#jit the kmodel object. This results in a slow initial solve, but a c-compiled solve
-kmodel_sim=jax.jit(kmodel_sim)
-ys=kmodel_sim(ts,y0,params)
-ys=pd.DataFrame(ys,columns=kmodel.species_names)
-
-fig,ax=plt.subplots(figsize=(4,4))
-ax.plot(ts,ys['m2'],label="m2")
-ax.plot(ts,ys['m3'],label="m3")
-ax.plot(ts,ys['m4'],label="m4")
-ax.set_xlabel("Time (in seconds)")
-ax.set_ylabel("Concentration (in mM)")
-ax.legend()
-
+{!code/building_models.py!lines=103-126}
 ```
 ![timeseries](images/timeseries_example_boundary_sin.png)
 
