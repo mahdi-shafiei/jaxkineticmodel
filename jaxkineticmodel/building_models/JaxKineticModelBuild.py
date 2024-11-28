@@ -24,7 +24,6 @@ class BoundaryCondition:
 
     def evaluate(self, t):
         return self.expression(t)
-        # return
 
 
 class Reaction:
@@ -41,10 +40,11 @@ class Reaction:
         self.mechanism = mechanism
         self.compartments = dict(zip(species, compartments))
 
-        self.parameters = np.setdiff1d(
-            list(vars(mechanism).values()), species
-        )  # excludes species as parameters, but add as seperate variable
-        self.species_in_mechanism = np.intersect1d(list(vars(mechanism).values()), species)
+        # exclude species as parameters, but add as seperate variable
+        self.parameters = [x for x in mechanism.param_names.values()
+                           if x not in species]
+        self.species_in_mechanism = [x for x in mechanism.param_names.values()
+                                     if x in species]
 
 
 class JaxKineticModel_Build:
