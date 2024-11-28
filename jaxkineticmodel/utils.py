@@ -1,9 +1,13 @@
 import logging
 import logging.config
 import sys
-import tomllib
 import os
 
+
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib
 
 def get_logger(name):
     package_root = os.path.dirname(os.path.dirname(__file__))  # Adjust as needed to reach package root

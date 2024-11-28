@@ -14,8 +14,8 @@ markdown_extensions:
   - admonition
   - codehilite
   - footnotes
-
-
+  - markdown_include.include:
+      base_path: docs
 
   
 theme: readthedocs

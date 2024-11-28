@@ -60,14 +60,16 @@ dependencies = [
     "scikit_learn==1.5.2",
     "scipy>=1.11.1",
     "sympy>=1.13.3",
+    "tomli>=2.1.0 ; python_version<'3.11'",
     "python-libsbml==5.20.4",
     "scikit-optimize>=0.10.2",
+    "markdown-include>=0.8.1",
 ]
 
 authors = [
-  { name="Paul van Lent", email="p.h.vanlent@tudelft.nl" },
-  {name="Leon Planken",email="l.r.planken@tudelft.nl"},
-  {name="Thomas Abeel", email="t.abeel@tudelft.nl"}
+  {name="Paul van Lent", email="p.h.vanlent@tudelft.nl"},
+  {name="Léon Planken",email="l.r.planken@tudelft.nl"},
+  {name="Thomas Abeel", email="t.abeel@tudelft.nl"},
 ]
 
 
