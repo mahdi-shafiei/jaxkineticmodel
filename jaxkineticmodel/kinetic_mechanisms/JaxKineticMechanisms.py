@@ -57,7 +57,7 @@ class Jax_MM_Rev_UniUni(Mechanism):
     @staticmethod
     def compute(substrate, product, vmax,
                   k_equilibrium, km_substrate, km_product):
-        nominator = vmax * (substrate / km_substrate) * (1 - (1 / k_equilibrium) * (product / substrate))
+        numerator = vmax * (substrate / km_substrate) * (1 - (1 / k_equilibrium) * (product / substrate))
         denominator = 1 + (substrate / km_substrate) + (product / km_product)
         return numerator / denominator
 
