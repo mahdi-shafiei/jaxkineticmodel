@@ -96,66 +96,66 @@ def latinhypercube_sampling(bounds, N):
     return parameter_sets
 
 
-def save_parameter_initializations(model_name, dataset, id):
+def save_parameter_initializations(model_name, dataset, id_string):
     """Saves parameter initializations in folder. Requires setting id string"""
     model_name = model_name.replace(".xml", "")
     model_name = model_name.replace(".sbml", "")
     output_filedir = "parameter_initializations/" + model_name + "/"
     if not os.path.exists(output_filedir):
         os.mkdir(output_filedir)
-        filename = output_filedir + model_name + "_parameterset_" + "id_" + id + ".csv"
+        filename = output_filedir + model_name + "_parameterset_" + "id_" + id_string + ".csv"
         dataset.to_csv(filename)
     else:
         print(f"The directory '{output_filedir}' already exists. ")
-        filename = output_filedir + model_name + "_parameterset_" + "id_" + id + ".csv"
+        filename = output_filedir + model_name + "_parameterset_" + "id_" + id_string + ".csv"
         dataset.to_csv(filename)
     return dataset
 
 
-def save_optimized_params(model_name, result, id, output_filedir):
+def save_optimized_params(model_name, result, id_string, output_filedir):
     """Saves parameter initializations in folder. Requires setting id string"""
     model_name = model_name.replace(".xml", "")
     model_name = model_name.replace(".sbml", "")
     output_filedir = output_filedir + model_name + "/"
     if not os.path.exists(output_filedir):
         os.mkdir(output_filedir)
-        filename = output_filedir + model_name + "_parameters_" + "id_" + id + ".csv"
+        filename = output_filedir + model_name + "_parameters_" + "id_" + id_string + ".csv"
         result.to_csv(filename)
     else:
         print(f"The directory '{output_filedir}' already exists. ")
-        filename = output_filedir + model_name + "_parameters_" + "id_" + id + ".csv"
+        filename = output_filedir + model_name + "_parameters_" + "id_" + id_string + ".csv"
         result.to_csv(filename)
     return result
 
 
-def save_losses(model_name, result, id, output_filedir):
+def save_losses(model_name, result, id_string, output_filedir):
     """Saves parameter initializations in folder. Requires setting id string"""
     model_name = model_name.replace(".xml", "")
     model_name = model_name.replace(".sbml", "")
     output_filedir = output_filedir + model_name + "/"
     if not os.path.exists(output_filedir):
         os.mkdir(output_filedir)
-        filename = output_filedir + model_name + "_losses_" + "id_" + id + ".csv"
+        filename = output_filedir + model_name + "_losses_" + "id_" + id_string + ".csv"
         result.to_csv(filename)
     else:
         print(f"The directory '{output_filedir}' already exists. ")
-        filename = output_filedir + model_name + "_losses_" + "id_" + id + ".csv"
+        filename = output_filedir + model_name + "_losses_" + "id_" + id_string + ".csv"
         result.to_csv(filename)
     return result
 
 
-def save_norms(model_name, result, id, output_filedir):
+def save_norms(model_name, result, id_string, output_filedir):
     """Saves parameter initializations in folder. Requires setting id string"""
     model_name = model_name.replace(".xml", "")
     model_name = model_name.replace(".sbml", "")
     output_filedir = output_filedir + model_name + "/"
     if not os.path.exists(output_filedir):
         os.mkdir(output_filedir)
-        filename = output_filedir + model_name + "_norms_" + "id_" + id + ".csv"
+        filename = output_filedir + model_name + "_norms_" + "id_" + id_string + ".csv"
         result.to_csv(filename)
     else:
         print(f"The directory '{output_filedir}' already exists. ")
-        filename = output_filedir + model_name + "_norms_" + "id_" + id + ".csv"
+        filename = output_filedir + model_name + "_norms_" + "id_" + id_string + ".csv"
         result.to_csv(filename)
     return result
 

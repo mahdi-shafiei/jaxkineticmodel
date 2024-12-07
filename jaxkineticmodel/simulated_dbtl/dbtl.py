@@ -26,6 +26,8 @@ class DesignBuildTestLearnCycle:
     """
 
     def __init__(self, model, parameters: dict, initial_conditions: jnp.array, timespan: jnp.array, target: list):
+        self.parameter_target_names = None
+        self.ml_model = None
         self.species_names = model.species_names
         self.kinetic_model = jax.jit(model.get_kinetic_model())
         self.parameters = parameters
@@ -161,14 +163,14 @@ class DesignBuildTestLearnCycle:
         # a function that formats the generated dataset given the reference parameter set as well as values (TEST)
         # a function that can add noise to the measurements (TEST add noise)
 
-    def TEST_add_noise(self, values, percentage, type="homoschedastic"):
+    def TEST_add_noise(self, values, percentage, noisetype="homoschedastic"):
         """add noise to the training set, to see the effect of noise models on performance.
         Includes homoschedastic or heteroschedastic noise for a certain percentage.
         Other experiment specific noise models could be added as well.
         One then needs to model the noise w.r.t to its screening value"""
 
         noised_values = {}
-        if type == "homoschedastic":
+        if noisetype == "homoschedastic":
             # look back whether this is actually the right way to do it
             for targ in self.target:
                 values_new = np.random.normal(values[targ], percentage)
@@ -176,7 +178,7 @@ class DesignBuildTestLearnCycle:
 
                 noised_values[targ] = values_new
 
-        if type == "heteroschedastic":
+        if noisetype == "heteroschedastic":
             # We assume that the noise level is given by X_m=D*X_true +X_true, where D is the percentage of deviation.
             # We now model this as a simple gaussian, dependent on percentage*Xtrue
             for targ in self.target:

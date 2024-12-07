@@ -12,7 +12,7 @@ import optax
 import argparse
 
 jax.config.update("jax_enable_x64", True)
-from source.parameter_estimation.training import (
+from jaxkineticmodel.parameter_estimation.training import (
     create_log_params_means_centered_loss_func,
     log_transform_parameters,
     exponentiate_parameters,

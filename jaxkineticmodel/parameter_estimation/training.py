@@ -19,6 +19,7 @@ class Trainer:
     Input: a model that is a JaxKineticModel class to fit, and a dataset"""
 
     def __init__(self, model, data: pd.DataFrame, learning_rate=1e-3, loss_threshold=1e-4, clip=4, n_iter=100):
+
         if isinstance(model, SBMLModel):
             self.model = jax.jit(model.get_kinetic_model())
             params = get_global_parameters(model.model)
@@ -38,6 +39,7 @@ class Trainer:
         self.n_iter = n_iter
         self.log_loss_func = jax.jit(create_log_params_means_centered_loss_func(self.model))
         self.dataset = data
+        self.parameter_sets = None
 
     def _generate_bounds(self, parameters_base: dict, lower_bound: float, upper_bound: float):
         """Generates bounds given an estimate of the parameters
@@ -235,12 +237,12 @@ def create_log_params_means_centered_loss_func(model):
         y_pred = model(ts, y0, params)
         ys = jnp.where(mask, ys, 0)
 
-        ys = ys + 1
-        y_pred = y_pred + 1
+        ys += 1
+        y_pred += 1
         scale = jnp.mean(ys, axis=0)
 
-        ys = ys / scale
-        y_pred = y_pred / scale
+        ys /= scale
+        y_pred /= scale
 
         y_pred = jnp.where(mask, y_pred, 0)
         # print(ys,y_pred)
@@ -265,12 +267,12 @@ def create_log_params_means_centered_loss_func2(model, to_include: list):
         y_pred = model(ts, y0, params)
         ys = jnp.where(mask, ys, 0)
 
-        ys = ys + 1
-        y_pred = y_pred + 1
+        ys += 1
+        y_pred += 1
         scale = jnp.mean(ys, axis=0)
 
-        ys = ys / scale
-        y_pred = y_pred / scale
+        ys /= scale
+        y_pred /= scale
 
         y_pred = jnp.where(mask, y_pred, 0)
 

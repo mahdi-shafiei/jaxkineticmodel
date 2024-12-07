@@ -133,7 +133,7 @@ class JaxKineticModel_Build:
         eval_dict = {**y, **params, **boundary_conditions}
         v = jnp.stack([self.v[i](eval_dict) for i in range(len(self.reaction_names))])
         dY = jnp.matmul(self.S, v)
-        dY = dY / self.compartment_values
+        dY /= self.compartment_values
 
         return dY
 

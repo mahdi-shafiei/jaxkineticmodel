@@ -113,7 +113,7 @@ class JaxKineticModel:
             [apply_func(i, y, self.flux_point_dict[i], local_params[i], time_dict[i]) for i in self.reaction_names]
         )  # perhaps there is a way to vectorize this in a better way
         dY = jnp.matmul(self.stoichiometry, v)  # dMdt=S*v(t)
-        dY = dY / self.compartment_values
+        dY /= self.compartment_values
         return dY
 
 

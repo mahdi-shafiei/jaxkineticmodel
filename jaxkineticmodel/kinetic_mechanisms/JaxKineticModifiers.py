@@ -1,5 +1,5 @@
 class SimpleActivator:
-    "activation class modifier"
+    """ activation class modifier """
 
     def __init__(self, k_A: str):
         self.k_A = k_A

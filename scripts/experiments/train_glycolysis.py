@@ -4,14 +4,14 @@ sys.path.append("/tudelft.net/staff-bulk/ewi/insy/DBL/plent/NeuralODEs/jax_neura
 sys.path.append("/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes")
 import pandas as pd
 import numpy as np
-import diffrax
+
 import jax.numpy as jnp
 import jax
 import optax
 from models.manual_implementations.glycolysis.glycolysis_model import *
 
 jax.config.update("jax_enable_x64", True)
-from source.parameter_estimation.training import (
+from jaxkineticmodel.parameter_estimation.training import (
     create_log_params_means_centered_loss_func2,
     log_transform_parameters,
     exponentiate_parameters,
