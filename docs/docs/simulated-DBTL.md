@@ -101,7 +101,7 @@ bst,r2_scores=dbtl_cycle.LEARN_train_model(data=data,
 
 dbtl_cycle.LEARN_validate_model(samples=12,
                      elements=12,
-                     target='t6p'
+                     target='t6p',
                      plotting=True
                      )
 

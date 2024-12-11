@@ -81,7 +81,7 @@ class JaxKineticModel:
         self.func = v
         self.stoichiometry = S
         # self.params=params
-        self.flux_point_dict = flux_point_dict  # this is ugly but wouldnt know how to do it another wa
+        self.flux_point_dict = flux_point_dict  # this is ugly but wouldn't know how to do it another wa
         self.species_names = np.array(species_names)
         self.reaction_names = np.array(reaction_names)
         self.compartment_values = jnp.array(compartment_values)

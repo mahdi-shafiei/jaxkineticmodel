@@ -443,7 +443,7 @@ def get_lambda_function_dictionary(model):
         n_nodes = math.getNumChildren()
         string_math = libsbml.formulaToL3String(math.getChild(n_nodes - 1))
 
-        sp_symbols = {}
+
         math_nodes = []
         for i in range(function.getNumArguments()):
             math_node_name = function.getArgument(i).getName()

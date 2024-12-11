@@ -40,7 +40,7 @@ class DesignBuildTestLearnCycle:
         self.target = target
         self.reference = None  #
 
-    def DESIGN_establish_library_elements(self, parameter_target_names, parameter_perturbation_values):
+    def design_establish_library_elements(self, parameter_target_names, parameter_perturbation_values):
         """
         The actions that can be taken when sampling scenarios during the Design-phase.
         From an experimental perspective, this can be viewed as the library design phase.
@@ -68,24 +68,24 @@ class DesignBuildTestLearnCycle:
         self.parameter_target_names = parameter_target_names
         return elementary_actions
 
-    def DESIGN_assign_probabilities(self, occurence_list=None):
+    def design_assign_probabilities(self, occurrence_list=None):
         """This functions assigns a probability to each element in the action list.
         Can be viewed as changing concentrations in a library design"""
         rows, cols = np.shape(self.library_units)
-        if occurence_list is not None:
-            if len(occurence_list) == rows:
-                self.library_units["probability"] = np.array(occurence_list) / np.sum(occurence_list)
+        if occurrence_list is not None:
+            if len(occurrence_list) == rows:
+                self.library_units["probability"] = np.array(occurrence_list) / np.sum(occurrence_list)
                 return_message = "manual probabilities"
                 pass
             else:
                 return_message = "None"
-                logger.error("Length of list of occurences of promoters is not matching ")
+                logger.error("Length of list of occurrences of promoters is not matching ")
         else:
             return_message = "equal probabilities"
             self.library_units["probability"] = np.ones(rows) / rows
         return return_message
 
-    def DESIGN_generate_strains(self, elements, samples, replacement=False):
+    def design_generate_strains(self, elements, samples, replacement=False):
         """Sample designs given the elementary actions given
         Input: number of elements to choose from the library (typically 6), number of samples.
         Replacement means whether we allow duplicate genes in the designs."""
@@ -116,7 +116,7 @@ class DesignBuildTestLearnCycle:
         self.designs_per_cycle[f"cycle_{self.cycle_status}_designs"] = strain_promoters
         return strains
 
-    def BUILD_simulate_strains(self, strains_perturbed, plot=False):
+    def build_simulate_strains(self, strains_perturbed, plot=False):
         """Simulates perturbations with respect to the reference strain.
         Takes the mean value of the last 10 simulated steps.
         We then save this into the designs_per_cycle status"""
@@ -163,14 +163,14 @@ class DesignBuildTestLearnCycle:
         # a function that formats the generated dataset given the reference parameter set as well as values (TEST)
         # a function that can add noise to the measurements (TEST add noise)
 
-    def TEST_add_noise(self, values, percentage, noisetype="homoschedastic"):
+    def test_add_noise(self, values, percentage, noisetype="homoscedastic"):
         """add noise to the training set, to see the effect of noise models on performance.
-        Includes homoschedastic or heteroschedastic noise for a certain percentage.
+        Includes homoscedastic or heteroscedastic noise for a certain percentage.
         Other experiment specific noise models could be added as well.
         One then needs to model the noise w.r.t to its screening value"""
 
         noised_values = {}
-        if noisetype == "homoschedastic":
+        if noisetype == "homoscedastic":
             # look back whether this is actually the right way to do it
             for targ in self.target:
                 values_new = np.random.normal(values[targ], percentage)
@@ -178,7 +178,7 @@ class DesignBuildTestLearnCycle:
 
                 noised_values[targ] = values_new
 
-        if noisetype == "heteroschedastic":
+        if noisetype == "heteroscedastic":
             # We assume that the noise level is given by X_m=D*X_true +X_true, where D is the percentage of deviation.
             # We now model this as a simple gaussian, dependent on percentage*Xtrue
             for targ in self.target:
@@ -188,10 +188,10 @@ class DesignBuildTestLearnCycle:
 
         return noised_values
 
-    def TEST_format_dataset(self, strain_designs, production_values, reference_parameters):
+    def test_format_dataset(self, strain_designs, production_values, reference_parameters):
         """Function that given strain designs and a reference strain (parameter set) formats the datasets as a pandas
         df for further use in ML/BO or whatever,
-        the index will be coded with a cycle status coding. The last column is the.
+        the index will be coded with a cycle status coding. The last column is the target variable.
         """
 
         strain_names = [f"cycle{self.cycle_status}_strain{i}" for i in range(len(strain_designs))]
@@ -222,9 +222,9 @@ class DesignBuildTestLearnCycle:
     ## This should update the previous reference strain to perform further library or DoE transformation
     ### Also updates the DBTL cycle states
     ###
-    def LEARN_train_model(self, data, target, args, model_type="XGBoost", test_size=0.2, runs=10):
+    def learn_train_model(self, data, target, args, model_type="XGBoost", test_size=0.2, runs=10):
         """Trains a model for the target given the datapoints.
-        Input: data , target (variable to predicted), testset size (default 80/20 split, # runs for the r2)"""
+        Input: data , target (variable to predicted), test set size (default 80/20 split, # runs for the r2)"""
 
         # train_test_val
         if target not in self.target:
@@ -258,13 +258,13 @@ class DesignBuildTestLearnCycle:
         self.ml_model = ml_model
         return ml_model, r2
 
-    def LEARN_validate_model(self, samples, elements, target, model_type="XGBoost", plotting=True):
+    def learn_validate_model(self, samples, elements, target, model_type="XGBoost", plotting=True):
         """Validate the model with new data, generated from the same library distribution as before."""
 
-        validation_set = self.DESIGN_generate_strains(elements=elements, samples=samples, replacement=True)
-        validation_values = self.BUILD_simulate_strains(validation_set, plot=False)
+        validation_set = self.design_generate_strains(elements=elements, samples=samples, replacement=True)
+        validation_values = self.build_simulate_strains(validation_set, plot=False)
 
-        validation_data = self.TEST_format_dataset(
+        validation_data = self.test_format_dataset(
             strain_designs=validation_set, production_values=validation_values, reference_parameters=self.parameters
         )
         if model_type == "XGBoost":

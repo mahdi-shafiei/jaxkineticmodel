@@ -1,5 +1,4 @@
 import jax.numpy as jnp
-import numpy as np
 from collections import Counter
 import diffrax
 import pandas as pd

@@ -45,8 +45,8 @@ class Trainer:
         """Generates bounds given an estimate of the parameters
         Input:
          Base parameter: a rough estimate of the parameter values
-          Lowerbound: Defines the lower bound given the paraameter base values
-           Upperbound: defines uppperboudn given the parameter base values"""
+          Lower bound: Defines the lower bound given the parameter base values
+           Upper bound: defines upper bound given the parameter base values"""
         lbs, ubs, names = [], [], []
 
         for key in parameters_base.keys():
@@ -64,7 +64,7 @@ class Trainer:
         return bounds
 
     def latinhypercube_sampling(self, parameters_base, lower_bound, upper_bound, N):
-        """Performs latin hypercube smapling"""
+        """Performs latin hypercube sampling"""
         bounds = self._generate_bounds(parameters_base=parameters_base, lower_bound=lower_bound, upper_bound=upper_bound)
 
         sampler = qmc.LatinHypercube(d=len(bounds.index))
@@ -92,7 +92,7 @@ class Trainer:
     # @jax.jit
     def _update_log(self, opt_state, params, ts, ys):
         """Update rule for the gradients for log-transformed parameters. Can only be applied
-        to nonnegative parameters"""
+        to non-negative parameters"""
 
         log_params = log_transform_parameters(params)
 
@@ -303,7 +303,7 @@ def create_update_rule(optimizer, loss_func):
 def create_log_update_rule(optimizer, log_loss_func):
     def update_log(opt_state, params, ts, ys):
         """Update rule for the gradients for log-transformed parameters. Can only be applied
-        to nonnegative parameters"""
+        to non-negative parameters"""
         log_params = log_transform_parameters(params)
 
         loss = log_loss_func(log_params, ts, ys)

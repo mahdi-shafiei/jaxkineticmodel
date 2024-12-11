@@ -1,18 +1,17 @@
 import sys
 
 sys.path.append("/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes")
-# sys.path.append('/home/plent/Documenten/Gitlab/NeuralODEs')
-from jaxkineticmodel.load_sbml.sbml_load import *
-from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
 
-jax.config.update("jax_enable_x64", True)
+
+
 from jaxkineticmodel.parameter_estimation.initialize_parameters import *
-import optax
+
 from jaxkineticmodel.parameter_estimation.training import *
 import time
 import argparse
 from jaxkineticmodel.parameter_estimation.jacobian import *
 
+jax.config.update("jax_enable_x64", True)
 
 def main():
     parser = argparse.ArgumentParser()

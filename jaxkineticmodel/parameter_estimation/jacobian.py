@@ -68,14 +68,14 @@ class Jacobian:
 
     def filter_oscillations(self, compiled_jacobian, y_t, parameter_initializations, period_bounds):
         """
-        Filtering a LHS based on oscillatory behavior.
+        Filtering a latin hypercube sample based on oscillatory behavior.
         Input:
         compiled jacobian
         y_t: values at time t
 
         parameter_initializations: a pandas dataframe with parameter initializations from a latin hypercube sampling
         period bounds (list [lb,ub] in proper units): used to filter for dynamics where an estimate of the period of
-        damped oscillations is available. Imaginary eigenvalus are check according to
+        damped oscillations is available. Imaginary eigenvalues are check according to
         2pi/T_lb <=Im(λ_i)<= 2pi/Tub.
         """
         eigvals = []

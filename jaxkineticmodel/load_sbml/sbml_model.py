@@ -292,7 +292,7 @@ def get_reaction_symbols_dict(eval_dict):
 # we want the output to be a list v, which contains jitted function
 def sympify_lambidify_and_jit_equation(equation, nested_local_dict):
     """Sympifies, lambdifies, and then jits a string rate law
-    "equation: the string rate law equation
+    equation: the string rate law equation
     nested_local_dict: a dictionary having dictionaries of
       global parameters,local parameters, compartments, and boundary conditions
 
@@ -406,7 +406,6 @@ def get_lambda_function_dictionary(model):
         string_math = replace_piecewise(libsbml.formulaToL3String(math.getChild(n_nodes - 1)))
 
         leaf_nodes = []
-        sp_symbols = {}
         math_nodes = get_leaf_nodes(math, leaf_nodes=leaf_nodes)
         sp_symbols = {}
         for node in math_nodes:
@@ -486,10 +485,9 @@ def get_assignment_rules_dictionary(model):
         math_nodes = get_leaf_nodes(math, leaf_nodes=leaf_nodes)
         sp_symbols = {node: sp.Symbol(node) for node in math_nodes}
         expr = sp.sympify(string_math, locals=sp_symbols)
-        # rule_x=sp.lambdify(math_nodes,expr, "jax")
 
         assignment_dict[id] = expr
-        # print("the expression: ",id,expr)
+
     return assignment_dict
 
 
@@ -558,7 +556,7 @@ def overwrite_init_conditions_with_init_assignments(model, y0):
 
 
 def get_events_dictionary(model):
-    """There are many type of events. For now I only add a few and the rest will throw a warning"""
+    """There are many type of events. For now, I only add a few and the rest will throw a warning"""
     num_events = model.getNumEvents()
     events_dict = {}
     if model.getLevel() == 2 and num_events != 0:
