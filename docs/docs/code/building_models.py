@@ -3,8 +3,7 @@ from jaxkineticmodel.building_models import JaxKineticModelBuild as jkm
 
 import jax.numpy as jnp
 import jax
-import numpy as np
-import diffrax
+
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -74,7 +73,7 @@ ax.legend()
 plt.show()
 
 kmodel=jkm.JaxKineticModel_Build(reactions,compartment_values)
-kmodel.add_boundary('m1',jkm.BoundaryCondition(2))
+kmodel.add_boundary('m1',jkm.BoundaryCondition("2"))
 print(kmodel.stoichiometric_matrix)
 
 #recompile and simulate
@@ -98,14 +97,14 @@ ax.plot(ts,ys['m4'],label="m4")
 ax.set_xlabel("Time (in seconds)")
 ax.set_ylabel("Concentration (in mM)")
 ax.legend()
-
+plt.show()
 
 # initialized the kinetic model object, and then make it a simulation object through jkm.NeuralODE
 kmodel=jkm.JaxKineticModel_Build(reactions,compartment_values)
 kmodel.add_boundary('m1',jkm.BoundaryCondition('0.1*sin(t)'))
 print(kmodel.stoichiometric_matrix)
 
-kmodel_sim=jkm.NeuralODE(kmodel)
+kmodel_sim=jkm.NeuralODEBuild(kmodel)
 ts=jnp.linspace(0,10,1000)
 
 #we remove m1 from y0, as this is now not evaluated by solving
@@ -124,4 +123,4 @@ ax.plot(ts,ys['m4'],label="m4")
 ax.set_xlabel("Time (in seconds)")
 ax.set_ylabel("Concentration (in mM)")
 ax.legend()
-
+plt.show()

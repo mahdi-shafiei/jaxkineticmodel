@@ -170,7 +170,7 @@ class DesignBuildTestLearnCycle:
         One then needs to model the noise w.r.t to its screening value"""
 
         noised_values = {}
-        if noisetype == "homoscedastic":
+        if noisetype in ["homoscedastic","homoskedastic","homoschedastic"]:
             # look back whether this is actually the right way to do it
             for targ in self.target:
                 values_new = np.random.normal(values[targ], percentage)
@@ -178,13 +178,16 @@ class DesignBuildTestLearnCycle:
 
                 noised_values[targ] = values_new
 
-        if noisetype == "heteroscedastic":
+        if noisetype in ["heteroscedastic","heteroskedastic","heteroschedastic"]:
             # We assume that the noise level is given by X_m=D*X_true +X_true, where D is the percentage of deviation.
             # We now model this as a simple gaussian, dependent on percentage*Xtrue
             for targ in self.target:
                 values_new = np.random.normal(values[targ], percentage * np.array(values[targ]))
                 values_new[values_new < 0] = 0
                 noised_values[targ] = values_new
+        else:
+            logger.error("Noise model not found or not implemented")
+
 
         return noised_values
 

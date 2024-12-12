@@ -38,7 +38,8 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 packages = ["jaxkineticmodel"]
 
-
+[tool.my_project]
+project_root = "."
 
 [project]
 name = "jaxkineticmodel"

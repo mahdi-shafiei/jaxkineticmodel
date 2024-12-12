@@ -17,6 +17,7 @@ class BoundaryCondition:
     # (could be easier to jax.jit)"""
 
     def __init__(self, expression: str):
+
         self.expression = sp.sympify(expression)
 
         self.expression = sp.lambdify(sp.Symbol("t"), self.expression, "jax")
@@ -110,13 +111,23 @@ class JaxKineticModel_Build:
         """Add a metabolite boundary condition
         input: metabolite name, boundary condition object or diffrax interpolation object"""
 
+        #updates the list of boundary conditions
         self.boundary_conditions.update({metabolite_name: boundary_condition})
         index = self.species_names.index(metabolite_name)
-        # self.S=jnp.delete(self.S,index)
+
+        #since it is now a boundary condition, it will be removed
+        # from species list
         self.species_names.remove(metabolite_name)
+
+        #boundary conditions will not be evaluated in S*v(t)
         self.S = jnp.delete(self.S, index, axis=0)
+
+        # same here, but then for the pandas
+        # (refactor this later)
         self.stoichiometric_matrix = self.stoichiometric_matrix.drop(labels=metabolite_name, axis=0)
         self.compartment_values = jnp.delete(self.compartment_values, index)
+
+        #
 
     def __call__(self, t, y, args):
         params, boundary_conditions = args
@@ -145,7 +156,7 @@ class NeuralODEBuild:
         self.reaction_names = list(func.stoichiometric_matrix.columns)
         self.species_names = list(func.stoichiometric_matrix.index)
         self.Stoichiometry = func.S
-        self.boundary_conditions = {}
+        self.boundary_conditions = func.boundary_conditions
 
         self.max_steps = 200000
         self.rtol = 1e-8
