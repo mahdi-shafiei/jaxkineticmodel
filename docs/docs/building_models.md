@@ -108,7 +108,7 @@ For non-constant boundary conditions, you can use the `BoundaryCondition` class 
 When building kinetic models, it is not uncommon that \\(\frac{dm(t)}{dt}\\) is not fully based on the evaluation of \\(S\cdot v(t)\\). For these cases, one can still use the kinetic mechanisms described above but with a manual setup of the ODEs. We have provided a custom implementation of glycolysis in [Custom models](glycolysis.md) as an example.
 
 ## Saving models
-To do (or remove)
+Coming up
 
 
 ## References

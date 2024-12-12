@@ -1,21 +1,10 @@
-
-
-from jaxkineticmodel.kinetic_mechanisms import JaxKineticMechanisms as jm
-from jaxkineticmodel.building_models import JaxKineticModelBuild as jkm
 from jaxkineticmodel.load_sbml.sbml_load import *
 from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
 import jax.numpy as jnp
-import jax
-import numpy as np
 from jaxkineticmodel.utils import get_logger
 logger = get_logger(__name__)
-
-import matplotlib.pyplot as plt
-import pandas as pd
-import itertools
-
 from jaxkineticmodel.simulated_dbtl.dbtl import DesignBuildTestLearnCycle
-import xgboost as xgb
+
 
 # load model (Messiha et. al (2013))
 filepath = ("../../../models/sbml_models/working_models/Messiha2013.xml")
@@ -34,7 +23,7 @@ dbtl_cycle = DesignBuildTestLearnCycle(model=model,
                                        timespan=ts,
                                        target=['PEP'])
 
-#design phase
+# design phase
 parameter_target_names = ['lp.ADH.Kacald', 'lp.ENO.kcat_ENO1',
                           'lp.FBA.Kdhap', 'lp.HXK.kcat_HXK1',
                           'lp.PGK.kcat', 'lp.HXT.Vmax', 'lp.GND.Kp6g_GND1']
@@ -57,16 +46,16 @@ dbtl_cycle.design_assign_probabilities()
 strain_designs = dbtl_cycle.design_generate_strains(elements=6, samples=40, replacement=False)
 
 
-#build phase
+# build phase
 values=dbtl_cycle.build_simulate_strains(strain_designs,plot=False)
 
-#test phase
+# test phase
 noised_values=dbtl_cycle.test_add_noise(values,0.1,noisetype='heteroschedastic')
 data=dbtl_cycle.test_format_dataset(strain_designs=strain_designs,
                                production_values=noised_values,
                                reference_parameters=dbtl_cycle.parameters)
 
-#learn phase
+# learn phase
 xgbparameters={'tree_method': 'auto','reg_lambda':1,'max_depth':2,"disable_default_eval_metric":0}
 alternative_params={'num_boost_round':10,'early_stopping_rounds':40}
 bst,r2_scores=dbtl_cycle.learn_train_model(data=data,
