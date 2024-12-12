@@ -18,8 +18,8 @@ class BoundaryCondition:
 
     def __init__(self, expression: str):
 
+        self.string_expression=expression
         self.expression = sp.sympify(expression)
-
         self.expression = sp.lambdify(sp.Symbol("t"), self.expression, "jax")
 
     def evaluate(self, t):
@@ -48,18 +48,24 @@ class Reaction:
 
 
 class JaxKineticModel_Build:
-    def __init__(self, reactions: list, compartment_values: dict):
+    def __init__(self, reactions: list, compartments: dict):
         """Kinetic model that is defined through it's reactions:
-        Input:"""
-        self.reactions = reactions
+        Input:
+        reactions: list of reaction objects
+        compartments: list of compartments with corresponding value for evaluation
+        """
 
+        self.reactions = reactions
         self.stoichiometric_matrix = self._get_stoichiometry()
         self.S = jnp.array(self.stoichiometric_matrix)  # use for evaluation
         self.reaction_names = self.stoichiometric_matrix.columns.to_list()
         self.species_names = self.stoichiometric_matrix.index.to_list()
 
         self.species_compartments = self._get_compartments_species()
-        self.compartment_values = jnp.array([compartment_values[self.species_compartments[i]] for i in self.species_names])
+
+
+        self.compartments=compartments
+        self.compartment_values = jnp.array([compartments[self.species_compartments[i]] for i in self.species_names])
 
         # only retrieve the mechanisms from each reaction
         self.v = [reaction.mechanism for reaction in self.reactions]

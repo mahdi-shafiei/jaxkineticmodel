@@ -1,6 +1,3 @@
-import matplotlib.pyplot as plt
-import os
-import sys, os
 from jaxkineticmodel.load_sbml.sbml_load import *
 from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
 
