@@ -8,3 +8,4 @@ figures/
 scripts/documentation_notebooks/
 JaxKineticModel.egg-info/
 .venv/
+build/
