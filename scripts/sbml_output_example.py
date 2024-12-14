@@ -154,7 +154,7 @@ check(model.setTimeUnits("second"),       'set model-wide time units')
 # check(unit.setScale(0),                   'set unit scale')
 # check(unit.setMultiplier(1),              'set unit multiplier')
 #
-compartments={'c':1,'e':2}
+compartments={'c':1}
 for (c_id, c_size) in compartments.items():
     # Create a compartment inside this model, and set the required
     # attributes for an SBML compartment in SBML Level 3.

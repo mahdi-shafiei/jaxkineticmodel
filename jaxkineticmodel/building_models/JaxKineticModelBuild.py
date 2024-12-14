@@ -10,14 +10,22 @@ logger = get_logger(__name__)
 
 class BoundaryCondition:
     """Class to evaluate boundary conditions, similar in form to Diffrax. For most purposes the interpolation in diffrax is
-    perfectly fine.
-    For now we only will consider boundary conditions that are dependent on t.
+    perfectly fine. For now, we only will consider boundary conditions that are dependent on t.
+
+    input:
+    String expression of the boundary condition (which can be e.g., str(2)))
+    Boolean of whether expression is a constant boundary condition.
+    This is required for consistency with exporting to sbml
 
     #To do: think about how to expand this class to include metabolite dependencies in expression
-    # (could be easier to jax.jit)"""
+    """
 
-    def __init__(self, expression: str):
+    def __init__(self,
+                 expression: str,
+                 constant: bool,
+                 ):
 
+        self.constant=constant
         self.string_expression=expression
         self.expression = sp.sympify(expression)
         self.expression = sp.lambdify(sp.Symbol("t"), self.expression, "jax")
