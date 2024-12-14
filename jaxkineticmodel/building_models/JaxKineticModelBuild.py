@@ -25,6 +25,11 @@ class BoundaryCondition:
                  constant: bool,
                  ):
 
+        if constant:
+            try:
+                float(expression)
+            except:
+                logger.error(f"expression {expression} cannot be converted to float. Are you sure it is a constant?")
         self.constant=constant
         self.string_expression=expression
         self.expression = sp.sympify(expression)

@@ -101,7 +101,7 @@ For non-constant boundary conditions, you can use the `BoundaryCondition` class 
 ```
 ![timeseries](images/timeseries_example_boundary_sin.png)
 
-<span style="font-size: 0.8em;"><b>Figure 3:</b> ODE simulation with \\(m1=0.1sin(t)\\).</span>
+<span style="font-size: 0.8em;"><b>Figure 3:</b> ODE simulation with \\(m1=0+5+0.3*sin(t)\\).</span>
 
 
 ## Building custom models

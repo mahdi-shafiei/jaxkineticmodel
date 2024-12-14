@@ -56,7 +56,7 @@ compartment_values={'c':1}
 
 # initialize the kinetic model object, and then make it a simulation object through jkm.NeuralODE
 kmodel=jkm.JaxKineticModel_Build(reactions,compartment_values)
-kmodel.add_boundary('m1',jkm.BoundaryCondition("2"))
+kmodel.add_boundary('m1',jkm.BoundaryCondition(expression="0.5+0.3*sin(t)",constant=False))
 kmodel_sim=jkm.NeuralODEBuild(kmodel)
 print(kmodel.stoichiometric_matrix)
 
@@ -190,12 +190,40 @@ for (s_id,s_comp) in boundary_species.items():
     s1=model.createSpecies()
     check(s1.setId(s_id), 'set species id')
     check(s1.setCompartment(s_comp),            'set species s1 compartment')
-    check(s1.setConstant(False),              'set "constant" attribute on s1')
-    check(s1.setInitialAmount(jnp.nan),             'set initial amount for s1')
     check(s1.setSubstanceUnits('mole'),       'set substance units for s1')
+
+    # this is by definition of the boundary condition class True
     check(s1.setBoundaryCondition(True),     'set "boundaryCondition" on s1')
     check(s1.setHasOnlySubstanceUnits(False), 'set "hasOnlySubstanceUnits" on s1')
 
+    #here a somewhat strange thing is done in sbml. If it is a constant it is defined in the species list
+    # but if it is not constant we define an assignment rule
+    string_expression=boundary_conditions[s_id].string_expression
+    if boundary_conditions[s_id].constant:
+        check(s1.setConstant(True),              'set "constant" attribute on s1')
+        check(s1.setInitialAmount(float(string_expression)), 'set "initialAmount" attribute on s1')
+
+    elif not boundary_conditions[s_id].constant:
+        check(s1.setConstant(False), 'set "constant" attribute on s1')
+        check(s1.setInitialAmount(jnp.nan), 'set "initialAmount" attribute on s1')
+
+
+        math_ast=libsbml.parseL3Formula(string_expression)
+        rule = model.createAssignmentRule()
+        check(rule.setVariable(s1.id), 'set "rule" attribute on s1')
+        check(rule.setMath(math_ast), 'set "math" attribute on s1')
+
+
+# rule.setVariable("S1")  # The species ID to be governed by this rule
+# rule.setMath(libsbml.parseL3Formula("time * 2"))  # Example formula: S1 = time * 2
+
+
+# math_ast = libsbml.parseL3Formula('k * s1 * c1')
+# check(math_ast,                           'create AST for rate expression')
+#
+# kinetic_law = r1.createKineticLaw()
+# check(kinetic_law,                        'create kinetic law')
+# check(kinetic_law.setMath(math_ast),      'set math on kinetic law')
 
 parameter_names=kmodel.parameter_names
 
@@ -218,6 +246,9 @@ for reaction in reactions:
             species_ref1 = r1.createProduct()
             check(species_ref1, 'create reactant')
             check(species_ref1.setSpecies(s_id), 'set reactant species id')
+
+
+
 
 #how to make a string expression from the mechanisms? Discuss with leon, what would be the best way to achieve this?
 import inspect
