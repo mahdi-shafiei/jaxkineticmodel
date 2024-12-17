@@ -1,9 +1,12 @@
-## Overview of the results described in Neural Ordinary Differential Equations Inspired Parameterization of Kinetic Models
+# Overview of the results described in Neural Ordinary Differential Equations Inspired Parameterization of Kinetic Models
 
-#### Overview of scripts needed to get results reported in paper [results](../results)
+## Overview of scripts needed to get results reported in paper [results](../results)
+#### Initialization bounds latin hypercube sampling (Figure 2) in [EXP4_Glycolysis_Fitting_Datasets](../results/EXP4_Glycolysis_Fitting_Datasets)
 
 
-#### Overview of notebooks generating the figures
+Results in [results](../results)
+
+## Overview of notebooks generating the figures
 Figure 2A,B,C: [Fig2ABC_parameterization_analysis_SBML.ipynb](experiments/Fig2ABC_parameterization_analysis_SBML.ipynb)
 Figure 2D,E,F) [Fig2DEF_lossplots_and_timeseries_examples.ipynb](experiments/Fig2DEF_lossplots_and_timeseries_examples.ipynb)
 
