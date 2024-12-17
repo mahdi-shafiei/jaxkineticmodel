@@ -14,7 +14,7 @@ python -m pip install .
 Documentation on jaxkineticmodel can be found *here*
 
 ### Running experiments as reported in paper
-Experiments as reported in [1] can be found `scripts/`
+Experiments as reported in [1] can be found in [scripts](scripts/)
 
 ### Reference
 If you use this package in your work, please reference:
