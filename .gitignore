@@ -9,3 +9,4 @@ scripts/documentation_notebooks/
 JaxKineticModel.egg-info/
 .venv/
 build/
+scripts/scripts_not_for_submission
