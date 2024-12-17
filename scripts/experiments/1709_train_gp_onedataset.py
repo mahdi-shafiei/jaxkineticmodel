@@ -1,8 +1,4 @@
 import sys
-
-sys.path.append("/tudelft.net/staff-bulk/ewi/insy/DBL/plent/NeuralODEs/jax_neural_odes")
-sys.path.append("/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes")
-
 import pandas as pd
 import numpy as np
 import diffrax
