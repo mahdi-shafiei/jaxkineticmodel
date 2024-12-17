@@ -6,6 +6,7 @@
 """
 
 import libsbml
+import sympy
 
 from jaxkineticmodel.kinetic_mechanisms import JaxKineticMechanisms as jm
 from jaxkineticmodel.building_models import JaxKineticModelBuild as jkm
@@ -56,7 +57,7 @@ compartment_values={'c':1}
 
 # initialize the kinetic model object, and then make it a simulation object through jkm.NeuralODE
 kmodel=jkm.JaxKineticModel_Build(reactions,compartment_values)
-kmodel.add_boundary('m1',jkm.BoundaryCondition(expression="0.5+0.3*sin(t)",constant=False))
+kmodel.add_boundary('m1',jkm.BoundaryCondition("0.5+0.3*sin(t)"))
 kmodel_sim=jkm.NeuralODEBuild(kmodel)
 print(kmodel.stoichiometric_matrix)
 
@@ -84,8 +85,6 @@ ax.legend()
 
 
 ## ** Code below here lifted from SBML documentation **
-
-
 
 def check(value, message):
    """Check output from libSBML functions for errors.
@@ -119,7 +118,7 @@ def check(value, message):
 try:
  document = libsbml.SBMLDocument(3, 1)
 except ValueError:
- raise SystemExit('Could not create SBMLDocumention object')
+ raise SystemExit('Could not create SBMLDocument object')
 
 # species = set()
 # for r in reactions:
@@ -131,7 +130,7 @@ except ValueError:
 # produce a model with complete units for the reaction rates, we need
 # to set the 'timeUnits' and 'extentUnits' attributes on Model.  We
 # set 'substanceUnits' too, for good measure, though it's not strictly
-# necessary here because we also set the units for invididual species
+# necessary here because we also set the units for individual species
 # in their definitions.
 
 model = document.createModel()
@@ -153,7 +152,7 @@ check(model.setTimeUnits("second"),       'set model-wide time units')
 # check(unit.setExponent(-1),               'set unit exponent')
 # check(unit.setScale(0),                   'set unit scale')
 # check(unit.setMultiplier(1),              'set unit multiplier')
-#
+
 compartments={'c':1}
 for (c_id, c_size) in compartments.items():
     # Create a compartment inside this model, and set the required
@@ -167,7 +166,7 @@ for (c_id, c_size) in compartments.items():
     check(c1.setSpatialDimensions(3),         'set compartment dimensions')
     #check(c1.setUnits('litre'),               'set compartment size units')
 
-#species (that are not boundaries and not constant
+#species (that are not boundaries and not constant)
 species_y0=dict(zip(kmodel.species_names,y0))
 species={specimen : kmodel.species_compartments[specimen] for specimen  in species_y0.keys()}
 
@@ -199,14 +198,12 @@ for (s_id,s_comp) in boundary_species.items():
     #here a somewhat strange thing is done in sbml. If it is a constant it is defined in the species list
     # but if it is not constant we define an assignment rule
     string_expression=boundary_conditions[s_id].string_expression
-    if boundary_conditions[s_id].constant:
-        check(s1.setConstant(True),              'set "constant" attribute on s1')
+    if boundary_conditions[s_id].is_constant:
+        check(s1.setConstant(True), 'set "constant" attribute on s1')
         check(s1.setInitialAmount(float(string_expression)), 'set "initialAmount" attribute on s1')
-
-    elif not boundary_conditions[s_id].constant:
+    else:
         check(s1.setConstant(False), 'set "constant" attribute on s1')
         check(s1.setInitialAmount(jnp.nan), 'set "initialAmount" attribute on s1')
-
 
         math_ast=libsbml.parseL3Formula(string_expression)
         rule = model.createAssignmentRule()
@@ -249,12 +246,6 @@ for reaction in reactions:
 
 
 
-
-#how to make a string expression from the mechanisms? Discuss with leon, what would be the best way to achieve this?
-import inspect
-inspect.getsource(reactions[0].mechanism.compute)
-
-#
 # # Create two species inside this model, set the required attributes
 # # for each species in SBML Level 3 (which are the 'id', 'compartment',
 # # 'constant', 'hasOnlySubstanceUnits', and 'boundaryCondition'
