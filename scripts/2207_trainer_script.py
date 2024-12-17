@@ -26,7 +26,6 @@ def main():
     parser.add_argument(
         "-b", "--bounds", type=int, required=True, help="the bounds of the latin hypercube given [1.1,10,50,100]"
     )
-    # parser.add_argument('-d',"--data",type=str,required=True,help="time series data (NxT dataframe) used to fit")
     parser.add_argument(
         "-o",
         "--output_dir",
