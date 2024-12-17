@@ -6,6 +6,7 @@
 """
 
 import libsbml
+import sympy
 
 from jaxkineticmodel.kinetic_mechanisms import JaxKineticMechanisms as jm
 from jaxkineticmodel.building_models import JaxKineticModelBuild as jkm
@@ -15,80 +16,76 @@ import jax
 import matplotlib.pyplot as plt
 import pandas as pd
 
-
-ReactionA=jkm.Reaction(
+ReactionA = jkm.Reaction(
     name="ReactionA",
-    species=['A','B'],
-    stoichiometry=[-1,1],
-    compartments=['c','c'],
-    mechanism=jm.Jax_MM_Irrev_Uni(substrate="A",vmax="A_Vmax",km_substrate="A_Km"),
-    )
+    species=['A', 'B'],
+    stoichiometry=[-1, 1],
+    compartments=['c', 'c'],
+    mechanism=jm.Jax_MM_Irrev_Uni(substrate="A", vmax="A_Vmax", km_substrate="A_Km"),
+)
 
-#Add reactions v1 to v3
-v1=jkm.Reaction(
+# Add reactions v1 to v3
+v1 = jkm.Reaction(
     name="v1",
-    species=['m1','m2'],
-    stoichiometry=[-1,1],
-    compartments=['c','c'],
-    mechanism=jm.Jax_MM_Irrev_Uni(substrate="m1",vmax="A_Vmax",km_substrate="A_Km"),
-    )
+    species=['m1', 'm2'],
+    stoichiometry=[-1, 1],
+    compartments=['c', 'c'],
+    mechanism=jm.Jax_MM_Irrev_Uni(substrate="m1", vmax="A_Vmax", km_substrate="A_Km"),
+)
 
-v2=jkm.Reaction(
+v2 = jkm.Reaction(
     name="v2",
-    species=['m2','m3'],
-    stoichiometry=[-1,1],
-    compartments=['c','c'],
-    mechanism=jm.Jax_MM_Irrev_Uni(substrate="m2",vmax="B_Vmax",km_substrate="B_Km"),
-    )
+    species=['m2', 'm3'],
+    stoichiometry=[-1, 1],
+    compartments=['c', 'c'],
+    mechanism=jm.Jax_MM_Irrev_Uni(substrate="m2", vmax="B_Vmax", km_substrate="B_Km"),
+)
 
-v3=jkm.Reaction(
+v3 = jkm.Reaction(
     name="v3",
-    species=['m2','m4'],
-    stoichiometry=[-1,1],
-    compartments=['c','c'],
-    mechanism=jm.Jax_MM_Irrev_Uni(substrate="m2",vmax="C_Vmax",km_substrate="C_Km"),
-    )
+    species=['m2', 'm4'],
+    stoichiometry=[-1, 1],
+    compartments=['c', 'c'],
+    mechanism=jm.Jax_MM_Irrev_Uni(substrate="m2", vmax="C_Vmax", km_substrate="C_Km"),
+)
 
-
-reactions=[v1,v2,v3]
-compartment_values={'c':1}
-
+reactions = [v1, v2, v3]
+compartment_values = {'c': 1}
 
 # initialize the kinetic model object, and then make it a simulation object through jkm.NeuralODE
-kmodel=jkm.JaxKineticModel_Build(reactions,compartment_values)
-kmodel.add_boundary('m1',jkm.BoundaryCondition(expression="0.5+0.3*sin(t)",constant=False))
-kmodel_sim=jkm.NeuralODEBuild(kmodel)
+kmodel = jkm.JaxKineticModel_Build(reactions, compartment_values)
+kmodel.add_boundary('m1', jkm.BoundaryCondition("0.5+0.3*sin(t)"))
+kmodel_sim = jkm.NeuralODEBuild(kmodel)
 print(kmodel.stoichiometric_matrix)
 
-#define the time interval, and the initial conditions
+# define the time interval, and the initial conditions
 
-ts=jnp.linspace(0,10,1000)
-y0=jnp.array([2,0,0])
-params=dict(zip(kmodel.parameter_names,jnp.array([1,1,1,1,1.5,1])))
+ts = jnp.linspace(0, 10, 1000)
+y0 = jnp.array([2, 0, 0])
+params = dict(zip(kmodel.parameter_names, jnp.array([1, 1, 1, 1, 1.5, 1])))
 
-#jit the kmodel object. This results in a slow initial solve, but a c-compiled solve
-kmodel_sim=jax.jit(kmodel_sim)
-ys=kmodel_sim(ts,y0,params)
-ys=pd.DataFrame(ys,columns=kmodel.species_names)
+# jit the kmodel object. This results in a slow initial solve, but a c-compiled solve
+kmodel_sim = jax.jit(kmodel_sim)
+ys = kmodel_sim(ts, y0, params)
+ys = pd.DataFrame(ys, columns=kmodel.species_names)
 
-fig,ax=plt.subplots(figsize=(4,4))
+fig, ax = plt.subplots(figsize=(4, 4))
 # ax.plot(ts,ys['m1'],label="m1")
-ax.plot(ts,ys['m2'],label="m2")
-ax.plot(ts,ys['m3'],label="m3")
-ax.plot(ts,ys['m4'],label="m4")
+ax.plot(ts, ys['m2'], label="m2")
+ax.plot(ts, ys['m3'], label="m3")
+ax.plot(ts, ys['m4'], label="m4")
 ax.set_xlabel("Time (in seconds)")
 ax.set_ylabel("Concentration (in mM)")
 ax.legend()
+
+
 # plt.show()
 
 
-
-## ** Code below here lifted from SBML documentation **
-
-
+# ** Code below here lifted from SBML documentation **
 
 def check(value, message):
-   """Check output from libSBML functions for errors.
+    """Check output from libSBML functions for errors.
 
    If 'value' is None, prints an error message constructed using 'message' and then raises SystemExit.
    If 'value' is an integer, it assumes it is a libSBML return status code.
@@ -98,18 +95,19 @@ def check(value, message):
    prints an error message constructed using 'message' along with text from libSBML explaining the meaning of the
    code, and raises SystemExit.
    """
-   if value is None:
-     raise SystemExit('LibSBML returned a null value trying to ' + message + '.')
-   elif type(value) is int:
-     if value == libsbml.LIBSBML_OPERATION_SUCCESS:
-       return
-     else:
-       err_msg = 'Error encountered trying to ' + message + '.' \
-                 + 'LibSBML returned error code ' + str(value) + ': "' \
-                 + libsbml.OperationReturnValue_toString(value).strip() + '"'
-       raise SystemExit(err_msg)
-   else:
-     return
+    if value is None:
+        raise SystemExit('LibSBML returned a null value trying to ' + message + '.')
+    elif type(value) is int:
+        if value == libsbml.LIBSBML_OPERATION_SUCCESS:
+            return
+        else:
+            err_msg = 'Error encountered trying to ' + message + '.' \
+                      + 'LibSBML returned error code ' + str(value) + ': "' \
+                      + libsbml.OperationReturnValue_toString(value).strip() + '"'
+            raise SystemExit(err_msg)
+    else:
+        return
+
 
 # Create an empty SBMLDocument object.  It's a good idea to check for
 # possible errors.  Even when the parameter values are hardwired like
@@ -117,26 +115,25 @@ def check(value, message):
 # operating system runs out of memory).
 
 try:
- document = libsbml.SBMLDocument(3, 1)
+    document = libsbml.SBMLDocument(3, 1)
 except ValueError:
- raise SystemExit('Could not create SBMLDocumention object')
+    raise SystemExit('Could not create SBMLDocument object')
 
 # species = set()
 # for r in reactions:
 #    species |= set(r.species)
 
 
-
 # Create the basic Model object inside the SBMLDocument object.  To
 # produce a model with complete units for the reaction rates, we need
 # to set the 'timeUnits' and 'extentUnits' attributes on Model.  We
 # set 'substanceUnits' too, for good measure, though it's not strictly
-# necessary here because we also set the units for invididual species
+# necessary here because we also set the units for individual species
 # in their definitions.
 
 model = document.createModel()
-check(model,                              'create model')
-check(model.setTimeUnits("second"),       'set model-wide time units')
+check(model, 'create model')
+check(model.setTimeUnits("second"), 'set model-wide time units')
 # check(model.setExtentUnits("mole"),       'set model units of extent')
 # check(model.setSubstanceUnits('mole'),    'set model substance units')
 #
@@ -153,66 +150,63 @@ check(model.setTimeUnits("second"),       'set model-wide time units')
 # check(unit.setExponent(-1),               'set unit exponent')
 # check(unit.setScale(0),                   'set unit scale')
 # check(unit.setMultiplier(1),              'set unit multiplier')
-#
-compartments={'c':1}
+
+compartments = {'c': 1}
 for (c_id, c_size) in compartments.items():
     # Create a compartment inside this model, and set the required
     # attributes for an SBML compartment in SBML Level 3.
 
     c1 = model.createCompartment()
-    check(c1,                                 'create compartment')
-    check(c1.setId(c_id),                     'set compartment id')
-    check(c1.setConstant(True),               'set compartment "constant"')
-    check(c1.setSize(c_size),                      'set compartment "size"')
-    check(c1.setSpatialDimensions(3),         'set compartment dimensions')
-    #check(c1.setUnits('litre'),               'set compartment size units')
+    check(c1, 'create compartment')
+    check(c1.setId(c_id), 'set compartment id')
+    check(c1.setConstant(True), 'set compartment "constant"')
+    check(c1.setSize(c_size), 'set compartment "size"')
+    check(c1.setSpatialDimensions(3), 'set compartment dimensions')
+    # check(c1.setUnits('litre'),               'set compartment size units')
 
-#species (that are not boundaries and not constant
-species_y0=dict(zip(kmodel.species_names,y0))
-species={specimen : kmodel.species_compartments[specimen] for specimen  in species_y0.keys()}
+# species (that are not boundaries and not constant)
+species_y0 = dict(zip(kmodel.species_names, y0))
+species = {specimen: kmodel.species_compartments[specimen] for specimen in species_y0.keys()}
 
-for (s_id,s_comp) in species.items():
-    s1=model.createSpecies()
+for (s_id, s_comp) in species.items():
+    s1 = model.createSpecies()
     check(s1.setId(s_id), 'set species id')
-    check(s1.setCompartment(s_comp),            'set species s1 compartment')
-    check(s1.setConstant(False),              'set "constant" attribute on s1')
-    check(s1.setInitialAmount(float(species_y0[s_id])),             'set initial amount for s1')
-    check(s1.setSubstanceUnits('mole'),       'set substance units for s1')
-    check(s1.setBoundaryCondition(False),     'set "boundaryCondition" on s1')
+    check(s1.setCompartment(s_comp), 'set species s1 compartment')
+    check(s1.setConstant(False), 'set "constant" attribute on s1')
+    check(s1.setInitialAmount(float(species_y0[s_id])), 'set initial amount for s1')
+    check(s1.setSubstanceUnits('mole'), 'set substance units for s1')
+    check(s1.setBoundaryCondition(False), 'set "boundaryCondition" on s1')
     check(s1.setHasOnlySubstanceUnits(False), 'set "hasOnlySubstanceUnits" on s1')
 
-## boundary conditions
-boundary_conditions=kmodel.boundary_conditions
-boundary_species={specimen : kmodel.species_compartments[specimen] for specimen  in boundary_conditions.keys()}
+# boundary conditions
+boundary_conditions = kmodel.boundary_conditions
+boundary_species = {specimen: kmodel.species_compartments[specimen] for specimen in boundary_conditions.keys()}
 
-#discuss with leon how to properly the constant and non-constant boundary conditions
-for (s_id,s_comp) in boundary_species.items():
-    s1=model.createSpecies()
+# discuss with leon how to properly the constant and non-constant boundary conditions
+for (s_id, s_comp) in boundary_species.items():
+    s1 = model.createSpecies()
     check(s1.setId(s_id), 'set species id')
-    check(s1.setCompartment(s_comp),            'set species s1 compartment')
-    check(s1.setSubstanceUnits('mole'),       'set substance units for s1')
+    check(s1.setCompartment(s_comp), 'set species s1 compartment')
+    check(s1.setSubstanceUnits('mole'), 'set substance units for s1')
 
     # this is by definition of the boundary condition class True
-    check(s1.setBoundaryCondition(True),     'set "boundaryCondition" on s1')
+    check(s1.setBoundaryCondition(True), 'set "boundaryCondition" on s1')
     check(s1.setHasOnlySubstanceUnits(False), 'set "hasOnlySubstanceUnits" on s1')
 
-    #here a somewhat strange thing is done in sbml. If it is a constant it is defined in the species list
+    # here a somewhat strange thing is done in sbml. If it is a constant it is defined in the species list
     # but if it is not constant we define an assignment rule
-    string_expression=boundary_conditions[s_id].string_expression
-    if boundary_conditions[s_id].constant:
-        check(s1.setConstant(True),              'set "constant" attribute on s1')
+    string_expression = boundary_conditions[s_id].string_expression
+    if boundary_conditions[s_id].is_constant:
+        check(s1.setConstant(True), 'set "constant" attribute on s1')
         check(s1.setInitialAmount(float(string_expression)), 'set "initialAmount" attribute on s1')
-
-    elif not boundary_conditions[s_id].constant:
+    else:
         check(s1.setConstant(False), 'set "constant" attribute on s1')
         check(s1.setInitialAmount(jnp.nan), 'set "initialAmount" attribute on s1')
 
-
-        math_ast=libsbml.parseL3Formula(string_expression)
+        math_ast = libsbml.parseL3Formula(string_expression)
         rule = model.createAssignmentRule()
         check(rule.setVariable(s1.id), 'set "rule" attribute on s1')
         check(rule.setMath(math_ast), 'set "math" attribute on s1')
-
 
 # rule.setVariable("S1")  # The species ID to be governed by this rule
 # rule.setMath(libsbml.parseL3Formula("time * 2"))  # Example formula: S1 = time * 2
@@ -225,36 +219,28 @@ for (s_id,s_comp) in boundary_species.items():
 # check(kinetic_law,                        'create kinetic law')
 # check(kinetic_law.setMath(math_ast),      'set math on kinetic law')
 
-parameter_names=kmodel.parameter_names
+parameter_names = kmodel.parameter_names
 
 for parameter_name in parameter_names:
-    p1=model.createParameter()
+    p1 = model.createParameter()
     check(p1.setId(str(parameter_name)), 'set parameter name')
     check(p1.setConstant(True), 'set parameter name')
     check(p1.setValue(float(params[parameter_name])), 'set parameter value')
 
-reactions=kmodel.reactions
+reactions = kmodel.reactions
 for reaction in reactions:
-    r1=model.createReaction()
+    r1 = model.createReaction()
     check(r1.setId(str(reaction.name)), 'set reaction name')
-    for (s_id,stoich) in reaction.stoichiometry.items():
-        if stoich<0:
-            species_ref1=r1.createReactant()
+    for (s_id, stoich) in reaction.stoichiometry.items():
+        if stoich < 0:
+            species_ref1 = r1.createReactant()
             check(species_ref1, 'create reactant')
             check(species_ref1.setSpecies(s_id), 'set reactant species id')
-        if stoich>0:
+        if stoich > 0:
             species_ref1 = r1.createProduct()
             check(species_ref1, 'create reactant')
             check(species_ref1.setSpecies(s_id), 'set reactant species id')
 
-
-
-
-#how to make a string expression from the mechanisms? Discuss with leon, what would be the best way to achieve this?
-import inspect
-inspect.getsource(reactions[0].mechanism.compute)
-
-#
 # # Create two species inside this model, set the required attributes
 # # for each species in SBML Level 3 (which are the 'id', 'compartment',
 # # 'constant', 'hasOnlySubstanceUnits', and 'boundaryCondition'

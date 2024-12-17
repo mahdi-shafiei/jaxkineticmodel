@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Any
 
 import jax.numpy as jnp
 from collections import Counter
@@ -22,23 +22,27 @@ class BoundaryCondition:
     #To do: think about how to expand this class to include metabolite dependencies in expression
     """
 
+    is_constant: bool
+    string_expression: str
+    lambdified: Any
+
     def __init__(self,
-                 expression: str,
-                 constant: bool,
+                 string_expression: str,
+                 is_constant: bool = False,
                  ):
 
-        if constant:
+        if is_constant:
             try:
-                float(expression)
-            except:
-                logger.error(f"expression {expression} cannot be converted to float. Are you sure it is a constant?")
-        self.constant=constant
-        self.string_expression = expression
-        self.expression = sp.sympify(expression)
-        self.expression = sp.lambdify(sp.Symbol("t"), self.expression, "jax")
+                float(string_expression)
+            except ValueError:
+                logger.error(f"expression {string_expression} cannot be converted to float. Are you sure it is a constant?")
+        self.is_constant = is_constant
+        self.string_expression = string_expression
+        self.lambdified = sp.sympify(string_expression)
+        self.lambdified = sp.lambdify(sp.Symbol("t"), self.lambdified, "jax")
 
     def evaluate(self, t):
-        return self.expression(t)
+        return self.lambdified(t)
 
 
 class Reaction:
@@ -65,6 +69,7 @@ class Reaction:
 class JaxKineticModel_Build:
     reactions: List[Reaction]
     compartments: dict[str, int]
+    boundary_conditions: dict[str, BoundaryCondition]
 
     def __init__(self, reactions: List[Reaction], compartments: dict[str, int]):
         """Kinetic model that is defined through it's reactions:
@@ -131,7 +136,7 @@ class JaxKineticModel_Build:
             if k != 1:
                 logger.info(f"parameter {self.parameter_names[k]} is in multiple reactions.")
 
-    def add_boundary(self, metabolite_name, boundary_condition):
+    def add_boundary(self, metabolite_name: str, boundary_condition: BoundaryCondition):
         """Add a metabolite boundary condition
         input: metabolite name, boundary condition object or diffrax interpolation object"""
 
@@ -150,8 +155,6 @@ class JaxKineticModel_Build:
         # (refactor this later)
         self.stoichiometric_matrix = self.stoichiometric_matrix.drop(labels=metabolite_name, axis=0)
         self.compartment_values = jnp.delete(self.compartment_values, index)
-
-        #
 
     def __call__(self, t, y, args):
         params, boundary_conditions = args
