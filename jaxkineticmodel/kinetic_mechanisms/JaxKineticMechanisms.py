@@ -1,4 +1,5 @@
 import inspect
+import sympy
 
 class Mechanism:
     param_names: dict[str, str]
@@ -10,6 +11,13 @@ class Mechanism:
         except TypeError:
             raise
         self.param_names = kwargs
+
+    def to_symbolic(self):
+        symbol_dict = {k: sympy.Symbol(v) for k, v in self.param_names.items()}
+        return self.compute(**symbol_dict)
+
+    def __str__(self):
+        return str(self.to_symbolic())
 
     def __call__(self, eval_dict):
         kwargs = {k: eval_dict[v] for k, v in self.param_names.items()}
@@ -30,9 +38,8 @@ class Jax_MM_Irrev_Uni(Mechanism):
         return nominator / denominator
 
 
-
 class Jax_Facilitated_Diffusion(Mechanism):
-    """facilitated diffusion formula, taken from 
+    """facilitated diffusion formula, taken from
     Lao-Martil, D., Schmitz, J. P., Teusink, B., & van Riel, N. A. (2023). Elucidating yeast glycolytic dynamics at steady state growth and glucose pulses through
      kinetic metabolic modeling. Metabolic engineering, 77, 128-142.
      

@@ -1,3 +1,5 @@
+from typing import List
+
 import jax.numpy as jnp
 from collections import Counter
 import diffrax
@@ -31,7 +33,7 @@ class BoundaryCondition:
             except:
                 logger.error(f"expression {expression} cannot be converted to float. Are you sure it is a constant?")
         self.constant=constant
-        self.string_expression=expression
+        self.string_expression = expression
         self.expression = sp.sympify(expression)
         self.expression = sp.lambdify(sp.Symbol("t"), self.expression, "jax")
 
@@ -61,7 +63,10 @@ class Reaction:
 
 
 class JaxKineticModel_Build:
-    def __init__(self, reactions: list, compartments: dict):
+    reactions: List[Reaction]
+    compartments: dict[str, int]
+
+    def __init__(self, reactions: List[Reaction], compartments: dict[str, int]):
         """Kinetic model that is defined through it's reactions:
         Input:
         reactions: list of reaction objects
