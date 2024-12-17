@@ -10,10 +10,13 @@ git clone https://github.com/AbeelLab/jaxkineticmodel.git
 python -m pip install .
 ```
 
-### Documentation 
-Documentation can be found *here*
+### Documentation package 
+Documentation on jaxkineticmodel can be found *here*
 
+### Running experiments as reported in paper
+Experiments as reported in [1] can be found scripts/
 
 ### Reference
-If you use this package in your work, please reference 
-[1] Ref
+If you use this package in your work, please reference:
+
+[1] Neural Ordinary Differential Equations Inspired Parameterization of Kinetic Models
