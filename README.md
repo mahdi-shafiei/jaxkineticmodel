@@ -17,7 +17,7 @@ Documentation on jaxkineticmodel can be found *here*
 - Datasets generated from SBML models can be found in [datasets](datasets/)
 - Glucose pulse datasets can be found [here](datasets/VanHeerden_Glucose_Pulse/)
 - Experiments as reported in [1] can be found in [scripts](scripts/). Results from these experiments can found in the 
-[4tu-repository](o-HY8kDJhoCXyNOijO9Eaylje7E2dU-ex-edboPBDZ8)
+[4tu-repository](https://data.4tu.nl/private_datasets/o-HY8kDJhoCXyNOijO9Eaylje7E2dU-ex-edboPBDZ8)
 
 
 ### Reference
