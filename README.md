@@ -10,8 +10,9 @@ git clone https://github.com/AbeelLab/jaxkineticmodel.git
 python -m pip install .
 ```
 
+
 ### Documentation package 
-Documentation on jaxkineticmodel can be found *here*
+Documentation on jaxkineticmodel can be found [here](https://abeellab.github.io/jaxkineticmodel/)
 
 ### Running experiments as reported in paper
 - Datasets generated from SBML models can be found in [datasets](datasets/)
