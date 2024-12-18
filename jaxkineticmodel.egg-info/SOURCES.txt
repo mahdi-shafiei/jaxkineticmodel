@@ -1,0 +1,11 @@
+LICENSE
+README.md
+pyproject.toml
+jaxkineticmodel/__init__.py
+jaxkineticmodel/utils.py
+jaxkineticmodel.egg-info/PKG-INFO
+jaxkineticmodel.egg-info/SOURCES.txt
+jaxkineticmodel.egg-info/dependency_links.txt
+jaxkineticmodel.egg-info/requires.txt
+jaxkineticmodel.egg-info/top_level.txt
+tests/test_imports_pip.py
