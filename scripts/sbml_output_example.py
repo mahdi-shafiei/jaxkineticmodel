@@ -6,7 +6,6 @@
 """
 
 import libsbml
-import sympy
 
 from jaxkineticmodel.kinetic_mechanisms import JaxKineticMechanisms as jm
 from jaxkineticmodel.building_models import JaxKineticModelBuild as jkm
@@ -230,16 +229,36 @@ for parameter_name in parameter_names:
 reactions = kmodel.reactions
 for reaction in reactions:
     r1 = model.createReaction()
-    check(r1.setId(str(reaction.name)), 'set reaction name')
+    check(r1, 'create reaction')
+    check(r1.setId(str(reaction.name)), 'set reaction id')
     for (s_id, stoich) in reaction.stoichiometry.items():
         if stoich < 0:
             species_ref1 = r1.createReactant()
-            check(species_ref1, 'create reactant')
-            check(species_ref1.setSpecies(s_id), 'set reactant species id')
-        if stoich > 0:
+        elif stoich > 0:
             species_ref1 = r1.createProduct()
-            check(species_ref1, 'create reactant')
-            check(species_ref1.setSpecies(s_id), 'set reactant species id')
+        else:
+            raise ValueError('stoich may not be 0')
+        check(species_ref1, 'create reactant')
+        check(species_ref1.setSpecies(s_id), 'set reactant species id')
+
+        # TODO: Here, we would really like to use sympy's MathML utilities.  However, we run into several issues that
+        #  make them unsuitable for now (i.e. requiring a lot of work):
+        #  - sympy takes presentation issues into account when producing content MathML, e.g. parsing A_Km as a variable
+        #  A with subscript Km and producing <mml:msub> tags for it, which libsbml can't handle.
+        #  - sympy also seems to always produce (xml entities for) e.g. Greek letters in the MathML.
+        #  - libsbml sometimes sets <cn type="integer"> while sympy can only create bare <cn>.
+        #  A final small issue is that MathML string must be preceded by an <?xml?> preamble and surrounded by a <math>
+        #  tag.
+        #  The sympy implementation seems to store the produced XML DOM in MathMLPrinterBase.dom, which would allow for
+        #  traversing it and fixing some of these issues.  But this seems like a lot more trouble than it's worth.
+
+        # TODO: issue a warning for operators / functions etc that don't translate 1-to-1 between sympy's and libsbml's
+        #  math string representations.
+
+        math_ast = libsbml.parseL3Formula(str(reaction.mechanism))
+        kinetic_law = r1.createKineticLaw()
+        check(kinetic_law,                        'create kinetic law')
+        check(kinetic_law.setMath(math_ast),      'set math on kinetic law')
 
 # # Create two species inside this model, set the required attributes
 # # for each species in SBML Level 3 (which are the 'id', 'compartment',
