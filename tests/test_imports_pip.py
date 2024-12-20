@@ -12,6 +12,9 @@ def check_imports(package_name):
             print(f"Successfully imported {modname}")
         except ImportError as e:
             print(f"Failed to import {modname}: {e}")
+            return False
+    return True
 
 
-check_imports("jaxkineticmodel")
+def test_imports():
+    assert check_imports("jaxkineticmodel")
