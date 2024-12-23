@@ -242,6 +242,7 @@ for reaction in reactions:
     for (s_id, stoich) in reaction.stoichiometry.items():
         if stoich < 0:
             species_ref1 = r1.createReactant()
+
         elif stoich > 0:
             species_ref1 = r1.createProduct()
         else:
@@ -252,6 +253,8 @@ for reaction in reactions:
         check(species_ref1, 'create reactant')
         check(species_ref1.setSpecies(specimen.getId()), 'set reactant species id')
         check(species_ref1.setConstant(specimen.getConstant()), 'set reactant species id')
+        check(species_ref1.setStoichiometry(abs(stoich)), 'set absolute reactant/product stoichiometry')
+
 
         # TODO: Here, we would really like to use sympy's MathML utilities.  However, we run into several issues that
         #  make them unsuitable for now (i.e. requiring a lot of work):

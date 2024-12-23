@@ -73,7 +73,7 @@ ax.legend()
 plt.show()
 
 kmodel=jkm.JaxKineticModel_Build(reactions,compartment_values)
-kmodel.add_boundary('m1',jkm.BoundaryCondition("2", constant=True))
+kmodel.add_boundary('m1',jkm.BoundaryCondition("2", is_constant=True))
 print(kmodel.stoichiometric_matrix)
 
 #recompile and simulate
@@ -101,7 +101,7 @@ plt.show()
 
 # initialized the kinetic model object, and then make it a simulation object through jkm.NeuralODE
 kmodel=jkm.JaxKineticModel_Build(reactions,compartment_values)
-kmodel.add_boundary('m1',jkm.BoundaryCondition('0.5+0.3*sin(t)'))
+kmodel.add_boundary('m1',jkm.BoundaryCondition('0.5+0.3*sin(t)',is_constant=False))
 print(kmodel.stoichiometric_matrix)
 
 kmodel_sim=jkm.NeuralODEBuild(kmodel)
