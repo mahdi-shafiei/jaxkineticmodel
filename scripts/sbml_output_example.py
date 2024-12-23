@@ -167,6 +167,9 @@ for (c_id, c_size) in compartments.items():
 species_y0 = dict(zip(kmodel.species_names, y0))
 species = {specimen: kmodel.species_compartments[specimen] for specimen in species_y0.keys()}
 
+species_reference_dict={} # one we have made a species, we should save it in a dictionary for later reference
+# in the reactions
+
 for (s_id, s_comp) in species.items():
     s1 = model.createSpecies()
     check(s1.setId(s_id), 'set species id')
@@ -176,6 +179,7 @@ for (s_id, s_comp) in species.items():
     check(s1.setSubstanceUnits('mole'), 'set substance units for s1')
     check(s1.setBoundaryCondition(False), 'set "boundaryCondition" on s1')
     check(s1.setHasOnlySubstanceUnits(False), 'set "hasOnlySubstanceUnits" on s1')
+    species_reference_dict[s_id] = s1
 
 # boundary conditions
 boundary_conditions = kmodel.boundary_conditions
@@ -192,8 +196,7 @@ for (s_id, s_comp) in boundary_species.items():
     check(s1.setBoundaryCondition(True), 'set "boundaryCondition" on s1')
     check(s1.setHasOnlySubstanceUnits(False), 'set "hasOnlySubstanceUnits" on s1')
 
-    # here a somewhat strange thing is done in sbml. If it is a constant it is defined in the species list
-    # but if it is not constant we define an assignment rule
+
     string_expression = boundary_conditions[s_id].string_expression
     if boundary_conditions[s_id].is_constant:
         check(s1.setConstant(True), 'set "constant" attribute on s1')
@@ -202,10 +205,13 @@ for (s_id, s_comp) in boundary_species.items():
         check(s1.setConstant(False), 'set "constant" attribute on s1')
         check(s1.setInitialAmount(jnp.nan), 'set "initialAmount" attribute on s1')
 
+        #sbml recognizes time, but not t
+        string_expression=string_expression.replace("t","time")
         math_ast = libsbml.parseL3Formula(string_expression)
         rule = model.createAssignmentRule()
         check(rule.setVariable(s1.id), 'set "rule" attribute on s1')
         check(rule.setMath(math_ast), 'set "math" attribute on s1')
+    species_reference_dict[s_id] = s1
 
 # rule.setVariable("S1")  # The species ID to be governed by this rule
 # rule.setMath(libsbml.parseL3Formula("time * 2"))  # Example formula: S1 = time * 2
@@ -231,6 +237,8 @@ for reaction in reactions:
     r1 = model.createReaction()
     check(r1, 'create reaction')
     check(r1.setId(str(reaction.name)), 'set reaction id')
+    check(r1.setReversible(False), 'set reversible') #required
+    check(r1.setFast(False), 'set reversible')
     for (s_id, stoich) in reaction.stoichiometry.items():
         if stoich < 0:
             species_ref1 = r1.createReactant()
@@ -238,8 +246,12 @@ for reaction in reactions:
             species_ref1 = r1.createProduct()
         else:
             raise ValueError('stoich may not be 0')
+
+        # use the dictionary with species references
+        specimen = species_reference_dict[s_id]
         check(species_ref1, 'create reactant')
-        check(species_ref1.setSpecies(s_id), 'set reactant species id')
+        check(species_ref1.setSpecies(specimen.getId()), 'set reactant species id')
+        check(species_ref1.setConstant(specimen.getConstant()), 'set reactant species id')
 
         # TODO: Here, we would really like to use sympy's MathML utilities.  However, we run into several issues that
         #  make them unsuitable for now (i.e. requiring a lot of work):
@@ -256,6 +268,7 @@ for reaction in reactions:
         #  math string representations.
 
         math_ast = libsbml.parseL3Formula(str(reaction.mechanism))
+
         kinetic_law = r1.createKineticLaw()
         check(kinetic_law,                        'create kinetic law')
         check(kinetic_law.setMath(math_ast),      'set math on kinetic law')
@@ -329,4 +342,8 @@ for reaction in reactions:
 # And we're done creating the basic model.
 # Now return a text string containing the model in XML format.
 
-print(libsbml.writeSBMLToString(document))
+# print(libsbml.writeSBMLToString(document))
+sbml=libsbml.writeSBMLToString(document)
+f = open("test.xml", "w")
+f.write(sbml)
+f.close()
