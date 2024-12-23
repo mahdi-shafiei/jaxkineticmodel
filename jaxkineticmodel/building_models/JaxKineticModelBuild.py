@@ -38,7 +38,6 @@ class BoundaryCondition:
                 logger.error(f"expression {string_expression} cannot be converted to float. Are you sure it is a constant?")
         self.is_constant = is_constant
         self.string_expression = string_expression
-
         self.lambdified = sp.sympify(string_expression)
         self.lambdified = sp.lambdify(sp.Symbol("t"), self.lambdified, "jax")
 
