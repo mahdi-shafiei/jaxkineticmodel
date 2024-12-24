@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level3/version1/core" level="3" version="1">
+  <model timeUnits="second">
+    <listOfCompartments>
+      <compartment id="c" spatialDimensions="3" size="1" constant="true"/>
+    </listOfCompartments>
+    <listOfSpecies>
+      <species id="m2" compartment="c" initialAmount="2" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="m3" compartment="c" initialAmount="0" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="m4" compartment="c" initialAmount="0" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="m1" compartment="c" initialAmount="NaN" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="true" constant="false"/>
+    </listOfSpecies>
+    <listOfParameters>
+      <parameter id="A_Vmax" value="1" constant="true"/>
+      <parameter id="A_Km" value="1" constant="true"/>
+      <parameter id="B_Vmax" value="1" constant="true"/>
+      <parameter id="B_Km" value="1" constant="true"/>
+      <parameter id="C_Vmax" value="1.5" constant="true"/>
+      <parameter id="C_Km" value="1" constant="true"/>
+    </listOfParameters>
+    <listOfRules>
+      <assignmentRule variable="m1">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <plus/>
+            <cn> 0.5 </cn>
+            <apply>
+              <times/>
+              <cn> 0.3 </cn>
+              <apply>
+                <sin/>
+                <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+              </apply>
+            </apply>
+          </apply>
+        </math>
+      </assignmentRule>
+    </listOfRules>
+    <listOfReactions>
+      <reaction id="v1" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="m1" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="m2" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <divide/>
+              <apply>
+                <times/>
+                <ci> A_Vmax </ci>
+                <ci> m1 </ci>
+              </apply>
+              <apply>
+                <times/>
+                <ci> A_Km </ci>
+                <apply>
+                  <plus/>
+                  <cn type="integer"> 1 </cn>
+                  <apply>
+                    <divide/>
+                    <ci> m1 </ci>
+                    <ci> A_Km </ci>
+                  </apply>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v2" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="m2" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="m3" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <divide/>
+              <apply>
+                <times/>
+                <ci> B_Vmax </ci>
+                <ci> m2 </ci>
+              </apply>
+              <apply>
+                <times/>
+                <ci> B_Km </ci>
+                <apply>
+                  <plus/>
+                  <cn type="integer"> 1 </cn>
+                  <apply>
+                    <divide/>
+                    <ci> m2 </ci>
+                    <ci> B_Km </ci>
+                  </apply>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v3" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="m2" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="m4" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <divide/>
+              <apply>
+                <times/>
+                <ci> C_Vmax </ci>
+                <ci> m2 </ci>
+              </apply>
+              <apply>
+                <times/>
+                <ci> C_Km </ci>
+                <apply>
+                  <plus/>
+                  <cn type="integer"> 1 </cn>
+                  <apply>
+                    <divide/>
+                    <ci> m2 </ci>
+                    <ci> C_Km </ci>
+                  </apply>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+    </listOfReactions>
+  </model>
+</sbml>

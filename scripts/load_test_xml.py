@@ -1,5 +1,5 @@
 from jaxkineticmodel.load_sbml.sbml_load import *
-from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
+from jaxkineticmodel.load_sbml.sbml_model import SBMLModel,overwrite_init_conditions_with_init_assignments
 import matplotlib.pyplot as plt
 
 filepath = ("../scripts/test.xml")
@@ -20,7 +20,7 @@ params = {**model.local_params, **params}
 
 
 #simulate given the initial conditions defined in the sbml
-print(model._get_initial_conditions())
+y0=model._get_initial_conditions()
 print(params)
 
 

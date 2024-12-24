@@ -24,4 +24,5 @@ Documentation on jaxkineticmodel can be found [here](https://abeellab.github.io/
 ### Reference
 If you use this package in your work, please reference:
 
-[1] Neural Ordinary Differential Equations Inspired Parameterization of Kinetic Models
+[1] Lent, P. V., Bunkova, O., Planken, L., Schmitz, J., & Abeel, T. (2024). 
+Neural Ordinary Differential Equations Inspired Parameterization of Kinetic Models. bioRxiv, 2024-12.
