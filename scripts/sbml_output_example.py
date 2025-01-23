@@ -9,11 +9,13 @@ import libsbml
 
 from jaxkineticmodel.kinetic_mechanisms import JaxKineticMechanisms as jm
 from jaxkineticmodel.building_models import JaxKineticModelBuild as jkm
+from jaxkineticmodel import utils
 
 import jax.numpy as jnp
 import jax
 import matplotlib.pyplot as plt
 import pandas as pd
+import sympy as sp
 
 ReactionA = jkm.Reaction(
     name="ReactionA",
@@ -182,14 +184,11 @@ for (s_id, s_comp) in species.items():
     species_reference_dict[s_id] = s1
 
 # boundary conditions
-boundary_conditions = kmodel.boundary_conditions
-boundary_species = {specimen: kmodel.species_compartments[specimen] for specimen in boundary_conditions.keys()}
-
-# discuss with leon how to properly the constant and non-constant boundary conditions
-for (s_id, s_comp) in boundary_species.items():
+for (species_id, condition) in kmodel.boundary_conditions.items():
+    compartment = kmodel.species_compartments[species_id]
     s1 = model.createSpecies()
-    check(s1.setId(s_id), 'set species id')
-    check(s1.setCompartment(s_comp), 'set species s1 compartment')
+    check(s1.setId(species_id), 'set species id')
+    check(s1.setCompartment(compartment), 'set species s1 compartment')
     check(s1.setSubstanceUnits('mole'), 'set substance units for s1')
 
     # this is by definition of the boundary condition class True
@@ -197,17 +196,18 @@ for (s_id, s_comp) in boundary_species.items():
     check(s1.setHasOnlySubstanceUnits(False), 'set "hasOnlySubstanceUnits" on s1')
 
 
-    string_expression = boundary_conditions[s_id].string_expression
-    if boundary_conditions[s_id].is_constant:
+    if condition.is_constant:
+        assert isinstance(condition.sympified, sp.Number)
         check(s1.setConstant(True), 'set "constant" attribute on s1')
-        check(s1.setInitialAmount(float(string_expression)), 'set "initialAmount" attribute on s1')
+        check(s1.setInitialAmount(float(condition.sympified)), 'set "initialAmount" attribute on s1')
     else:
         check(s1.setConstant(False), 'set "constant" attribute on s1')
         check(s1.setInitialAmount(jnp.nan), 'set "initialAmount" attribute on s1')
 
         #sbml recognizes time, but not t
-        string_expression=string_expression.replace("t","time")
-        math_ast = libsbml.parseL3Formula(string_expression)
+        # FIXME change sympy_to_libsbml to convert Symbol t to AST_NAME_TIME
+        # string_expression=string_expression.replace("t","time")
+        math_ast = utils.sympy_to_libsbml(condition.sympified)
         rule = model.createAssignmentRule()
         check(rule.setVariable(s1.id), 'set "rule" attribute on s1')
         check(rule.setMath(math_ast), 'set "math" attribute on s1')
@@ -270,7 +270,7 @@ for reaction in reactions:
         # TODO: issue a warning for operators / functions etc that don't translate 1-to-1 between sympy's and libsbml's
         #  math string representations.
 
-        math_ast = libsbml.parseL3Formula(str(reaction.mechanism))
+        math_ast = utils.sympy_to_libsbml(reaction.mechanism.symbolic())
 
         kinetic_law = r1.createKineticLaw()
         check(kinetic_law,                        'create kinetic law')

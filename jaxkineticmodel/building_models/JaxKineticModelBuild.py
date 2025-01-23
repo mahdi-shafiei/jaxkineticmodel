@@ -5,6 +5,8 @@ from collections import Counter
 import diffrax
 import pandas as pd
 import sympy as sp
+
+from jaxkineticmodel.kinetic_mechanisms.JaxKineticMechanisms import Mechanism
 from jaxkineticmodel.utils import get_logger
 
 logger = get_logger(__name__)
@@ -23,23 +25,13 @@ class BoundaryCondition:
     """
 
     is_constant: bool
-    string_expression: str
+    sympified: sp.Basic
     lambdified: Any
 
-    def __init__(self,
-                 string_expression: str,
-                 is_constant: bool = False,
-                 ):
-
-        if is_constant:
-            try:
-                float(string_expression)
-            except ValueError:
-                logger.error(f"expression {string_expression} cannot be converted to float. Are you sure it is a constant?")
-        self.is_constant = is_constant
-        self.string_expression = string_expression
-        self.lambdified = sp.sympify(string_expression)
-        self.lambdified = sp.lambdify(sp.Symbol("t"), self.lambdified, "jax")
+    def __init__(self, string_expression: str):
+        self.sympified = sp.sympify(string_expression)
+        self.is_constant = isinstance(self.sympified, sp.Number)
+        self.lambdified = sp.lambdify(sp.Symbol("t"), self.sympified, "jax")
 
     def evaluate(self, t):
         return self.lambdified(t)
@@ -52,7 +44,8 @@ class Reaction:
     stoichiometry of the specific reaction,
     mechanism + named parameters, and compartment"""
 
-    def __init__(self, name: str, species: list, stoichiometry: list, compartments: list, mechanism):
+    def __init__(self, name: str, species: list, stoichiometry: list,
+                 compartments: list, mechanism: Mechanism):
         self.name = name
         self.species = species
         self.stoichiometry = dict(zip(species, stoichiometry))
