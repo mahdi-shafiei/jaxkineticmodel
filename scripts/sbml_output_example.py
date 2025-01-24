@@ -169,11 +169,13 @@ for (c_id, c_size) in compartments.items():
 species_y0 = dict(zip(kmodel.species_names, y0))
 species = {specimen: kmodel.species_compartments[specimen] for specimen in species_y0.keys()}
 
-species_reference_dict={} # one we have made a species, we should save it in a dictionary for later reference
+species_reference_dict = {}  # one we have made a species, we should save it
+# in a dictionary for later reference
 # in the reactions
 
 for (s_id, s_comp) in species.items():
     s1 = model.createSpecies()
+    check(s1, 'create species')
     check(s1.setId(s_id), 'set species id')
     check(s1.setCompartment(s_comp), 'set species s1 compartment')
     check(s1.setConstant(False), 'set "constant" attribute on s1')
@@ -187,6 +189,7 @@ for (s_id, s_comp) in species.items():
 for (species_id, condition) in kmodel.boundary_conditions.items():
     compartment = kmodel.species_compartments[species_id]
     s1 = model.createSpecies()
+    check(s1, 'create species')
     check(s1.setId(species_id), 'set species id')
     check(s1.setCompartment(compartment), 'set species s1 compartment')
     check(s1.setSubstanceUnits('mole'), 'set substance units for s1')
@@ -194,7 +197,6 @@ for (species_id, condition) in kmodel.boundary_conditions.items():
     # this is by definition of the boundary condition class True
     check(s1.setBoundaryCondition(True), 'set "boundaryCondition" on s1')
     check(s1.setHasOnlySubstanceUnits(False), 'set "hasOnlySubstanceUnits" on s1')
-
 
     if condition.is_constant:
         assert isinstance(condition.sympified, sp.Number)
@@ -204,14 +206,11 @@ for (species_id, condition) in kmodel.boundary_conditions.items():
         check(s1.setConstant(False), 'set "constant" attribute on s1')
         check(s1.setInitialAmount(jnp.nan), 'set "initialAmount" attribute on s1')
 
-        #sbml recognizes time, but not t
-        # FIXME change sympy_to_libsbml to convert Symbol t to AST_NAME_TIME
-        # string_expression=string_expression.replace("t","time")
         math_ast = utils.sympy_to_libsbml(condition.sympified)
         rule = model.createAssignmentRule()
         check(rule.setVariable(s1.id), 'set "rule" attribute on s1')
         check(rule.setMath(math_ast), 'set "math" attribute on s1')
-    species_reference_dict[s_id] = s1
+    species_reference_dict[species_id] = s1
 
 # rule.setVariable("S1")  # The species ID to be governed by this rule
 # rule.setMath(libsbml.parseL3Formula("time * 2"))  # Example formula: S1 = time * 2

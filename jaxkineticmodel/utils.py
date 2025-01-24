@@ -51,13 +51,19 @@ SYMPY_AST_TABLE = [
 ]
 
 
-def sympy_to_libsbml(expression: Basic) -> libsbml.ASTNode:
+def sympy_to_libsbml(expression: Basic, time_variable_name='t') -> libsbml.ASTNode:
     result = libsbml.ASTNode()
 
     if isinstance(expression, sympy.Symbol):
-        result.setName(expression.name)
+        if expression.name == time_variable_name:
+            result.setName('time')
+            result.setType(libsbml.AST_NAME_TIME)
+        else:
+            result.setName(expression.name)
     elif isinstance(expression, sympy.Integer):
         result.setValue(int(expression))
+    elif isinstance(expression, sympy.Float):
+        result.setValue(float(expression))
 
     for sympy_op, sbml_op, arg_count in SYMPY_AST_TABLE:
         if isinstance(expression, sympy_op):
@@ -65,9 +71,10 @@ def sympy_to_libsbml(expression: Basic) -> libsbml.ASTNode:
                 raise ValueError(f'Unexpected number of arguments for '
                                  f'{sympy_op}: expected {arg_count}, got '
                                  f'{len(expression.args)}')
-            result.setType(sbml_op)
+            if result.getType() == libsbml.AST_UNKNOWN:
+                result.setType(sbml_op)
             for child in expression.args:
-                result.addChild(sympy_to_libsbml(child))
+                result.addChild(sympy_to_libsbml(child, time_variable_name))
             if not result.isWellFormedASTNode():
                 raise RuntimeError('Failed to build a well-formed '
                                    'LibSBML AST node')
