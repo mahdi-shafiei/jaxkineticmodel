@@ -9,7 +9,7 @@ import libsbml
 
 from jaxkineticmodel.kinetic_mechanisms import JaxKineticMechanisms as jm
 from jaxkineticmodel.building_models import JaxKineticModelBuild as jkm
-from jaxkineticmodel import utils
+from jaxkineticmodel.load_sbml.sympy_converter import SympyConverter
 
 import jax.numpy as jnp
 import jax
@@ -115,6 +115,8 @@ def check(value, message):
 # this, it is still possible for a failure to occur (e.g., if the
 # operating system runs out of memory).
 
+sympy_converter = SympyConverter()
+
 try:
     document = libsbml.SBMLDocument(3, 1)
 except ValueError:
@@ -206,7 +208,7 @@ for (species_id, condition) in kmodel.boundary_conditions.items():
         check(s1.setConstant(False), 'set "constant" attribute on s1')
         check(s1.setInitialAmount(jnp.nan), 'set "initialAmount" attribute on s1')
 
-        math_ast = utils.sympy_to_libsbml(condition.sympified)
+        math_ast = sympy_converter.convert(condition.sympified)
         rule = model.createAssignmentRule()
         check(rule.setVariable(s1.id), 'set "rule" attribute on s1')
         check(rule.setMath(math_ast), 'set "math" attribute on s1')
@@ -254,22 +256,7 @@ for reaction in reactions:
         check(species_ref1.setConstant(specimen.getConstant()), 'set reactant species id')
         check(species_ref1.setStoichiometry(abs(stoich)), 'set absolute reactant/product stoichiometry')
 
-
-        # TODO: Here, we would really like to use sympy's MathML utilities.  However, we run into several issues that
-        #  make them unsuitable for now (i.e. requiring a lot of work):
-        #  - sympy takes presentation issues into account when producing content MathML, e.g. parsing A_Km as a variable
-        #  A with subscript Km and producing <mml:msub> tags for it, which libsbml can't handle.
-        #  - sympy also seems to always produce (xml entities for) e.g. Greek letters in the MathML.
-        #  - libsbml sometimes sets <cn type="integer"> while sympy can only create bare <cn>.
-        #  A final small issue is that MathML string must be preceded by an <?xml?> preamble and surrounded by a <math>
-        #  tag.
-        #  The sympy implementation seems to store the produced XML DOM in MathMLPrinterBase.dom, which would allow for
-        #  traversing it and fixing some of these issues.  But this seems like a lot more trouble than it's worth.
-
-        # TODO: issue a warning for operators / functions etc that don't translate 1-to-1 between sympy's and libsbml's
-        #  math string representations.
-
-        math_ast = utils.sympy_to_libsbml(reaction.mechanism.symbolic())
+        math_ast = sympy_converter.convert(reaction.mechanism.symbolic())
 
         kinetic_law = r1.createKineticLaw()
         check(kinetic_law,                        'create kinetic law')
