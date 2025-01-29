@@ -22,9 +22,7 @@ class Trainer:
 
         if isinstance(model, SBMLModel):
             self.model = jax.jit(model.get_kinetic_model())
-            params = get_global_parameters(model.model)
-            params = {**model.local_params, **params}
-            self.parameters = list(params.keys())
+            self.parameters = list(model.parameters.keys())
 
         if isinstance(model, jkm.NeuralODEBuild):
             logger.info("type not tested yet")

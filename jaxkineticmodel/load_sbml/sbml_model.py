@@ -29,11 +29,11 @@ class SBMLModel:
         self.y0 = overwrite_init_conditions_with_init_assignments(self.model, self.y0).values()
         self.y0 = jnp.array(list(self.y0))
 
-        #self.local_params has been gather through _getparameters()
-        # next compartment values
-        self.v, self.v_symbol_dictionaries, self.local_params, self.compartment_values = self._create_fluxes_v()
 
+        self.compartments, self.species_compartment_values = self._get_compartments()
         self.parameters=self._get_parameters()
+
+        self.v, self.v_symbols = self._get_fluxes()
         self.met_point_dict = self._construct_flux_pointer_dictionary()
 
     @staticmethod
@@ -61,6 +61,16 @@ class SBMLModel:
         logger.info(f" number of event rules: {model.getNumEvents()}")
 
         return model
+
+    def _get_compartments(self):
+        """retrieves compartments and the compartment values of species. The latter is necessary for proper scaling
+        of rate laws."""
+
+        compartments = self.model.getListOfCompartments()
+        compartments = {cmp.id: cmp.size for cmp in compartments}
+        compartment_list = self._get_compartments_initial_conditions(compartments)
+
+        return compartments,compartment_list
 
     def _get_stoichiometric_matrix(self):
         """Retrieves the stoichiometric matrix from the model."""
@@ -127,7 +137,7 @@ class SBMLModel:
         return initial_concentration_dict
 
     def _get_parameters(self):
-        """Retrieves the parameters from the SBML model. Both local (with a regex lp.) and global."""
+        """Retrieves the parameters from the SBML model. Both local (with a identifier lp.{reaction.id}.) and global."""
 
         parameters={}
         #retrieve global parameters
@@ -135,6 +145,7 @@ class SBMLModel:
         global_parameters = {param.id: param.value for param in global_params}
         parameters.update(global_parameters)
 
+        #retrieve local parameters
         for reaction in self.model.reactions:
             r = reaction.getKineticLaw()
             local_parameters = {"lp."+str(reaction.id)+"."+param.id: param.value for param in r.getListOfParameters()}
@@ -163,60 +174,43 @@ class SBMLModel:
         compartment_list = jnp.array(compartment_list)
         return compartment_list
 
-    def _create_fluxes_v(self):
-        """This function defines the jax jitted equations that are used in TorchKinModel
-        class
-        """
-        # retrieve whatever is important
-
+    def _get_fluxes(self):
         species_ic = self._get_initial_conditions()
-        global_parameters = get_global_parameters(self.model)
-        compartments = get_compartments(self.model)
-        compartment_list = self._get_compartments_initial_conditions(compartments)
-
-        constant_boundaries = get_constant_boundary_species(self.model)
-
-        lambda_functions = get_lambda_function_dictionary(self.model)
-        assignments_rules = get_assignment_rules_dictionary(self.model)
+        global_parameters,local_parameters=separate_params(self.parameters)
+        constant_boundaries=get_constant_boundary_species(self.model)
+        lambda_functions=get_lambda_function_dictionary(self.model)
+        assignments_rules=get_assignment_rules_dictionary(self.model)
         event_rules = get_events_dictionary(self.model)
 
         v = {}
         v_symbol_dict = {}  # all symbols that are used in the equation.
-        local_param_dict = {}  # local parameters with the reaction it belongs to as a new parameter
 
         for reaction in self.model.reactions:
             local_parameters = get_local_parameters(reaction)
-            # print(local_parameters)
-            # reaction_species = get_reaction_species(reaction)
             nested_dictionary_vi = {
                 "species": species_ic,
                 "globals": global_parameters,
                 "locals": local_parameters,
-                "compartments": compartments,
+                "compartments": self.compartments,
                 "boundary": constant_boundaries,
                 "lambda_functions": lambda_functions,
                 "boundary_assignments": assignments_rules,
             }  # add functionality
 
+            # this will soon be replaced by direct astnode--> sympy (leon)
             vi_rate_law = get_string_expression(reaction)
-
-            # print(vi_rate_law)
             vi, filtered_dict = sympify_lambidify_and_jit_equation(vi_rate_law, nested_dictionary_vi)
 
             v[reaction.id] = vi  # the jitted equation
             v_symbol_dict[reaction.id] = filtered_dict
 
-            # here
-            for key in local_parameters.keys():
-                newkey = "lp." + str(reaction.id) + "." + key
-                local_param_dict[newkey] = local_parameters[key]
-        return v, v_symbol_dict, local_param_dict, compartment_list
+        return v, v_symbol_dict
 
     def _construct_flux_pointer_dictionary(self):
         """In jax, the values that are used need to be pointed directly in y."""
         flux_point_dict = {}
         for k, reaction in enumerate(self.reaction_names):
-            v_dict = self.v_symbol_dictionaries[reaction]
+            v_dict = self.v_symbols[reaction]
             filtered_dict = [self.species_names.index(key) for key in v_dict.keys() if key in self.species_names]
             filtered_dict = jnp.array(filtered_dict)
             flux_point_dict[reaction] = filtered_dict
@@ -227,8 +221,8 @@ class SBMLModel:
             v=self.v,
             S=self.S,
             met_point_dict=self.met_point_dict,
-            v_symbol_dictionaries=self.v_symbol_dictionaries,
-            compartment_values=self.compartment_values,
+            v_symbol_dictionaries=self.v_symbols,
+            compartment_values=self.species_compartment_values,
         )
 
 
