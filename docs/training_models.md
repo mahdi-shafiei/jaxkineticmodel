@@ -14,12 +14,12 @@ First, we load the necessary functions
 Then, we load the model, data and initialize the trainer object. 
 
 ```python
-{!code/training_models.py!lines=7-19}
+{!code/training_models.py!lines=7-18}
 ```
 We next perform a latin hypercube sampling for a certain initial guess, with lower and upperbound defined with respect to these values. We want five initializations (normally this should be higher).
 
 ```python
-{!code/training_models.py!lines=19-25}
+{!code/training_models.py!lines=18-25}
 ```
 
 
