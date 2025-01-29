@@ -29,7 +29,11 @@ class SBMLModel:
         self.y0 = overwrite_init_conditions_with_init_assignments(self.model, self.y0).values()
         self.y0 = jnp.array(list(self.y0))
 
+        #self.local_params has been gather through _getparameters()
+        # next compartment values
         self.v, self.v_symbol_dictionaries, self.local_params, self.compartment_values = self._create_fluxes_v()
+
+        self.parameters=self._get_parameters()
         self.met_point_dict = self._construct_flux_pointer_dictionary()
 
     @staticmethod
@@ -122,6 +126,21 @@ class SBMLModel:
 
         return initial_concentration_dict
 
+    def _get_parameters(self):
+        """Retrieves the parameters from the SBML model. Both local (with a regex lp.) and global."""
+
+        parameters={}
+        #retrieve global parameters
+        global_params = self.model.getListOfParameters()
+        global_parameters = {param.id: param.value for param in global_params}
+        parameters.update(global_parameters)
+
+        for reaction in self.model.reactions:
+            r = reaction.getKineticLaw()
+            local_parameters = {"lp."+str(reaction.id)+"."+param.id: param.value for param in r.getListOfParameters()}
+            parameters.update(local_parameters)
+        return parameters
+
     def _get_compartments_initial_conditions(self, compartments):
         """Returns a list of the compartment values of
         the initial conditions. This is necessary in the dMdt to properly scale."""
@@ -149,7 +168,6 @@ class SBMLModel:
         class
         """
         # retrieve whatever is important
-        nreactions = self.model.getNumReactions()
 
         species_ic = self._get_initial_conditions()
         global_parameters = get_global_parameters(self.model)
