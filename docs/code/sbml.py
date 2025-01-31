@@ -11,7 +11,6 @@ JaxKmodel = model.get_kinetic_model()
 ts = jnp.linspace(0,100,2000)
 
 
-
 #simulate given the initial conditions defined in the sbml
 ys = JaxKmodel(ts=ts,
             y0=model.y0,
