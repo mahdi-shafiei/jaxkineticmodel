@@ -208,7 +208,7 @@ for (species_id, condition) in kmodel.boundary_conditions.items():
         check(s1.setConstant(False), 'set "constant" attribute on s1')
         check(s1.setInitialAmount(jnp.nan), 'set "initialAmount" attribute on s1')
 
-        math_ast = sympy_converter.convert(condition.sympified)
+        math_ast = sympy_converter.sympy2libsbml(condition.sympified)
         rule = model.createAssignmentRule()
         check(rule.setVariable(s1.id), 'set "rule" attribute on s1')
         check(rule.setMath(math_ast), 'set "math" attribute on s1')
@@ -256,7 +256,7 @@ for reaction in reactions:
         check(species_ref1.setConstant(specimen.getConstant()), 'set reactant species id')
         check(species_ref1.setStoichiometry(abs(stoich)), 'set absolute reactant/product stoichiometry')
 
-        math_ast = sympy_converter.convert(reaction.mechanism.symbolic())
+        math_ast = sympy_converter.sympy2libsbml(reaction.mechanism.symbolic())
 
         kinetic_law = r1.createKineticLaw()
         check(kinetic_law,                        'create kinetic law')
