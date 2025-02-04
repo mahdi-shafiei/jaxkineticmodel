@@ -63,8 +63,8 @@ LIBSBML_TIME_NAME = "time"
 
 @dataclass
 class Mapping:
-    # If a mapping exactly one of sympy_op and libsbml_op set,
-    # SympyConverter should have a custom method for that op.
+    # If a mapping has exactly one of sympy_op and libsbml_op set,
+    # then SympyConverter should have a custom method for that op.
     # Otherwise, it must have both sympy_op and libsbml_op set and
     # should _not_ have such a method.
     sympy_op: Optional[type[sympy.Basic]]
@@ -84,11 +84,13 @@ class Mapping:
 #  The sympy implementation seems to store the produced XML DOM in MathMLPrinterBase.dom, which would allow for
 #  traversing it and fixing some of these issues.  But this seems like a lot more trouble than it's worth.
 
+#here I can add extra mappings ! #PAUL
 MAPPINGS = [
     Mapping(sympy.Add, LibSBMLASTNode.PLUS, None),
     Mapping(sympy.Mul, LibSBMLASTNode.TIMES, None),
     Mapping(sympy.Pow, LibSBMLASTNode.POWER, 2),
     Mapping(sympy.sin, LibSBMLASTNode.FUNCTION_SIN, 1),
+    Mapping(sympy.cos, LibSBMLASTNode.FUNCTION_COS, 1),
     Mapping(sympy.Symbol, None, 0),
     Mapping(sympy.Integer, None, 0),
     Mapping(sympy.Float, None, 0),

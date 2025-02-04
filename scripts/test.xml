@@ -47,24 +47,30 @@
         <kineticLaw>
           <math xmlns="http://www.w3.org/1998/Math/MathML">
             <apply>
-              <divide/>
+              <times/>
+              <ci> A_Vmax </ci>
+              <ci> m1 </ci>
               <apply>
-                <times/>
-                <ci> A_Vmax </ci>
-                <ci> m1 </ci>
+                <power/>
+                <ci> A_Km </ci>
+                <cn type="integer"> -1 </cn>
               </apply>
               <apply>
-                <times/>
-                <ci> A_Km </ci>
+                <power/>
                 <apply>
                   <plus/>
                   <cn type="integer"> 1 </cn>
                   <apply>
-                    <divide/>
+                    <times/>
                     <ci> m1 </ci>
-                    <ci> A_Km </ci>
+                    <apply>
+                      <power/>
+                      <ci> A_Km </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
                   </apply>
                 </apply>
+                <cn type="integer"> -1 </cn>
               </apply>
             </apply>
           </math>
@@ -80,24 +86,30 @@
         <kineticLaw>
           <math xmlns="http://www.w3.org/1998/Math/MathML">
             <apply>
-              <divide/>
+              <times/>
+              <ci> B_Vmax </ci>
+              <ci> m2 </ci>
               <apply>
-                <times/>
-                <ci> B_Vmax </ci>
-                <ci> m2 </ci>
+                <power/>
+                <ci> B_Km </ci>
+                <cn type="integer"> -1 </cn>
               </apply>
               <apply>
-                <times/>
-                <ci> B_Km </ci>
+                <power/>
                 <apply>
                   <plus/>
                   <cn type="integer"> 1 </cn>
                   <apply>
-                    <divide/>
+                    <times/>
                     <ci> m2 </ci>
-                    <ci> B_Km </ci>
+                    <apply>
+                      <power/>
+                      <ci> B_Km </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
                   </apply>
                 </apply>
+                <cn type="integer"> -1 </cn>
               </apply>
             </apply>
           </math>
@@ -113,24 +125,30 @@
         <kineticLaw>
           <math xmlns="http://www.w3.org/1998/Math/MathML">
             <apply>
-              <divide/>
+              <times/>
+              <ci> C_Vmax </ci>
+              <ci> m2 </ci>
               <apply>
-                <times/>
-                <ci> C_Vmax </ci>
-                <ci> m2 </ci>
+                <power/>
+                <ci> C_Km </ci>
+                <cn type="integer"> -1 </cn>
               </apply>
               <apply>
-                <times/>
-                <ci> C_Km </ci>
+                <power/>
                 <apply>
                   <plus/>
                   <cn type="integer"> 1 </cn>
                   <apply>
-                    <divide/>
+                    <times/>
                     <ci> m2 </ci>
-                    <ci> C_Km </ci>
+                    <apply>
+                      <power/>
+                      <ci> C_Km </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
                   </apply>
                 </apply>
+                <cn type="integer"> -1 </cn>
               </apply>
             </apply>
           </math>
