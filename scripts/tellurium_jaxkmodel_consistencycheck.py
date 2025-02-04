@@ -46,15 +46,14 @@ for sbml_file in sbml_files:
         JaxKmodel = jax.jit(JaxKmodel)
 
         # #parameters are not yet defined
-        params = get_global_parameters(model.model)
-        params = {**model.local_params, **params}
+
         # params = {**local_params, **params}
 
         tellurium_model = te.loadSBMLModel(file_path)
         sol_tellurium = tellurium_model.simulate(0, 100, 200)
 
         ts = jnp.array(sol_tellurium["time"])
-        ys = JaxKmodel(ts=ts, y0=model.y0, params=params)
+        ys = JaxKmodel(ts=ts, y0=model.y0, params=model.parameters)
         ys = pd.DataFrame(ys, columns=S.index)
 
         ## we need to do another estimate for the error tolerance
