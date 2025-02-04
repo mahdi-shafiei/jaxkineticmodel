@@ -11,6 +11,7 @@ import collections
 import os
 from jaxkineticmodel.utils import get_logger
 from .jax_kinetic_model import NeuralODE
+from jaxkineticmodel.load_sbml.sympy_converter import SympyConverter, LibSBMLConverter
 
 logger = get_logger(__name__)
 
@@ -175,6 +176,10 @@ class SBMLModel:
         return compartment_list
 
     def _get_fluxes(self):
+
+        libsbml_converter = LibSBMLConverter()
+
+
         species_ic = self._get_initial_conditions()
         global_parameters,local_parameters=separate_params(self.parameters)
         constant_boundaries=get_constant_boundary_species(self.model)
@@ -198,7 +203,18 @@ class SBMLModel:
             }  # add functionality
 
             # this will soon be replaced by direct astnode--> sympy (leon)
+            # continue here
+            astnode_reaction=reaction.getKineticLaw().math
+            sympy_expression=libsbml_converter.libsbml2sympy(astnode_reaction)
+
+            ### Continue here, and remove the nested dictionary structure because we do not need that anymore
+            ### Define the lambidfy and jit equation here.
+            print(sympy_expression.free_symbols)
+
+
+
             vi_rate_law = get_string_expression(reaction)
+            print(vi_rate_law)
             vi, filtered_dict = sympify_lambidify_and_jit_equation(vi_rate_law, nested_dictionary_vi)
 
             v[reaction.id] = vi  # the jitted equation

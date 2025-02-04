@@ -88,6 +88,7 @@ class Mapping:
 MAPPINGS = [
     Mapping(sympy.Add, LibSBMLASTNode.PLUS, None),
     Mapping(sympy.Mul, LibSBMLASTNode.TIMES, None),
+    Mapping(None,LibSBMLASTNode.DIVIDE,2),
     Mapping(sympy.Pow, LibSBMLASTNode.POWER, 2),
     Mapping(sympy.sin, LibSBMLASTNode.FUNCTION_SIN, 1),
     Mapping(sympy.cos, LibSBMLASTNode.FUNCTION_COS, 1),
@@ -220,3 +221,8 @@ class LibSBMLConverter(Converter):
     def convert_libsbml_REAL(self, node, children) -> sympy.Basic:
         assert len(children) == 0
         return sympy.Float(node.getValue())
+
+    def convert_libsbml_DIVIDE(self, node, children) -> sympy.Basic:
+        assert len(children) == 2, "Division has two children"
+        numerator, denominator = children
+        return sympy.Mul(numerator,sympy.Pow(denominator,-1))
