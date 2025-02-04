@@ -9,7 +9,7 @@ import libsbml
 
 from jaxkineticmodel.kinetic_mechanisms import JaxKineticMechanisms as jm
 from jaxkineticmodel.building_models import JaxKineticModelBuild as jkm
-from jaxkineticmodel.load_sbml.sympy_converter import SympyConverter
+from jaxkineticmodel.load_sbml.sympy_converter import SympyConverter, LibSBMLConverter
 
 import jax.numpy as jnp
 import jax
@@ -116,6 +116,7 @@ def check(value, message):
 # operating system runs out of memory).
 
 sympy_converter = SympyConverter()
+libsbml_converter = LibSBMLConverter()
 
 try:
     document = libsbml.SBMLDocument(3, 1)
@@ -209,6 +210,8 @@ for (species_id, condition) in kmodel.boundary_conditions.items():
         check(s1.setInitialAmount(jnp.nan), 'set "initialAmount" attribute on s1')
 
         math_ast = sympy_converter.sympy2libsbml(condition.sympified)
+        orig = libsbml_converter.libsbml2sympy(math_ast)
+        assert str(condition.sympified) == str(orig)
         rule = model.createAssignmentRule()
         check(rule.setVariable(s1.id), 'set "rule" attribute on s1')
         check(rule.setMath(math_ast), 'set "math" attribute on s1')
@@ -257,6 +260,8 @@ for reaction in reactions:
         check(species_ref1.setStoichiometry(abs(stoich)), 'set absolute reactant/product stoichiometry')
 
         math_ast = sympy_converter.sympy2libsbml(reaction.mechanism.symbolic())
+        orig = libsbml_converter.libsbml2sympy(math_ast)
+        assert str(reaction.mechanism.symbolic()) == str(orig)
 
         kinetic_law = r1.createKineticLaw()
         check(kinetic_law,                        'create kinetic law')

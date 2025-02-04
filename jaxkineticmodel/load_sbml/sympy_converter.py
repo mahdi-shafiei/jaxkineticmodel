@@ -8,84 +8,54 @@ import libsbml
 import sympy
 
 
-# Full list of LibSBML AST node types:
 @unique
 class LibSBMLASTNode(Enum):
     @staticmethod
     def _generate_next_value_(name, start, count, last_values):
         return libsbml.__dict__['AST_' + name]  # noqa
 
-    CONSTANT_E = auto()
-    CONSTANT_FALSE = auto()
-    CONSTANT_PI = auto()
-    CONSTANT_TRUE = auto()
-    DIVIDE = auto()
-    FUNCTION = auto()
-    FUNCTION_ABS = auto()
-    FUNCTION_ARCCOS = auto()
-    FUNCTION_ARCCOSH = auto()
-    FUNCTION_ARCCOT = auto()
-    FUNCTION_ARCCOTH = auto()
-    FUNCTION_ARCCSC = auto()
-    FUNCTION_ARCCSCH = auto()
-    FUNCTION_ARCSEC = auto()
-    FUNCTION_ARCSECH = auto()
-    FUNCTION_ARCSIN = auto()
-    FUNCTION_ARCSINH = auto()
-    FUNCTION_ARCTAN = auto()
-    FUNCTION_ARCTANH = auto()
-    FUNCTION_CEILING = auto()
-    FUNCTION_COS = auto()
-    FUNCTION_COSH = auto()
-    FUNCTION_COT = auto()
-    FUNCTION_COTH = auto()
-    FUNCTION_CSC = auto()
-    FUNCTION_CSCH = auto()
-    FUNCTION_DELAY = auto()
-    FUNCTION_EXP = auto()
-    FUNCTION_FACTORIAL = auto()
-    FUNCTION_FLOOR = auto()
-    FUNCTION_LN = auto()
-    FUNCTION_LOG = auto()
-    FUNCTION_MAX = auto()
-    FUNCTION_MIN = auto()
-    FUNCTION_PIECEWISE = auto()
-    FUNCTION_POWER = auto()
-    FUNCTION_QUOTIENT = auto()
-    FUNCTION_RATE_OF = auto()
-    FUNCTION_REM = auto()
-    FUNCTION_ROOT = auto()
-    FUNCTION_SEC = auto()
-    FUNCTION_SECH = auto()
-    FUNCTION_SIN = auto()
-    FUNCTION_SINH = auto()
-    FUNCTION_TAN = auto()
-    FUNCTION_TANH = auto()
-    INTEGER = auto()
-    LAMBDA = auto()
-    LOGICAL_AND = auto()
-    LOGICAL_IMPLIES = auto()
-    LOGICAL_NOT = auto()
-    LOGICAL_OR = auto()
-    LOGICAL_XOR = auto()
-    MINUS = auto()
-    NAME = auto()
-    NAME_AVOGADRO = auto()
-    NAME_TIME = auto()
+    CONSTANT_E = auto();          CONSTANT_FALSE = auto()       # noqa: E702
+    CONSTANT_PI = auto();         CONSTANT_TRUE = auto()        # noqa: E702
+    DIVIDE = auto();              FUNCTION = auto()             # noqa: E702
+
+    FUNCTION_ABS = auto();        FUNCTION_DELAY = auto()       # noqa: E702
+    FUNCTION_ARCCOS = auto();     FUNCTION_EXP = auto()         # noqa: E702
+    FUNCTION_ARCCOSH = auto();    FUNCTION_FACTORIAL = auto()   # noqa: E702
+    FUNCTION_ARCCOT = auto();     FUNCTION_FLOOR = auto()       # noqa: E702
+    FUNCTION_ARCCOTH = auto();    FUNCTION_LN = auto()          # noqa: E702
+    FUNCTION_ARCCSC = auto();     FUNCTION_LOG = auto()         # noqa: E702
+    FUNCTION_ARCCSCH = auto();    FUNCTION_MAX = auto()         # noqa: E702
+    FUNCTION_ARCSEC = auto();     FUNCTION_MIN = auto()         # noqa: E702
+    FUNCTION_ARCSECH = auto();    FUNCTION_PIECEWISE = auto()   # noqa: E702
+    FUNCTION_ARCSIN = auto();     FUNCTION_POWER = auto()       # noqa: E702
+    FUNCTION_ARCSINH = auto();    FUNCTION_QUOTIENT = auto()    # noqa: E702
+    FUNCTION_ARCTAN = auto();     FUNCTION_RATE_OF = auto()     # noqa: E702
+    FUNCTION_ARCTANH = auto();    FUNCTION_REM = auto()         # noqa: E702
+    FUNCTION_CEILING = auto();    FUNCTION_ROOT = auto()        # noqa: E702
+    FUNCTION_COS = auto();        FUNCTION_SEC = auto()         # noqa: E702
+    FUNCTION_COSH = auto();       FUNCTION_SECH = auto()        # noqa: E702
+    FUNCTION_COT = auto();        FUNCTION_SIN = auto()         # noqa: E702
+    FUNCTION_COTH = auto();       FUNCTION_SINH = auto()        # noqa: E702
+    FUNCTION_CSC = auto();        FUNCTION_TAN = auto()         # noqa: E702
+    FUNCTION_CSCH = auto();       FUNCTION_TANH = auto()        # noqa: E702
+
+    INTEGER = auto();             POWER = auto()                # noqa: E702
+    LAMBDA = auto();              RATIONAL = auto()             # noqa: E702
+    LOGICAL_AND = auto();         REAL = auto()                 # noqa: E702
+    LOGICAL_IMPLIES = auto();     REAL_E = auto()               # noqa: E702
+    LOGICAL_NOT = auto();         RELATIONAL_EQ = auto()        # noqa: E702
+    LOGICAL_OR = auto();          RELATIONAL_GEQ = auto()       # noqa: E702
+    LOGICAL_XOR = auto();         RELATIONAL_GT = auto()        # noqa: E702
+    MINUS = auto();               RELATIONAL_LEQ = auto()       # noqa: E702
+    NAME = auto();                RELATIONAL_LT = auto()        # noqa: E702
+    NAME_AVOGADRO = auto();       RELATIONAL_NEQ = auto()       # noqa: E702
+    NAME_TIME = auto();           TIMES = auto()                # noqa: E702
+    PLUS = auto();                UNKNOWN = auto()              # noqa: E702
+
     # ORIGINATES_IN_PACKAGE = auto()
-    PLUS = auto()
-    POWER = auto()
-    RATIONAL = auto()
-    REAL = auto()
-    REAL_E = auto()
-    RELATIONAL_EQ = auto()
-    RELATIONAL_GEQ = auto()
-    RELATIONAL_GT = auto()
-    RELATIONAL_LEQ = auto()
-    RELATIONAL_LT = auto()
-    RELATIONAL_NEQ = auto()
-    TIMES = auto()
-    UNKNOWN = auto()
+
+    def __str__(self):
+        return self.name
 
 
 LIBSBML_TIME_NAME = "time"
@@ -122,21 +92,27 @@ MAPPINGS = [
     Mapping(sympy.Symbol, None, 0),
     Mapping(sympy.Integer, None, 0),
     Mapping(sympy.Float, None, 0),
+    Mapping(None, LibSBMLASTNode.NAME, 0),
     Mapping(None, LibSBMLASTNode.NAME_TIME, 0),
+    Mapping(None, LibSBMLASTNode.INTEGER, 0),
+    Mapping(None, LibSBMLASTNode.REAL, 0),
 ]
 
 
-class SympyConverter:
+class Converter:
     time_variable_name: str
-
-    SYMPY2LIBSBML: dict[type[sympy.Basic], Mapping] = {}
-    LIBSBML2SYMPY: dict[LibSBMLASTNode, Mapping] = {}
-    for mp in MAPPINGS:
-        SYMPY2LIBSBML[mp.sympy_op] = mp
-        LIBSBML2SYMPY[mp.libsbml_op] = mp
 
     def __init__(self, time_variable_name='t'):
         self.time_variable_name = time_variable_name
+
+
+class SympyConverter(Converter):
+    SYMPY2LIBSBML: dict[type[sympy.Basic], Mapping] = {
+        mp.sympy_op: mp for mp in MAPPINGS
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def sympy2libsbml(self, expression: sympy.Basic) -> libsbml.ASTNode:
         children = [self.sympy2libsbml(child) for child in expression.args]
@@ -144,7 +120,7 @@ class SympyConverter:
         result = libsbml.ASTNode()
         for sympy_op in expression.__class__.__mro__:
             custom_method = getattr(self,
-                                    'convert_sympy_' + sympy_op.__name__,
+                                    f'convert_sympy_{sympy_op.__name__}',
                                     None)
             mp = self.SYMPY2LIBSBML.get(sympy_op, None)
             if mp is not None or custom_method is not None:
@@ -171,30 +147,6 @@ class SympyConverter:
                                'LibSBML AST node')
         return result
 
-    def libsbml2sympy(self, node: libsbml.ASTNode) -> sympy.Basic:
-        raise NotImplementedError('work in progress')
-        if not node.isWellFormedASTNode():
-            raise ValueError('Got invalid libSBML AST node')
-
-        children = []
-        for idx in range(node.getNumChildren()):
-            child = node.getChild(idx)
-            children.append(self.libsbml2sympy(child))
-
-        libsbml_op = LibSBMLASTNode(node.getType())
-        m = self.LIBSBML2SYMPY.get(libsbml_op, None)
-        if m is None:
-            raise NotImplementedError(f"can't deal yet with libsbml ASTNode "
-                                      f"type {node.getType()}")
-        if m.arg_count is not None and len(children) != m.arg_count:
-            raise ValueError(f'Unexpected number of arguments for '
-                             f'{m.sympy_op}: expected {m.arg_count}, got '
-                             f'{len(children)}')
-
-        result = m.sympy_op(*children)
-
-        return result
-
     def convert_sympy_Integer(self, number, result, children) -> libsbml.ASTNode:
         assert isinstance(number, sympy.Integer) and len(children) == 0
         result.setType(LibSBMLASTNode.INTEGER.value)
@@ -216,3 +168,59 @@ class SympyConverter:
             result.setType(LibSBMLASTNode.NAME.value)
             result.setName(symbol.name)
         return result
+
+
+class LibSBMLConverter(Converter):
+    LIBSBML2SYMPY: dict[LibSBMLASTNode, Mapping] = {
+        mp.libsbml_op: mp for mp in MAPPINGS
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def libsbml2sympy(self, node: libsbml.ASTNode) -> sympy.Basic:
+        if not node.isWellFormedASTNode():
+            raise ValueError('Got invalid libSBML AST node')
+
+        children = []
+        for idx in range(node.getNumChildren()):
+            child = node.getChild(idx)
+            children.append(self.libsbml2sympy(child))
+
+        libsbml_op = LibSBMLASTNode(node.getType())
+        m = self.LIBSBML2SYMPY.get(libsbml_op, None)
+        if m is None:
+            raise NotImplementedError(f"can't deal yet with libsbml ASTNode "
+                                      f"type {libsbml_op}")
+        if m.arg_count is not None and len(children) != m.arg_count:
+            raise ValueError(f'Unexpected number of children for '
+                             f'{libsbml_op}: expected {m.arg_count}, '
+                             f'got {len(children)}')
+
+        custom_method = getattr(self,
+                                f'convert_libsbml_{libsbml_op}',
+                                None)
+
+        if custom_method is not None:
+            assert m.sympy_op is None
+            result = custom_method(node, children)
+        else:
+            result = m.sympy_op(*children)
+
+        return result
+
+    def convert_libsbml_NAME(self, node, children) -> sympy.Basic:
+        assert len(children) == 0
+        return sympy.Symbol(node.getName())
+
+    def convert_libsbml_NAME_TIME(self, node, children) -> sympy.Basic:
+        assert len(children) == 0
+        return sympy.Symbol(self.time_variable_name)
+
+    def convert_libsbml_INTEGER(self, node, children) -> sympy.Basic:
+        assert len(children) == 0
+        return sympy.Integer(node.getValue())
+
+    def convert_libsbml_REAL(self, node, children) -> sympy.Basic:
+        assert len(children) == 0
+        return sympy.Float(node.getValue())
