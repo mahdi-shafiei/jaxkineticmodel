@@ -111,9 +111,6 @@ class SympyConverter(Converter):
         mp.sympy_op: mp for mp in MAPPINGS
     }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     def sympy2libsbml(self, expression: sympy.Basic) -> libsbml.ASTNode:
         children = [self.sympy2libsbml(child) for child in expression.args]
 
@@ -174,9 +171,6 @@ class LibSBMLConverter(Converter):
     LIBSBML2SYMPY: dict[LibSBMLASTNode, Mapping] = {
         mp.libsbml_op: mp for mp in MAPPINGS
     }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
     def libsbml2sympy(self, node: libsbml.ASTNode) -> sympy.Basic:
         if not node.isWellFormedASTNode():
