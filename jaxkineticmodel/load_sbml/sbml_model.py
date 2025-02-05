@@ -176,12 +176,11 @@ class SBMLModel:
         return compartment_list
 
     def _get_fluxes(self):
+        """Retrieves flux functions from the SBML model for simulation,
+        It already replaces some values that are constant."""
 
         libsbml_converter = LibSBMLConverter()
-
-
         species_ic = self._get_initial_conditions()
-        global_parameters,local_parameters=separate_params(self.parameters)
         constant_boundaries=get_constant_boundary_species(self.model)
         lambda_functions=get_lambda_function_dictionary(self.model)
         assignments_rules=get_assignment_rules_dictionary(self.model)
@@ -191,39 +190,42 @@ class SBMLModel:
         v_symbol_dict = {}  # all symbols that are used in the equation.
 
         for reaction in self.model.reactions:
-            local_parameters = get_local_parameters(reaction)
-            nested_dictionary_vi = {
-                "species": species_ic,
-                "globals": global_parameters,
-                "locals": local_parameters,
-                "compartments": self.compartments,
-                "boundary": constant_boundaries,
-                "lambda_functions": lambda_functions,
-                "boundary_assignments": assignments_rules,
-            }  # add functionality
 
-            # this will soon be replaced by direct astnode--> sympy (leon)
-            # continue here
             astnode_reaction=reaction.getKineticLaw().math
-            sympy_expression=libsbml_converter.libsbml2sympy(astnode_reaction)
+            equation=libsbml_converter.libsbml2sympy(astnode_reaction) #sympy type
 
-            ### Continue here, and remove the nested dictionary structure because we do not need that anymore
-            ### Define the lambidfy and jit equation here.
-            print(sympy_expression.free_symbols)
+            #this is an annoying property of the lambda expressions.
+            # They require mapping sp.symbols between eachother
+            #but if the order is wrong, the calculation will be wrong
+            for func in equation.atoms(sp.Function):
+                equation=equation.subs({func:lambda_functions[func.name]})
+                symbols_lambda=list(lambda_functions[func.name].free_symbols)
+                function_symbols=list(func.args)
+                symbols_mapping=dict(zip(symbols_lambda, function_symbols))
+                equation=equation.subs(symbols_mapping)
 
 
+            #there might be
+            # we also need to also substitute the right free symbols in
+            # the lambdify
+            equation=equation.subs(self.compartments)
+            equation=equation.subs(assignments_rules)
+            equation=equation.subs(constant_boundaries)
 
-            vi_rate_law = get_string_expression(reaction)
-            print(vi_rate_law)
-            vi, filtered_dict = sympify_lambidify_and_jit_equation(vi_rate_law, nested_dictionary_vi)
+            free_symbols=list(equation.free_symbols)
 
-            v[reaction.id] = vi  # the jitted equation
+            equation=sp.lambdify(free_symbols, equation,"jax")
+
+            filtered_dict=dict(zip([str(i) for i in free_symbols],free_symbols))
+
+            # v[reaction.id] = vi  # the jitted equation
+            v[reaction.id]=equation
             v_symbol_dict[reaction.id] = filtered_dict
 
         return v, v_symbol_dict
 
     def _construct_flux_pointer_dictionary(self):
-        """In jax, the values that are used need to be pointed directly in y."""
+        """In jax, the values that are used need to be pointed directly in y0."""
         flux_point_dict = {}
         for k, reaction in enumerate(self.reaction_names):
             v_dict = self.v_symbols[reaction]
@@ -240,6 +242,30 @@ class SBMLModel:
             v_symbol_dictionaries=self.v_symbols,
             compartment_values=self.species_compartment_values,
         )
+
+
+def get_lambda_function_dictionary(model):
+    """Stop giving these functions confusing names...
+    it returns a dictionary with all lambda functions"""
+    functional_dict = {}
+
+    for function in model.function_definitions:
+        id = function.getId()
+        math = function.getMath()
+        n_nodes = math.getNumChildren()
+        string_math = replace_piecewise(libsbml.formulaToL3String(math.getChild(n_nodes - 1)))
+
+        leaf_nodes = []
+        math_nodes = get_leaf_nodes(math, leaf_nodes=leaf_nodes)
+        sp_symbols = {}
+        for node in math_nodes:
+            sp_symbols[node] = sp.Symbol(node)
+        expr = sp.sympify(string_math, locals=sp_symbols)
+
+
+
+        functional_dict[id] = expr
+    return functional_dict
 
 
 def get_global_parameters(model):
@@ -312,7 +338,6 @@ def get_reaction_symbols_dict(eval_dict):
     """This functions works on the local_dictionary passed in the sympify function
     It ensures that sympy symbols for parameters and y-values are properly passed,
     while the rest is simply substituted in the expression."""
-
     symbol_dict = {i: sp.Symbol(i) for i in eval_dict.keys() if not callable(eval_dict[i])}  # skip functions symbols
     return symbol_dict
 
@@ -422,28 +447,6 @@ def get_leaf_nodes(node, leaf_nodes):
     return leaf_nodes
 
 
-def get_lambda_function_dictionary(model):
-    """Stop giving these functions confusing names...
-    it returns a dictionary with all lambda functions"""
-    functional_dict = {}
-
-    for function in model.function_definitions:
-        id = function.getId()
-        math = function.getMath()
-        n_nodes = math.getNumChildren()
-        string_math = replace_piecewise(libsbml.formulaToL3String(math.getChild(n_nodes - 1)))
-
-        leaf_nodes = []
-        math_nodes = get_leaf_nodes(math, leaf_nodes=leaf_nodes)
-        sp_symbols = {}
-        for node in math_nodes:
-            sp_symbols[node] = sp.Symbol(node)
-        expr = sp.sympify(string_math, locals=sp_symbols)
-
-        func_x = sp.lambdify(math_nodes, expr, "jax")
-
-        functional_dict[id] = func_x
-    return functional_dict
 
 
 def replace_piecewise(formula):

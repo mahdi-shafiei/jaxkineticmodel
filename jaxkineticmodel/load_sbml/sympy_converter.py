@@ -2,6 +2,7 @@ import types
 from abc import abstractmethod
 from dataclasses import dataclass
 from enum import Enum, auto, unique
+from logging import Logger
 from typing import Callable, Optional
 
 import libsbml
@@ -88,10 +89,16 @@ class Mapping:
 MAPPINGS = [
     Mapping(sympy.Add, LibSBMLASTNode.PLUS, None),
     Mapping(sympy.Mul, LibSBMLASTNode.TIMES, None),
-    Mapping(None,LibSBMLASTNode.DIVIDE,2),
+    Mapping(None,LibSBMLASTNode.DIVIDE,2), #new
+    Mapping(None, LibSBMLASTNode.FUNCTION, None),#new
+    Mapping(None,LibSBMLASTNode.MINUS,None), #new
+    Mapping(None,LibSBMLASTNode.REAL_E, 0), #new
     Mapping(sympy.Pow, LibSBMLASTNode.POWER, 2),
+    Mapping(sympy.Pow,LibSBMLASTNode.FUNCTION_POWER, 2), #new
     Mapping(sympy.sin, LibSBMLASTNode.FUNCTION_SIN, 1),
-    Mapping(sympy.cos, LibSBMLASTNode.FUNCTION_COS, 1),
+    Mapping(sympy.cos, LibSBMLASTNode.FUNCTION_COS, 1), #new
+    # Mapping(sympy.LessThan,LibSBMLASTNode.RELATIONAL_LT,2), #new
+    # Mapping(sympy.GreaterThan,LibSBMLASTNode.RELATIONAL_GT,2), #new
     Mapping(sympy.Symbol, None, 0),
     Mapping(sympy.Integer, None, 0),
     Mapping(sympy.Float, None, 0),
@@ -185,6 +192,7 @@ class LibSBMLConverter(Converter):
             children.append(self.libsbml2sympy(child))
 
         libsbml_op = LibSBMLASTNode(node.getType())
+
         m = self.LIBSBML2SYMPY.get(libsbml_op, None)
         if m is None:
             raise NotImplementedError(f"can't deal yet with libsbml ASTNode "
@@ -223,6 +231,36 @@ class LibSBMLConverter(Converter):
         return sympy.Float(node.getValue())
 
     def convert_libsbml_DIVIDE(self, node, children) -> sympy.Basic:
-        assert len(children) == 2, "Division has two children"
+        "Division has two children a and b (a/b)"
+        assert len(children) == 2
         numerator, denominator = children
         return sympy.Mul(numerator,sympy.Pow(denominator,-1))
+
+    def convert_libsbml_MINUS(self, node, children) -> sympy.Basic:
+        "MINUS can have one child (symbol is negative) or two children (a-b)"
+        if len(children) == 1:
+            a=children[0]
+            return -a
+        if len(children) == 2:
+            a, b = children
+            return sympy.Add(a, -b)
+        else:
+            raise Logger.error(f"ERROR: Unexpected number of children for MINUS: {len(children)}")
+
+    def convert_libsbml_REAL_E(self, node, children) -> sympy.Basic:
+        assert len(children) == 0
+
+        base = sympy.Float(node.getMantissa())  # Extracts the base (mantissa)
+        exponent = sympy.Integer(node.getExponent())  # Extracts the exponent
+
+        return sympy.Mul(base, sympy.Pow(10, exponent))  # Represents base * 10^exponent
+
+
+    def convert_libsbml_FUNCTION(self, node, children) -> sympy.Basic:
+        assert len(children) >= 1
+        function_name = node.getName()  # Get function name (e.g., 'f', 'g', etc.)
+        if not function_name:
+            raise ValueError("FUNCTION node has no associated name")
+
+        sympy_function = sympy.Function(function_name)  # Define function
+        return sympy_function(*children)  # Apply function to arguments

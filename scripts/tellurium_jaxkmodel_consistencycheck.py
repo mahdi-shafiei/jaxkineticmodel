@@ -53,6 +53,7 @@ for sbml_file in sbml_files:
         sol_tellurium = tellurium_model.simulate(0, 100, 200)
 
         ts = jnp.array(sol_tellurium["time"])
+
         ys = JaxKmodel(ts=ts, y0=model.y0, params=model.parameters)
         ys = pd.DataFrame(ys, columns=S.index)
 
