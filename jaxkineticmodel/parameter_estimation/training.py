@@ -1,14 +1,14 @@
 import jax
 import optax
 from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
-from jaxkineticmodel.load_sbml.sbml_load import get_global_parameters
 from scipy.stats import qmc
 import logging
 from jaxkineticmodel.building_models import JaxKineticModelBuild as jkm
 import numpy as np
 import jax.numpy as jnp
 import pandas as pd
-
+import inspect
+import types
 
 jax.config.update("jax_enable_x64", True)
 logger = logging.getLogger(__name__)
@@ -18,24 +18,42 @@ class Trainer:
     """Trainer class that fits data using a set of parameter initializations,
     Input: a model that is a JaxKineticModel class to fit, and a dataset"""
 
-    def __init__(self, model, data: pd.DataFrame, learning_rate=1e-3, loss_threshold=1e-4, clip=4, n_iter=100):
+    def __init__(self,
+                 model,
+                 data: pd.DataFrame,
+                 n_iter: int,
+                 learning_rate=1e-3,
+                 loss_threshold=1e-4,
+                 optimizer=None,
+                 clip=4,
+                 ):
 
         if isinstance(model, SBMLModel):
             self.model = jax.jit(model.get_kinetic_model())
             self.parameters = list(model.parameters.keys())
 
         if isinstance(model, jkm.NeuralODEBuild):
-            logger.info("type not tested yet")
+            logger.info("NeuralODEbuild object is not tested yet")
             self.parameters = model.parameter_names
             self.model = jax.jit(model)
 
         self.ts = jnp.array(list(data.index))
-
         self.lr = learning_rate
-        self.optimizer = self._add_optimizer(clip=clip)
+
+
+        if optimizer is None:
+            self.optimizer = self._add_optimizer(clip=clip)
+
+        elif isinstance(optimizer, optax.GradientTransformation):
+            self.optimizer = optimizer
+        else:
+            logger.error(f"optimizer args {optimizer} is not an optax.GradientTransformation object.")
+
         self.loss_threshold = loss_threshold
         self.n_iter = n_iter
+
         self.log_loss_func = jax.jit(create_log_params_means_centered_loss_func(self.model))
+
         self.dataset = data
         self.parameter_sets = None
 
@@ -82,6 +100,7 @@ class Trainer:
 
     def _add_optimizer(self, clip):
         optimizer = optax.adabelief(self.lr)
+
         clip_by_global = optax.clip_by_global_norm(np.log(clip))
         optimizer = optax.chain(optimizer, clip_by_global)
         self.optimizer = optimizer
@@ -284,7 +303,7 @@ def create_log_params_means_centered_loss_func2(model, to_include: list):
 
     return loss_func
 
-
+@jax.jit
 def create_update_rule(optimizer, loss_func):
     def update(opt_state, params, ts, ys):
         """Update rule for the gradients for parameters"""

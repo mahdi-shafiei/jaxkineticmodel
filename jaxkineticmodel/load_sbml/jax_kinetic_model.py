@@ -81,7 +81,6 @@ class NeuralODE:
         self.reaction_names = list(S.columns)
         self.v_symbol_dictionaries = v_symbol_dictionaries
         self.Stoichiometry = S
-
         self.max_steps = 300000
         self.rtol = 1e-7
         self.atol = 1e-10

@@ -191,6 +191,7 @@ class LibSBMLConverter(Converter):
             child = node.getChild(idx)
             children.append(self.libsbml2sympy(child))
 
+
         libsbml_op = LibSBMLASTNode(node.getType())
 
         m = self.LIBSBML2SYMPY.get(libsbml_op, None)
@@ -211,6 +212,7 @@ class LibSBMLConverter(Converter):
             result = custom_method(node, children)
         else:
             result = m.sympy_op(*children)
+
 
         return result
 
