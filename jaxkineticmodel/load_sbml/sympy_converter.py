@@ -183,6 +183,7 @@ class LibSBMLConverter(Converter):
     }
 
     def libsbml2sympy(self, node: libsbml.ASTNode) -> sympy.Basic:
+        node = libsbml.ASTNode(node)    # Work around a bug in libsbml
         if not node.isWellFormedASTNode():
             raise ValueError('Got invalid libSBML AST node')
 
