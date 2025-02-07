@@ -10,10 +10,13 @@ import sympy
 
 
 @unique
-class LibSBMLASTNode(Enum):
+class ASTNodeType(Enum):
     @staticmethod
     def _generate_next_value_(name, start, count, last_values):
         return libsbml.__dict__['AST_' + name]  # noqa
+
+    def matches(self, node: libsbml.ASTNode) -> bool:
+        return self.value == node.getType()
 
     CONSTANT_E = auto();          CONSTANT_FALSE = auto()       # noqa: E702
     CONSTANT_PI = auto();         CONSTANT_TRUE = auto()        # noqa: E702
@@ -69,7 +72,7 @@ class Mapping:
     # Otherwise, it must have both sympy_op and libsbml_op set and
     # should _not_ have such a method.
     sympy_op: Optional[type[sympy.Basic]]
-    libsbml_op: Optional[LibSBMLASTNode]
+    libsbml_op: Optional[ASTNodeType]
     arg_count: Optional[int]
 
 
@@ -87,25 +90,36 @@ class Mapping:
 
 #here I can add extra mappings ! #PAUL
 MAPPINGS = [
-    Mapping(sympy.Add, LibSBMLASTNode.PLUS, None),
-    Mapping(sympy.Mul, LibSBMLASTNode.TIMES, None),
-    Mapping(None,LibSBMLASTNode.DIVIDE,2), #new
-    Mapping(None, LibSBMLASTNode.FUNCTION, None),#new
-    Mapping(None,LibSBMLASTNode.MINUS,None), #new
-    Mapping(None,LibSBMLASTNode.REAL_E, 0), #new
-    Mapping(sympy.Pow, LibSBMLASTNode.POWER, 2),
-    Mapping(sympy.Pow,LibSBMLASTNode.FUNCTION_POWER, 2), #new
-    Mapping(sympy.sin, LibSBMLASTNode.FUNCTION_SIN, 1),
-    Mapping(sympy.cos, LibSBMLASTNode.FUNCTION_COS, 1), #new
+    Mapping(sympy.Add, ASTNodeType.PLUS, None),
+    Mapping(sympy.Mul, ASTNodeType.TIMES, None),
+    Mapping(None, ASTNodeType.DIVIDE, 2), #new
+    Mapping(None, ASTNodeType.FUNCTION, None),#new
+    Mapping(None, ASTNodeType.MINUS, None), #new
+    Mapping(None, ASTNodeType.REAL_E, 0), #new
+    Mapping(None, ASTNodeType.FUNCTION_PIECEWISE, None),
+    Mapping(sympy.Piecewise, None, None),
+    Mapping(sympy.Pow, ASTNodeType.POWER, 2),
+    Mapping(sympy.Pow, ASTNodeType.FUNCTION_POWER, 2), #new
+    Mapping(sympy.Lt, ASTNodeType.RELATIONAL_LT, 2),
+    Mapping(sympy.Le, ASTNodeType.RELATIONAL_LEQ, 2),
+    Mapping(sympy.Gt, ASTNodeType.RELATIONAL_GT, 2),
+    Mapping(sympy.Ge, ASTNodeType.RELATIONAL_GEQ, 2),
+    Mapping(sympy.Eq, ASTNodeType.RELATIONAL_EQ, 2),
+    Mapping(sympy.Ne, ASTNodeType.RELATIONAL_NEQ, 2),
+    Mapping(sympy.sin, ASTNodeType.FUNCTION_SIN, 1),
+    Mapping(sympy.cos, ASTNodeType.FUNCTION_COS, 1), #new
     # Mapping(sympy.LessThan,LibSBMLASTNode.RELATIONAL_LT,2), #new
     # Mapping(sympy.GreaterThan,LibSBMLASTNode.RELATIONAL_GT,2), #new
+    Mapping(sympy.S.true, ASTNodeType.CONSTANT_TRUE, 0),
+    Mapping(sympy.S.false, ASTNodeType.CONSTANT_FALSE, 0),
     Mapping(sympy.Symbol, None, 0),
     Mapping(sympy.Integer, None, 0),
     Mapping(sympy.Float, None, 0),
-    Mapping(None, LibSBMLASTNode.NAME, 0),
-    Mapping(None, LibSBMLASTNode.NAME_TIME, 0),
-    Mapping(None, LibSBMLASTNode.INTEGER, 0),
-    Mapping(None, LibSBMLASTNode.REAL, 0),
+    Mapping(sympy.S.NaN, None, 0),
+    Mapping(None, ASTNodeType.NAME, 0),
+    Mapping(None, ASTNodeType.NAME_TIME, 0),
+    Mapping(None, ASTNodeType.INTEGER, 0),
+    Mapping(None, ASTNodeType.REAL, 0),
 ]
 
 
@@ -122,8 +136,6 @@ class SympyConverter(Converter):
     }
 
     def sympy2libsbml(self, expression: sympy.Basic) -> libsbml.ASTNode:
-        children = [self.sympy2libsbml(child) for child in expression.args]
-
         result = libsbml.ASTNode()
         for sympy_op in expression.__class__.__mro__:
             custom_method = getattr(self,
@@ -136,49 +148,73 @@ class SympyConverter(Converter):
             raise NotImplementedError(f"can't deal yet with expression type {type(expression)}")
 
         assert mp is not None
-        if mp.arg_count is not None and len(children) != mp.arg_count:
+        if mp.arg_count is not None and len(expression.args) != mp.arg_count:
             raise ValueError(f'Unexpected number of arguments for '
                              f'{mp.sympy_op}: expected {mp.arg_count}, got '
-                             f'{len(children)}')
+                             f'{len(expression.args)}')
 
         if custom_method is not None:
             assert mp.libsbml_op is None
-            result = custom_method(expression, result, children)
+            result = custom_method(expression, result)
         else:
             result.setType(mp.libsbml_op.value)
-            for child in children:
-                result.addChild(child)
+            for child in expression.args:
+                # Recursively convert child nodes
+                result.addChild(self.sympy2libsbml(child))
 
         if not result.isWellFormedASTNode():
             raise RuntimeError('Failed to build a well-formed '
                                'LibSBML AST node')
         return result
 
-    def convert_sympy_Integer(self, number, result, children) -> libsbml.ASTNode:
-        assert isinstance(number, sympy.Integer) and len(children) == 0
-        result.setType(LibSBMLASTNode.INTEGER.value)
+    def convert_sympy_Integer(self, number, result) -> libsbml.ASTNode:
+        assert isinstance(number, sympy.Integer) and len(number.args) == 0
+        result.setType(ASTNodeType.INTEGER.value)
         result.setValue(int(number))
         return result
 
-    def convert_sympy_Float(self, number, result, children) -> libsbml.ASTNode:
-        assert isinstance(number, sympy.Float) and len(children) == 0
-        result.setType(LibSBMLASTNode.REAL.value)
+    def convert_sympy_Float(self, number, result) -> libsbml.ASTNode:
+        assert isinstance(number, sympy.Float) and len(number.args) == 0
+        result.setType(ASTNodeType.REAL.value)
         result.setValue(float(number))
         return result
 
-    def convert_sympy_Symbol(self, symbol, result, children) -> libsbml.ASTNode:
-        assert isinstance(symbol, sympy.Symbol) and len(children) == 0
+    def convert_sympy_NaN(self, nan, result) -> libsbml.ASTNode:
+        assert isinstance(nan, sympy.core.numbers.NaN) and len(nan.args) == 0
+        result.setType(ASTNodeType.REAL.value)
+        result.setValue(float('nan'))
+        return result
+
+    def convert_sympy_Symbol(self, symbol, result) -> libsbml.ASTNode:
+        assert isinstance(symbol, sympy.Symbol) and len(symbol.args) == 0
         if symbol.name == self.time_variable_name:
-            result.setType(LibSBMLASTNode.NAME_TIME.value)
+            result.setType(ASTNodeType.NAME_TIME.value)
             result.setName(LIBSBML_TIME_NAME)
         else:
-            result.setType(LibSBMLASTNode.NAME.value)
+            result.setType(ASTNodeType.NAME.value)
             result.setName(symbol.name)
+        return result
+
+    def convert_sympy_Piecewise(self, expr, result) -> libsbml.ASTNode:
+        assert isinstance(expr, sympy.Piecewise)
+        result.setType(ASTNodeType.FUNCTION_PIECEWISE.value)
+        # For sympy piecewise functions, the conditions don't have to be
+        # mutually exclusive; they are evaluated left-to-right and the
+        # first one that matches is applied.
+        # However, for libsbml, no order is assumed, and the entire
+        # expression is considered to be undefined if multiple conditions
+        # evaluate to true.
+        # Fortunately, sympy offers functionality to rewrite a piecewise
+        # expression to make the conditions mutually exclusive.
+        piecewise = sympy.functions.piecewise_exclusive(expr)
+        for (value, condition) in piecewise.args:
+            result.addChild(self.sympy2libsbml(value))
+            result.addChild(self.sympy2libsbml(condition))
         return result
 
 
 class LibSBMLConverter(Converter):
-    LIBSBML2SYMPY: dict[LibSBMLASTNode, Mapping] = {
+    LIBSBML2SYMPY: dict[ASTNodeType, Mapping] = {
         mp.libsbml_op: mp for mp in MAPPINGS
     }
 
@@ -192,8 +228,7 @@ class LibSBMLConverter(Converter):
             child = node.getChild(idx)
             children.append(self.libsbml2sympy(child))
 
-
-        libsbml_op = LibSBMLASTNode(node.getType())
+        libsbml_op = ASTNodeType(node.getType())
 
         m = self.LIBSBML2SYMPY.get(libsbml_op, None)
         if m is None:
@@ -218,29 +253,54 @@ class LibSBMLConverter(Converter):
         return result
 
     def convert_libsbml_NAME(self, node, children) -> sympy.Basic:
+        assert ASTNodeType.NAME.matches(node)
         assert len(children) == 0
         return sympy.Symbol(node.getName())
 
     def convert_libsbml_NAME_TIME(self, node, children) -> sympy.Basic:
+        assert ASTNodeType.NAME_TIME.matches(node)
         assert len(children) == 0
         return sympy.Symbol(self.time_variable_name)
 
     def convert_libsbml_INTEGER(self, node, children) -> sympy.Basic:
+        assert ASTNodeType.INTEGER.matches(node)
         assert len(children) == 0
         return sympy.Integer(node.getValue())
 
     def convert_libsbml_REAL(self, node, children) -> sympy.Basic:
+        assert ASTNodeType.REAL.matches(node)
         assert len(children) == 0
         return sympy.Float(node.getValue())
 
     def convert_libsbml_DIVIDE(self, node, children) -> sympy.Basic:
         "Division has two children a and b (a/b)"
+        assert ASTNodeType.DIVIDE.matches(node)
         assert len(children) == 2
         numerator, denominator = children
         return sympy.Mul(numerator,sympy.Pow(denominator,-1))
 
+    def convert_libsbml_FUNCTION_PIECEWISE(self, node, children) -> sympy.Basic:
+        assert ASTNodeType.FUNCTION_PIECEWISE.matches(node)
+        if len(children) == 0:
+            # According to MathML documentation: "The degenerate case of no
+            # piece elements and no otherwise element is treated as
+            # undefined for all values of the domain."
+            return sympy.S.NaN
+
+        if len(children) % 2 == 1:
+            # Handle <otherwise> case.  This can be dealt with in sympy by
+            # having the last condition-value-pair always match.
+            children.append(sympy.S.true)
+        pieces = []
+        for idx in range(0, len(children), 2):
+            value = children[idx]
+            condition = children[idx + 1]
+            pieces.append((value, condition))
+        return sympy.Piecewise(*pieces)
+
     def convert_libsbml_MINUS(self, node, children) -> sympy.Basic:
         "MINUS can have one child (symbol is negative) or two children (a-b)"
+        assert ASTNodeType.MINUS.matches(node)
         if len(children) == 1:
             a=children[0]
             return -a
@@ -251,6 +311,7 @@ class LibSBMLConverter(Converter):
             raise Logger.error(f"ERROR: Unexpected number of children for MINUS: {len(children)}")
 
     def convert_libsbml_REAL_E(self, node, children) -> sympy.Basic:
+        assert ASTNodeType.REAL_E.matches(node)
         assert len(children) == 0
 
         base = sympy.Float(node.getMantissa())  # Extracts the base (mantissa)
@@ -260,6 +321,7 @@ class LibSBMLConverter(Converter):
 
 
     def convert_libsbml_FUNCTION(self, node, children) -> sympy.Basic:
+        assert ASTNodeType.FUNCTION.matches(node)
         assert len(children) >= 1
         function_name = node.getName()  # Get function name (e.g., 'f', 'g', etc.)
         if not function_name:
