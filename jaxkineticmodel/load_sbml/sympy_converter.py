@@ -97,6 +97,7 @@ MAPPINGS = [
     Mapping(None, ASTNodeType.MINUS, None), #new
     Mapping(None, ASTNodeType.REAL_E, 0), #new
     Mapping(None, ASTNodeType.FUNCTION_PIECEWISE, None),
+    Mapping(None, ASTNodeType.LAMBDA, None), #new
     Mapping(sympy.Piecewise, None, None),
     Mapping(sympy.Pow, ASTNodeType.POWER, 2),
     Mapping(sympy.Pow, ASTNodeType.FUNCTION_POWER, 2), #new
@@ -108,6 +109,8 @@ MAPPINGS = [
     Mapping(sympy.Ne, ASTNodeType.RELATIONAL_NEQ, 2),
     Mapping(sympy.sin, ASTNodeType.FUNCTION_SIN, 1),
     Mapping(sympy.cos, ASTNodeType.FUNCTION_COS, 1), #new
+    Mapping(sympy.ln,ASTNodeType.FUNCTION_LN,1), #new
+
     # Mapping(sympy.LessThan,LibSBMLASTNode.RELATIONAL_LT,2), #new
     # Mapping(sympy.GreaterThan,LibSBMLASTNode.RELATIONAL_GT,2), #new
     Mapping(sympy.S.true, ASTNodeType.CONSTANT_TRUE, 0),
@@ -329,3 +332,14 @@ class LibSBMLConverter(Converter):
 
         sympy_function = sympy.Function(function_name)  # Define function
         return sympy_function(*children)  # Apply function to arguments
+
+    def convert_libsbml_LAMBDA(self,node,children)-> sympy.Basic:
+        """Mapping to sp lambda.
+        The argument order matters in lambda functions and needs to be retrieved properly """
+        assert ASTNodeType.LAMBDA.matches(node)
+        assert len(children)>=1
+        lambda_function=sympy.Lambda(children[:-1],children[-1]) #last child is the expression
+        return lambda_function
+
+
+
