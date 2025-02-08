@@ -194,16 +194,17 @@ class SBMLModel:
             astnode_reaction=reaction.getKineticLaw().math
             equation=libsbml_converter.libsbml2sympy(astnode_reaction) #sympy type
 
-            #this is an annoying property of the lambda expressions.
-            # They require mapping sp.symbols between eachother
-            #but if the order is wrong, the calculation will be wrong
+            # arguments from the lambda expression are mapped to their respective symbols.
             for func in equation.atoms(sp.Function):
-                equation=equation.subs({func:lambda_functions[func.name]})
-                symbols_lambda=list(lambda_functions[func.name].free_symbols)
-                function_symbols=list(func.args)
-                symbols_mapping=dict(zip(symbols_lambda, function_symbols))
-                equation=equation.subs(symbols_mapping)
+                if hasattr(func, 'name'):
+                    variables=lambda_functions[func.name].variables
+                    variable_substitution = dict(zip(variables, func.args))
+                    expression=lambda_functions[func.name].expr
+                    expression=expression.subs(variable_substitution)
+                    equation=equation.subs({func:expression})
 
+
+            #_lambdifygenerated() missing 3 required positional arguments: 'S', 'v', and 'Stot'
 
             #there might be
             # we also need to also substitute the right free symbols in
@@ -248,23 +249,15 @@ def get_lambda_function_dictionary(model):
     """Stop giving these functions confusing names...
     it returns a dictionary with all lambda functions"""
     functional_dict = {}
+    libsbml_converter = LibSBMLConverter()
 
     for function in model.function_definitions:
         id = function.getId()
         math = function.getMath()
-        n_nodes = math.getNumChildren()
-        string_math = replace_piecewise(libsbml.formulaToL3String(math.getChild(n_nodes - 1)))
-
-        leaf_nodes = []
-        math_nodes = get_leaf_nodes(math, leaf_nodes=leaf_nodes)
-        sp_symbols = {}
-        for node in math_nodes:
-            sp_symbols[node] = sp.Symbol(node)
-        expr = sp.sympify(string_math, locals=sp_symbols)
+        equation=libsbml_converter.libsbml2sympy(math)
 
 
-
-        functional_dict[id] = expr
+        functional_dict[id] = equation
     return functional_dict
 
 
