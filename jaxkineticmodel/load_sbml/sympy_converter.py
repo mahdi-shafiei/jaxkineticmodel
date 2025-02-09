@@ -338,7 +338,7 @@ class LibSBMLConverter(Converter):
         The argument order matters in lambda functions and needs to be retrieved properly """
         assert ASTNodeType.LAMBDA.matches(node)
         assert len(children)>=1
-        lambda_function=sympy.Lambda(children[:-1],children[-1]) #last child is the expression
+        lambda_function=sympy.Lambda(tuple(children[:-1]),children[-1]) #last child is the expression
         return lambda_function
 
 
