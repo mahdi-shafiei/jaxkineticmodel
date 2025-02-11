@@ -27,7 +27,7 @@ y0 = jnp.array([2, 0])
 params = dict(zip(kmodel.parameter_names, jnp.array([1, 1])))
 
 # solve
-kmodel_sim = equinox.filter_jit(kmodel_sim)
+kmodel_sim = jax.jit(kmodel_sim)
 ys = kmodel_sim(ts, y0, params)
 ys = pd.DataFrame(ys, columns=kmodel.species_names)
 
