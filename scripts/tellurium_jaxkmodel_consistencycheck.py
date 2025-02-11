@@ -47,11 +47,14 @@ for sbml_file in sbml_files:
 
         # #parameters are not yet defined
 
-        # params = {**local_params, **params}
 
         tellurium_model = te.loadSBMLModel(file_path)
-        sol_tellurium = tellurium_model.simulate(0, 100, 200)
+        tellurium_model.integrator.rtol=1e-7
+        tellurium_model.integrator.atol=1e-10
+        tellurium_model.integrator.initial_time_step = 1e-11
+        tellurium_model.integrator.max_steps=300000
 
+        sol_tellurium = tellurium_model.simulate(0, 10, 200)
         ts = jnp.array(sol_tellurium["time"])
 
         ys = JaxKmodel(ts=ts, y0=model.y0, params=model.parameters)

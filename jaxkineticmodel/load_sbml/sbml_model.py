@@ -10,7 +10,7 @@ import re
 import collections
 import os
 from jaxkineticmodel.utils import get_logger
-from .jax_kinetic_model import NeuralODE
+from jaxkineticmodel.load_sbml.jax_kinetic_model import NeuralODE
 from jaxkineticmodel.load_sbml.sympy_converter import SympyConverter, LibSBMLConverter
 
 logger = get_logger(__name__)
@@ -204,14 +204,11 @@ class SBMLModel:
                     equation=equation.subs({func:expression})
 
 
-            #_lambdifygenerated() missing 3 required positional arguments: 'S', 'v', and 'Stot'
 
-            #there might be
-            # we also need to also substitute the right free symbols in
-            # the lambdify
             equation=equation.subs(self.compartments)
             equation=equation.subs(assignments_rules)
             equation=equation.subs(constant_boundaries)
+
 
             free_symbols=list(equation.free_symbols)
 
@@ -237,10 +234,10 @@ class SBMLModel:
 
     def get_kinetic_model(self):
         return NeuralODE(
-            v=self.v,
-            S=self.S,
+            fluxes=self.v,
+            stoichiometric_matrix=self.S,
             met_point_dict=self.met_point_dict,
-            v_symbol_dictionaries=self.v_symbols,
+            v_symbols=self.v_symbols,
             compartment_values=self.species_compartment_values,
         )
 

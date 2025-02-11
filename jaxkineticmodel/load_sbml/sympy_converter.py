@@ -106,13 +106,11 @@ MAPPINGS = [
     Mapping(sympy.Gt, ASTNodeType.RELATIONAL_GT, 2),
     Mapping(sympy.Ge, ASTNodeType.RELATIONAL_GEQ, 2),
     Mapping(sympy.Eq, ASTNodeType.RELATIONAL_EQ, 2),
+    # Mapping(sympy.Max,ASTNodeType.FUNCTION_MAX,2), #new
     Mapping(sympy.Ne, ASTNodeType.RELATIONAL_NEQ, 2),
     Mapping(sympy.sin, ASTNodeType.FUNCTION_SIN, 1),
     Mapping(sympy.cos, ASTNodeType.FUNCTION_COS, 1), #new
     Mapping(sympy.ln,ASTNodeType.FUNCTION_LN,1), #new
-
-    # Mapping(sympy.LessThan,LibSBMLASTNode.RELATIONAL_LT,2), #new
-    # Mapping(sympy.GreaterThan,LibSBMLASTNode.RELATIONAL_GT,2), #new
     Mapping(sympy.S.true, ASTNodeType.CONSTANT_TRUE, 0),
     Mapping(sympy.S.false, ASTNodeType.CONSTANT_FALSE, 0),
     Mapping(sympy.Symbol, None, 0),

@@ -12,8 +12,8 @@ jax.config.update("jax_enable_x64", True)
 class JaxKineticModel:
     def __init__(
         self,
-        v,
-        S,
+        fluxes,
+        stoichiometric_matrix,
         flux_point_dict,
         species_names,
         reaction_names,
@@ -27,10 +27,10 @@ class JaxKineticModel:
           corresponding metabolites should be in y. Should be matched to S.
         ##A pointer dictionary?
         """
-        self.func = v
-        self.stoichiometry = S
+        self.func = fluxes
+        self.stoichiometry = stoichiometric_matrix
         # self.params=params
-        self.flux_point_dict = flux_point_dict  # this is ugly but wouldn't know how to do it another wa
+        self.flux_point_dict = flux_point_dict
         self.species_names = np.array(species_names)
         self.reaction_names = np.array(reaction_names)
         self.compartment_values = jnp.array(compartment_values)
@@ -71,44 +71,62 @@ class NeuralODE:
 
     def __init__(
         self,
-        v,
-        S,
-        met_point_dict,
-        v_symbol_dictionaries,
-        compartment_values,
+            fluxes,
+            stoichiometric_matrix,
+            met_point_dict,
+            v_symbols,
+            compartment_values,
     ):
-        self.func = JaxKineticModel(v, jnp.array(S), met_point_dict, list(S.index), list(S.columns), compartment_values)
-        self.reaction_names = list(S.columns)
-        self.v_symbol_dictionaries = v_symbol_dictionaries
-        self.Stoichiometry = S
+        self.func = JaxKineticModel(fluxes, jnp.array(stoichiometric_matrix), met_point_dict,
+                                    list(stoichiometric_matrix.index), list(stoichiometric_matrix.columns),
+                                    compartment_values)
+        self.reaction_names = list(stoichiometric_matrix.columns)
+        self.v_symbols = v_symbols
+        self.Stoichiometry = stoichiometric_matrix
         self.max_steps = 300000
         self.rtol = 1e-7
         self.atol = 1e-10
+        self.dt0=1e-11
+        self.solver=diffrax.Kvaerno5()
+        self.stepsize_controller=diffrax.PIDController(rtol=self.rtol, atol=self.atol,pcoeff=0.4, icoeff=0.3, dcoeff=0)
 
         def wrap_time_symbols(t):
-            time_dependencies = time_dependency_symbols(v_symbol_dictionaries, t)
+            time_dependencies = time_dependency_symbols(v_symbols, t)
             return time_dependencies
 
         ## time dependencies: a function that return for all fluxes whether there is a time dependency
         self.time_dict = jax.jit(wrap_time_symbols)
+
+    def _change_solver(self,solver,**kwargs):
+        """To change the ODE solver object to any solver class from diffrax"""
+        if isinstance(solver,diffrax.AbstractAdaptiveSolver):
+            self.solver=solver
+            step_size_control_parameters={'rtol':self.rtol, 'atol':self.atol,"pcoeff":0.4,"icoeff":0.3,"dcoeff":0}
+            for key in kwargs:
+                if key in step_size_control_parameters:
+                    step_size_control_parameters[key] = kwargs[key]
+            self.stepsize_controller=diffrax.PIDController(**step_size_control_parameters)
+        return "solver added"
+
+
 
     def __call__(self, ts, y0, params):
         global_params, local_params = separate_params(params)
 
         # ensures that global params are loaded flux specific (necessary for jax)
         global_params = construct_param_point_dictionary(
-            self.v_symbol_dictionaries, self.reaction_names, global_params
+            self.v_symbols, self.reaction_names, global_params
         )  # this is required,
 
         solution = diffrax.diffeqsolve(
-            diffrax.ODETerm(self.func),
-            diffrax.Kvaerno5(),
+            terms=diffrax.ODETerm(self.func),
+            solver=self.solver,
             t0=ts[0],
             t1=ts[-1],
-            dt0=1e-11,
+            dt0=self.dt0,
             y0=y0,
             args=(global_params, local_params, self.time_dict),
-            stepsize_controller=diffrax.PIDController(rtol=self.rtol, atol=self.atol, pcoeff=0.4, icoeff=0.3, dcoeff=0),
+            stepsize_controller=self.stepsize_controller,
             saveat=diffrax.SaveAt(ts=ts),
             max_steps=self.max_steps,
         )
