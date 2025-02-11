@@ -1,13 +1,17 @@
+import logging
+
 import diffrax
 import numpy as np
 import jax.numpy as jnp
 import jax
 from jaxkineticmodel.load_sbml.sbml_load import construct_param_point_dictionary, separate_params
 from jaxkineticmodel.load_sbml.sbml_load import time_dependency_symbols
+from jaxkineticmodel.utils import get_logger
 
 
 jax.config.update("jax_enable_x64", True)
 
+logger = get_logger(__name__)
 
 class JaxKineticModel:
     def __init__(
@@ -20,7 +24,7 @@ class JaxKineticModel:
         compartment_values,
     ):  # params,
         """Initialize given the following arguments:
-        v: the flux functions given as lambidified jax functions,
+        v: the flux functions given as lambdified jax functions,
         S: a stoichiometric matrix. For now only support dense matrices, but later perhaps add for sparse
         params: kinetic parameters
         flux_point_dict: a dictionary for each vi that tells what the
@@ -98,15 +102,27 @@ class NeuralODE:
         self.time_dict = jax.jit(wrap_time_symbols)
 
     def _change_solver(self,solver,**kwargs):
-        """To change the ODE solver object to any solver class from diffrax"""
+        """To change the ODE solver object to any solver class from diffrax
+
+        Does not support multiterm objects yet."""
+
         if isinstance(solver,diffrax.AbstractAdaptiveSolver):
+            # for what i recall, only the adaptive part is important to ensure
+            #it can be loaded properly
             self.solver=solver
-            step_size_control_parameters={'rtol':self.rtol, 'atol':self.atol,"pcoeff":0.4,"icoeff":0.3,"dcoeff":0}
+            step_size_control_parameters={'rtol':self.rtol, 'atol':self.atol,
+                                          "pcoeff":0.4,"icoeff":0.3,"dcoeff":0}
             for key in kwargs:
                 if key in step_size_control_parameters:
                     step_size_control_parameters[key] = kwargs[key]
             self.stepsize_controller=diffrax.PIDController(**step_size_control_parameters)
-        return "solver added"
+        elif not isinstance(solver,diffrax.AbstractAdaptiveSolver):
+            self.solver=solver
+            self.stepsize_controller=diffrax.ConstantStepSize()
+        else:
+            logger.error(f"solver {type(solver)} not support yet")
+
+        return logger.info(f"solver changed to {type(solver)}")
 
 
 

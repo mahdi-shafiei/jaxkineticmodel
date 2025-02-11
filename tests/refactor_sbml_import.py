@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import time
 import jax
 import os
+import equinox
 import sys
 import roadrunner
 import tellurium as te
@@ -20,8 +21,8 @@ print(os.getcwd())
 
 
 
-model_name="dano1"
-filepath = (f"models/sbml_models/discrepancies/{model_name}.xml")
+model_name="Becker_Science2010"
+filepath = (f"models/sbml_models/working_models/{model_name}.xml")
 ##
 
 # # load model from file_path
@@ -29,7 +30,8 @@ model = SBMLModel(filepath)
 S=model._get_stoichiometric_matrix()
 
 JaxKmodel = model.get_kinetic_model()
-JaxKmodel._change_solver(solver=diffrax.ImplicitEuler(),acoeff=0.2,rtol=1e-3,atol=1e-6)
+JaxKmodel._change_solver(solver=diffrax.Kvaerno3())
+
 
 ts = jnp.linspace(0,10,200)
 
@@ -40,7 +42,9 @@ ts = jnp.linspace(0,10,200)
 #
 #
 #
-JaxKmodel=jax.jit(JaxKmodel)
+
+JaxKmodel=equinox.filter_jit(JaxKmodel)
+
 ys = JaxKmodel(ts=ts,
             y0=model.y0,
             params=model.parameters)
@@ -48,14 +52,14 @@ ys=pd.DataFrame(ys,columns=S.index)
 plt.plot(ts,ys)
 plt.title("jaxkmodel")
 plt.show()
-
 #
-# start=time.time()
-for i in range(1000):
-    print(i)
-    ys = JaxKmodel(ts=ts,
-                y0=model.y0,
-                params=model.parameters)
+# #
+# # # start=time.time()
+# for i in range(100):
+#     print(i)
+#     ys = JaxKmodel(ts=ts,
+#                 y0=model.y0,
+#                 params=model.parameters)
 # # end=time.time()
 # # jaxkmodel_timing=end-start
 # # print(jaxkmodel_timing)

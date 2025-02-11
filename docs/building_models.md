@@ -103,9 +103,19 @@ For non-constant boundary conditions, you can use the `BoundaryCondition` class 
 
 <span style="font-size: 0.8em;"><b>Figure 3:</b> ODE simulation with \\(m1=0+5+0.3*sin(t)\\).</span>
 
+## Changing the numerical solver
+
+The default solver is `diffrax.kvaerno5`, but diffrax offers many other numerical solvers that might be more
+efficient for your purposes. Solvers can therefore be changed as follows.
+
+```python
+{!code/building_models.py!lines=129-131}
+```
 
 ## Building custom models
 When building kinetic models, it is not uncommon that \\(\frac{dm(t)}{dt}\\) is not fully based on the evaluation of \\(S\cdot v(t)\\). For these cases, one can still use the kinetic mechanisms described above but with a manual setup of the ODEs. We have provided a custom implementation of glycolysis in [Custom models](glycolysis.md) as an example.
+
+
 
 ## Saving models
 Coming up

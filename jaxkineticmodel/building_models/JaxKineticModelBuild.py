@@ -167,7 +167,6 @@ class JaxKineticModel_Build:
 
         return dY
 
-
 class NeuralODEBuild:
     def __init__(self, func):
         self.func = func
@@ -178,22 +177,47 @@ class NeuralODEBuild:
         self.Stoichiometry = func.S
         self.boundary_conditions = func.boundary_conditions
 
-        self.max_steps = 200000
-        self.rtol = 1e-8
-        self.atol = 1e-11
+        self.max_steps = 300000
+        self.rtol = 1e-7
+        self.atol = 1e-10
+        self.dt0=1e-11
+        self.solver=diffrax.Kvaerno5()
+        self.stepsize_controller=diffrax.PIDController(rtol=self.rtol, atol=self.atol,pcoeff=0.4, icoeff=0.3, dcoeff=0)
 
-        ## time dependencies: a function that return for all fluxes whether there is a time dependency
+
+
+    def _change_solver(self,solver,**kwargs):
+        """To change the ODE solver object to any solver class from diffrax
+        Does not support multiterm objects yet."""
+
+        if isinstance(solver,diffrax.AbstractAdaptiveSolver):
+            # for what i recall, only the adaptive part is important to ensure
+            #it can be loaded properly
+            self.solver=solver
+            step_size_control_parameters={'rtol':self.rtol, 'atol':self.atol,
+                                          "pcoeff":0.4,"icoeff":0.3,"dcoeff":0}
+            for key in kwargs:
+                if key in step_size_control_parameters:
+                    step_size_control_parameters[key] = kwargs[key]
+            self.stepsize_controller=diffrax.PIDController(**step_size_control_parameters)
+        elif not isinstance(solver,diffrax.AbstractAdaptiveSolver):
+            self.solver=solver
+            self.stepsize_controller=diffrax.ConstantStepSize()
+        else:
+            logger.error(f"solver {type(solver)} not support yet")
+
+        return logger.info(f"solver changed to {type(solver)}")
 
     def __call__(self, ts, y0, params):
         solution = diffrax.diffeqsolve(
-            diffrax.ODETerm(self.func),
-            diffrax.Kvaerno5(),
+            terms=diffrax.ODETerm(self.func),
+            solver=diffrax.Kvaerno5(),
             t0=ts[0],
             t1=ts[-1],
-            dt0=1e-8,
+            dt0=self.dt0,
             y0=y0,
             args=(params, self.boundary_conditions),
-            stepsize_controller=diffrax.PIDController(rtol=self.rtol, atol=self.atol, pcoeff=0.4, icoeff=0.3, dcoeff=0),
+            stepsize_controller=self.stepsize_controller,
             saveat=diffrax.SaveAt(ts=ts),
             max_steps=self.max_steps,
         )

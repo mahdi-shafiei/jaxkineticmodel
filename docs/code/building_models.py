@@ -1,9 +1,11 @@
+import diffrax
+
 from jaxkineticmodel.kinetic_mechanisms import JaxKineticMechanisms as jm
 from jaxkineticmodel.building_models import JaxKineticModelBuild as jkm
 
 import jax.numpy as jnp
 import jax
-
+import equinox
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -58,7 +60,7 @@ y0=jnp.array([2,0,0,0])
 params=dict(zip(kmodel.parameter_names,jnp.array([1,1,1,1,1.5,1])))
 
 #jit the kmodel object. This results in a slow initial solve, but a c-compiled solve
-kmodel_sim=jax.jit(kmodel_sim)
+kmodel_sim=equinox.filter_jit(kmodel_sim)
 ys=kmodel_sim(ts,y0,params)
 ys=pd.DataFrame(ys,columns=kmodel.species_names)
 
@@ -124,3 +126,6 @@ ax.set_xlabel("Time (in seconds)")
 ax.set_ylabel("Concentration (in mM)")
 ax.legend()
 plt.show()
+
+kmodel_sim=jkm.NeuralODEBuild(kmodel)
+kmodel_sim._change_solver(solver=diffrax.Kvaerno3(),rtol=1e-8,atol=1e-8,icoeff=0.1)
