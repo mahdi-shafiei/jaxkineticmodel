@@ -1,3 +1,4 @@
+
 from typing import Union
 
 import sympy as sp
@@ -26,13 +27,14 @@ class SBMLModel:
         self.reaction_names = list(self.S.columns)
         self.species_names = list(self.S.index)
 
+        self.parameters = self._get_parameters()
+        self.initial_assignments=self._get_initial_assignments()
         self.y0 = self._get_initial_conditions()
-        self.y0 = overwrite_init_conditions_with_init_assignments(self.model, self.y0).values()
-        self.y0 = jnp.array(list(self.y0))
 
 
+        self.y0,self.parameters=self._update_with_initial_assignments()
+        self.y0 = jnp.array(list(self.y0.values()))
         self.compartments, self.species_compartment_values = self._get_compartments()
-        self.parameters=self._get_parameters()
 
         self.v, self.v_symbols = self._get_fluxes()
         self.met_point_dict = self._construct_flux_pointer_dictionary()
@@ -62,6 +64,36 @@ class SBMLModel:
         logger.info(f" number of event rules: {model.getNumEvents()}")
 
         return model
+
+    def _update_with_initial_assignments(self):
+        """Update parameters and species with initial assignments."""
+
+        #As far as I am aware, only parameters and species can be updated through initial assignments"""
+        parameters=self.parameters
+        y0=self.y0
+        for key,value in self.initial_assignments.items():
+            if key in self.parameters.keys():
+                value=value.subs(self.parameters) #substitutes parameters
+                value = value.subs(self.parameters)  # substitutes parameters
+                parameters[key]=float(value) #force it to be a float
+            elif key in self.y0.keys():
+                value=value.subs(self.parameters)
+                value=value.subs(self.y0)
+                y0[key] = float(value)  # force it to be a float
+            else:
+                logger.warning("initial assignment rule not implemented in jaxkineticmodel, model simulation might be wrong")
+        return y0, parameters
+
+
+    def _get_initial_assignments(self):
+        "retrieve all rules that are defined outside of species and parameters, we then use these rules to update y0 and parameters"
+        libsbml_converter = LibSBMLConverter()
+        initial_assignments = {}
+        for assignment in self.model.getListOfInitialAssignments():
+            expression = assignment.getMath()
+            expression = libsbml_converter.libsbml2sympy(expression)
+            initial_assignments[assignment.id] = expression
+        return initial_assignments
 
     def _get_compartments(self):
         """retrieves compartments and the compartment values of species. The latter is necessary for proper scaling
@@ -129,8 +161,13 @@ class SBMLModel:
                 elif not specimen.getBoundaryCondition() and specimen.getConstant():
                     continue  # not a boundary, but still a constant
                 elif not specimen.getBoundaryCondition() and not specimen.getConstant():
-                    initial_concentration_dict[specimen.id] = specimen.initial_concentration
+                    if specimen.isSetInitialConcentration():
 
+                        initial_concentration_dict[specimen.id] = specimen.initial_concentration
+                    elif specimen.isSetInitialAmount():
+                        initial_concentration_dict[specimen.id] = specimen.initial_amount
+                    else:
+                        logger.error(f"specimen {specimen.id} has no initial amount or concentration set")
             else:
                 logger.warn(f"{specimen.id} constant/boundary attribute not set. Assume that boundary is constant")
                 continue
@@ -494,22 +531,6 @@ def replace_piecewise(formula):
     return formula
 
 
-def get_assignment_rules_dictionary(model):
-    """Get rules that assign to variables. I did not lambdify here"""
-    assignment_dict = {}
-    for rule in model.rules:
-        id = rule.getId()
-        math = rule.getMath()
-        leaf_nodes = []
-        string_math = replace_piecewise(libsbml.formulaToL3String(math))
-
-        math_nodes = get_leaf_nodes(math, leaf_nodes=leaf_nodes)
-        sp_symbols = {node: sp.Symbol(node) for node in math_nodes}
-        expr = sp.sympify(string_math, locals=sp_symbols)
-
-        assignment_dict[id] = expr
-
-    return assignment_dict
 
 
 def separate_params(params):
@@ -543,37 +564,22 @@ def time_dependency_symbols(v_symbol_dictionaries, t):
 #   return time_dependencies
 
 
-def get_initial_assignments(model, global_parameters, assignment_rules, y0):
-    """Some sbml assign values through the list of initial assignments. This should be used
-    to overwrite y0 where necessary. This can be done outside the model structure"""
 
-    initial_assignments = {}
-    for init_assign in model.getListOfInitialAssignments():
-        if init_assign.id in y0.keys():
-            math = init_assign.getMath()
-            math_string = replace_piecewise(libsbml.formulaToL3String(math))
-            sympy_expr = sp.sympify(math_string, locals={**assignment_rules, **global_parameters})
-            # sympy_expr=sympy_expr.subs(global_parameters)
-            if type(sympy_expr) is not float:
-                sympy_expr = sympy_expr.subs(global_parameters)
-                sympy_expr = sympy_expr.subs(y0)
-                sympy_expr = np.float64(sympy_expr)
-            initial_assignments[init_assign.id] = sympy_expr
-    return initial_assignments
+def get_assignment_rules_dictionary(model):
+    """Get rules that assign to variables. I did not lambdify here"""
+    libsbml_converter = LibSBMLConverter()
+    assignment_dict = {}
+    for rule in model.rules:
+        id = rule.getId()
+        expr = rule.getMath()
+        expr=libsbml_converter.libsbml2sympy(expr)
 
 
-def overwrite_init_conditions_with_init_assignments(model, y0):
-    """y0 values are initialized in sbml, but some models also define initial assignments
-    These should be leading and be passed to y0"""
-    assignment_rules = get_assignment_rules_dictionary(model)
-    global_params = get_global_parameters(model)
-    initial_assignments = get_initial_assignments(model, global_params, assignment_rules, y0)
+        assignment_dict[id] = expr
 
-    # initial_assignments=get_initial_assignments(model,params)
-    for key in initial_assignments.keys():
-        if key in y0.keys():
-            y0[key] = initial_assignments[key]
-    return y0
+    return assignment_dict
+
+
 
 
 def get_events_dictionary(model):

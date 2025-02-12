@@ -38,6 +38,7 @@ MAPPINGS = [
     Mapping(sympy.Mul, libsbml.AST_TIMES, None),
     Mapping(None, libsbml.AST_DIVIDE, 2), #new
     Mapping(None, libsbml.AST_FUNCTION, None),#new
+    Mapping(None, libsbml.AST_FUNCTION_DELAY,2), #new
     Mapping(None, libsbml.AST_MINUS, None), #new
     Mapping(None, libsbml.AST_REAL_E, 0), #new
     Mapping(None, libsbml.AST_FUNCTION_PIECEWISE, None),
@@ -50,11 +51,17 @@ MAPPINGS = [
     Mapping(sympy.Gt, libsbml.AST_RELATIONAL_GT, 2),
     Mapping(sympy.Ge, libsbml.AST_RELATIONAL_GEQ, 2),
     Mapping(sympy.Eq, libsbml.AST_RELATIONAL_EQ, 2),
-    # Mapping(sympy.Max,ASTNodeType.FUNCTION_MAX,2), #new
+
+    Mapping(sympy.And,libsbml.AST_LOGICAL_AND, None),
+    Mapping(sympy.Or,libsbml.AST_LOGICAL_OR, None),
+    Mapping(sympy.Xor,libsbml.AST_LOGICAL_XOR, None),
+
     Mapping(sympy.Ne, libsbml.AST_RELATIONAL_NEQ, 2),
     Mapping(sympy.sin, libsbml.AST_FUNCTION_SIN, 1),
     Mapping(sympy.cos, libsbml.AST_FUNCTION_COS, 1), #new
     Mapping(sympy.ln,libsbml.AST_FUNCTION_LN,1), #new
+    Mapping(sympy.Min, libsbml.AST_FUNCTION_MIN, None),
+    Mapping(sympy.Max, libsbml.AST_FUNCTION_MAX, None),  # new
     Mapping(sympy.S.true, libsbml.AST_CONSTANT_TRUE, 0),
     Mapping(sympy.S.false, libsbml.AST_CONSTANT_FALSE, 0),
     Mapping(sympy.Symbol, None, 0),
@@ -65,6 +72,8 @@ MAPPINGS = [
     Mapping(None, libsbml.AST_NAME_TIME, 0),
     Mapping(None, libsbml.AST_INTEGER, 0),
     Mapping(None, libsbml.AST_REAL, 0),
+    Mapping(None, libsbml.AST_RATIONAL, 0),
+    Mapping(None,libsbml.AST_NAME_AVOGADRO, 0),
 ]
 
 AST_NODE_TYPE_NAMES = {
@@ -270,8 +279,9 @@ class LibSBMLConverter(Converter):
 
 
     def convert_libsbml_FUNCTION(self, node, children) -> sympy.Basic:
+        """some functions have no children, deal with this later """
         assert node.getType() == libsbml.AST_FUNCTION
-        assert len(children) >= 1
+
         function_name = node.getName()  # Get function name (e.g., 'f', 'g', etc.)
         if not function_name:
             raise ValueError("FUNCTION node has no associated name")
@@ -283,7 +293,27 @@ class LibSBMLConverter(Converter):
         """Mapping to sp lambda.
         The argument order matters in lambda functions and needs to be retrieved properly """
         assert node.getType() == libsbml.AST_LAMBDA
-        assert len(children)>=1
+        assert len(children) >= 1
         lambda_function=sympy.Lambda(tuple(children[:-1]),children[-1]) #last child is the expression
         return lambda_function
+
+    def convert_libsbml_RATIONAL(self,node,children)-> sympy.Basic:
+        """Convert rational to sympy float. Mapping directly to sympy.float didnt work."""
+        assert node.getType() == libsbml.AST_RATIONAL
+        assert len(children) == 0
+        return sympy.Float(node.getValue())
+
+    def convert_libsbml_NAME_AVOGADRO(self,node,children)-> sympy.Basic:
+        assert node.getType() == libsbml.AST_NAME_AVOGADRO
+        return sympy.Float(node.getValue())
+
+    def convert_libsbml_FUNCTION_DELAY(self,node,children)-> sympy.Basic:
+        assert node.getType() == libsbml.AST_FUNCTION_DELAY
+        assert len(children)==2
+        expression= children[0] - children[1]
+        return expression
+
+
+
+
 
