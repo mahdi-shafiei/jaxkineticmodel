@@ -15,8 +15,9 @@ logger.disabled = True
 
 file_path="/home/plent/Documenten/Gitlab/sbml-test-suite/cases/semantic"
 
-n_models=200
-sbml_level="l2v1.xml"
+n_models=500
+
+sbml_level="l3v2.xml"
 
 
 def parse_file(filename):
@@ -42,11 +43,13 @@ def parse_file(filename):
 
     return data
 
+
+
 sbml_test_models=os.listdir(file_path)[0:n_models]
 #[0:n_models]
 print("number of considered test-suite models",len(sbml_test_models))
-
 timeseries_models=[]
+
 
 for sbml_model in sbml_test_models:
     if os.path.isdir(os.path.join(file_path,sbml_model)):
@@ -146,11 +149,12 @@ for sbml_model in timeseries_models:
 
 
 
-
+l2v2_counter_jax['total']=np.sum(list(l2v2_counter_jax.values()))
+l2v2_counter_libroadrunner['total']=np.sum(list(l2v2_counter_libroadrunner.values()))
 tests=pd.DataFrame({'jax_tests':l2v2_counter_jax,'libroad_runner_tests':l2v2_counter_libroadrunner}).T
 date=datetime.datetime.today()
 
-tests.to_csv(f"results/sbml_suite_tests/level_{sbml_level}_ntests_{sbml_counter}_date_{date.day}_{date.month}_{date.year}.csv")
+tests.to_csv(f"results/sbml_test_suite/level_{sbml_level}_ntests_{sbml_counter}_date_{date.day}_{date.month}_{date.year}.csv")
 
 
 

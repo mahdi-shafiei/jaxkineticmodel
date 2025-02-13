@@ -81,7 +81,8 @@ class SBMLModel:
                 value=value.subs(self.y0)
                 y0[key] = float(value)  # force it to be a float
             else:
-                logger.warning("initial assignment rule not implemented in jaxkineticmodel, model simulation might be wrong")
+                logger.warning(f"initial assignment rule not in species or parameters. Assignment for"
+                               "{key} is ignored and simulation might be wrong")
         return y0, parameters
 
 

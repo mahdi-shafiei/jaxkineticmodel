@@ -1,3 +1,5 @@
+import inspect
+
 import jax
 import optax
 from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
@@ -6,9 +8,8 @@ import logging
 from jaxkineticmodel.building_models import JaxKineticModelBuild as jkm
 import numpy as np
 import jax.numpy as jnp
+import equinox
 import pandas as pd
-import inspect
-import types
 
 jax.config.update("jax_enable_x64", True)
 logger = logging.getLogger(__name__)
@@ -25,37 +26,69 @@ class Trainer:
                  learning_rate=1e-3,
                  loss_threshold=1e-4,
                  optimizer=None,
+                 optim_space="log",
                  clip=4,
                  ):
+
 
         if isinstance(model, SBMLModel):
             self.model = jax.jit(model.get_kinetic_model())
             self.parameters = list(model.parameters.keys())
-
-        if isinstance(model, jkm.NeuralODEBuild):
+        elif isinstance(model, jkm.NeuralODEBuild):
             logger.info("NeuralODEbuild object is not tested yet")
             self.parameters = model.parameter_names
             self.model = jax.jit(model)
+        else:
+            logger.error(f"{model} is not a JaxKineticModel class")
 
         self.ts = jnp.array(list(data.index))
         self.lr = learning_rate
-
+        self.optim_space=optim_space
 
         if optimizer is None:
             self.optimizer = self._add_optimizer(clip=clip)
-
         elif isinstance(optimizer, optax.GradientTransformation):
             self.optimizer = optimizer
         else:
             logger.error(f"optimizer args {optimizer} is not an optax.GradientTransformation object.")
 
+        # creates an update rule based on whether log space or
+        if optim_space == "log":
+            self.update_rule=self._update_log
+            self.loss_func=self._create_loss_func(log_mean_centered_loss_func)
+        elif optim_space == "linear":
+            print('linear')
+            self.update_rule=self._update
+            self.loss_func=self._create_loss_func(loss_func)
+
+
+
         self.loss_threshold = loss_threshold
         self.n_iter = n_iter
 
-        self.log_loss_func = jax.jit(create_log_params_means_centered_loss_func(self.model))
+
 
         self.dataset = data
         self.parameter_sets = None
+
+    def _create_loss_func(self,loss_func,**kwargs):
+        """Function that helps to implement custom loss functions.
+        It will be up to the user to ensure proper usage for log or linspace optimization"""
+        model = self.model
+        if not callable(loss_func):
+            logger.error("loss_func is not callable")
+
+        arguments=inspect.signature(loss_func).parameters
+        required_args={'params','ts','ys'}
+        if required_args.issubset(arguments.keys()):
+            def wrapped_loss(params,ts,ys):
+                return loss_func(params,ts,ys,model,**kwargs)
+        else:
+            logger.error(f"required arguments {required_args} are not in loss_function")
+
+        self.loss_func =wrapped_loss
+        return wrapped_loss
+
 
     def _generate_bounds(self, parameters_base: dict, lower_bound: float, upper_bound: float):
         """Generates bounds given an estimate of the parameters
@@ -113,15 +146,31 @@ class Trainer:
 
         log_params = log_transform_parameters(params)
 
-        loss = self.log_loss_func(log_params, ts, ys)
-
-        grads = jax.grad(self.log_loss_func, 0)(log_params, ts, ys)  # loss w.r.t. parameters
+        loss = self.loss_func(log_params, ts, ys)
+        grads = jax.grad(self.loss_func, 0)(log_params, ts, ys)  # loss w.r.t. parameters
         updates, opt_state = self.optimizer.update(grads, opt_state)
 
         # we perform updates in log space, but only return params in lin space
         log_params = optax.apply_updates(log_params, updates)
         lin_params = exponentiate_parameters(log_params)
         return opt_state, lin_params, loss, grads
+
+    def _update(self, opt_state, params, ts, ys):
+        """Update rule for the gradients for log-transformed parameters. Can only be applied
+        to non-negative parameters"""
+        print(params)
+        loss = self.loss_func(params, ts, ys)
+        print(loss)
+        grads = jax.grad(self.loss_func, 0)(params, ts, ys)  # loss w.r.t. parameters
+        updates, opt_state = self.optimizer.update(grads, opt_state)
+
+        # we perform updates in log space, but only return params in lin space
+        params = optax.apply_updates(params, updates)
+
+        return opt_state, params, loss, grads
+
+
+
 
     def train(self):
         """Train model given the initializations"""
@@ -138,7 +187,7 @@ class Trainer:
             gradient_norms = []
             try:
                 for step in range(self.n_iter):  # loop over number of iterations
-                    opt_state, params_init, loss, grads = self._update_log(
+                    opt_state, params_init, loss, grads = self.update_rule(
                         opt_state, params_init, self.ts, jnp.array(self.dataset)
                     )
 
@@ -181,46 +230,51 @@ def exponentiate_parameters(params):
     return params_dict
 
 
-def create_loss_func(model):
-    def loss_func(params, ts, ys):
-        mask = ~jnp.isnan(jnp.array(ys))
-        ys = jnp.atleast_2d(ys)
-        y0 = ys[0, :]
-        y_pred = model(ts, y0, params)
-        ys = jnp.where(mask, ys, 0)
-        y_pred = jnp.where(mask, y_pred, 0)
-        # print(ys,y_pred)
-        non_nan_count = jnp.sum(mask)
+@equinox.filter_jit
+def log_mean_centered_loss_func(params, ts, ys,model):
+    """A log mean centered loss function. Typically works well on systems biology models
+    due to their exponential parameter distributions"""
+    params = exponentiate_parameters(params)
+    mask = ~jnp.isnan(jnp.array(ys))
+    ys = jnp.atleast_2d(ys)
+    y0 = ys[0, :]
+    y_pred = model(ts, y0, params)
+    ys = jnp.where(mask, ys, 0)
 
-        loss = jnp.sum((y_pred - ys) ** 2) / non_nan_count
-        return loss
+    ys += 1
+    y_pred += 1
+    scale = jnp.mean(ys, axis=0)
 
-    return loss_func
+    ys /= scale
+    y_pred /= scale
+
+    y_pred = jnp.where(mask, y_pred, 0)
+    non_nan_count = jnp.sum(mask)
+
+    loss = jnp.sum((y_pred - ys) ** 2) / non_nan_count
+    return loss
+
+@equinox.filter_jit
+def loss_func(params, ts, ys,model):
+    """A typical mean squared error loss function"""
+    mask = ~jnp.isnan(jnp.array(ys))
+    ys = jnp.atleast_2d(ys)
+    y0 = ys[0, :]
+    y_pred = model(ts, y0, params)
+    ys = jnp.where(mask, ys, 0)
+    y_pred = jnp.where(mask, y_pred, 0)
+    # print(ys,y_pred)
+    non_nan_count = jnp.sum(mask)
+
+    loss = jnp.sum((y_pred - ys) ** 2) / non_nan_count
+    return loss
 
 
-def create_log_params_loss_func(model):
-    """Loss function for log transformed parameters"""
-
-    def loss_func(params, ts, ys):
-        params = exponentiate_parameters(params)
-        mask = ~jnp.isnan(jnp.array(ys))
-        ys = jnp.atleast_2d(ys)
-        y0 = ys[0, :]
-        y_pred = model(ts, y0, params)
-        ys = jnp.where(mask, ys, 0)
-        y_pred = jnp.where(mask, y_pred, 0)
-        # print(ys,y_pred)
-        non_nan_count = jnp.sum(mask)
-
-        loss = jnp.sum((y_pred - ys) ** 2) / non_nan_count
-        return loss
-
-    return loss_func
 
 
+@equinox.filter_jit
 def create_log_params_log_loss_func(model):
     """Loss function for log transformed parameters"""
-
     def loss_func(params, ts, ys):
         params = exponentiate_parameters(params)
         mask = ~jnp.isnan(jnp.array(ys))
@@ -241,12 +295,12 @@ def create_log_params_log_loss_func(model):
 
     return loss_func
 
-
+@equinox.filter_jit
 def create_log_params_means_centered_loss_func(model):
     """Loss function for log transformed parameters.
     We do a simple input scaling using the mean per state variable (we add 1 everywhere to prevent division by zero)"""
 
-    def loss_func(params, ts, ys):
+    def log_mean_centered_loss_func(params, ts, ys):
         params = exponentiate_parameters(params)
         mask = ~jnp.isnan(jnp.array(ys))
         ys = jnp.atleast_2d(ys)
@@ -262,15 +316,14 @@ def create_log_params_means_centered_loss_func(model):
         y_pred /= scale
 
         y_pred = jnp.where(mask, y_pred, 0)
-        # print(ys,y_pred)
         non_nan_count = jnp.sum(mask)
 
         loss = jnp.sum((y_pred - ys) ** 2) / non_nan_count
         return loss
 
-    return loss_func
+    return log_mean_centered_loss_func
 
-
+@equinox.filter_jit
 def create_log_params_means_centered_loss_func2(model, to_include: list):
     """Loss function for log transformed parameters.
     We do a simple input scaling using the mean per state variable (we add 1 everywhere to prevent division by zero).
@@ -292,48 +345,13 @@ def create_log_params_means_centered_loss_func2(model, to_include: list):
         y_pred /= scale
 
         y_pred = jnp.where(mask, y_pred, 0)
-
         ys = ys[:, to_include]
         y_pred = y_pred[:, to_include]
-        # print(ys,y_pred)
         non_nan_count = jnp.sum(mask)
-
         loss = jnp.sum((y_pred - ys) ** 2) / non_nan_count
         return loss
-
     return loss_func
 
-@jax.jit
-def create_update_rule(optimizer, loss_func):
-    def update(opt_state, params, ts, ys):
-        """Update rule for the gradients for parameters"""
-        loss = loss_func(params, ts, ys)
-        grads = jax.jit(jax.grad(loss_func, 0))(params, ts, ys)  # loss w.r.t. parameters
-        updates, opt_state = optimizer.update(grads, opt_state)
-        params = optax.apply_updates(params, updates)
-        return opt_state, params, loss, grads
-
-    return update
-
-
-@jax.jit
-def create_log_update_rule(optimizer, log_loss_func):
-    def update_log(opt_state, params, ts, ys):
-        """Update rule for the gradients for log-transformed parameters. Can only be applied
-        to non-negative parameters"""
-        log_params = log_transform_parameters(params)
-
-        loss = log_loss_func(log_params, ts, ys)
-
-        grads = jax.jit(jax.grad(log_loss_func, 0))(log_params, ts, ys)  # loss w.r.t. parameters
-        updates, opt_state = optimizer.update(grads, opt_state)
-
-        # we perform updates in log space, but only return params in lin space
-        log_params = optax.apply_updates(log_params, updates)
-        lin_params = exponentiate_parameters(log_params)
-        return opt_state, lin_params, loss, grads
-
-    return update_log
 
 
 def global_norm(grads):

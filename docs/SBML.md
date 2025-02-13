@@ -9,18 +9,40 @@ SBML models can be loaded and simulated as follows.
 ```
 
 
-## Percentage of similar models
-Status report on a large collection of SBML models loaded from [biomodels](https://www.ebi.ac.uk/biomodels/) and from a benchmark collection **[1]**. Discrepancies are models where we compared the output from JaxKineticModel to a simulation using tellurium **[2]**, a popular tool in systems biology. Discrepancies could be there because of numerical differences in the results, or potentially a missing feature in our current implementation (certain event rules are not implemented yet.)
+## SBML test-suite passed tests
+While `jaxkineticmodel` is compatible with SBML, not all .xml files are compatible/possible to simulate. This depends on the 
+SBML model level and version that it was written. We here report a comparison in number of passed models with a comparison
+to libroadrunner using the [sbml-test-suite](https://github.com/sbmlteam/sbml-test-suite/tree/release). 
+Libroadrunner is a high-performance simulation engine for systems biology. We compare the simulations to the gold-standard
+dataset that is provided in the sbml-test-suite. We selected 500 models from the test-suite and filtered out steady state models.
 
-| **Category**             | **Number of working models**                         
-|----------------------------------|-------------------------------------------------
-|Models working | 31|
-| Failing models | 2|
-| Discrepancies | 5 |
+Discrepancies are models where we compared the output from JaxKineticModel to the ground-truth data and observed
+differnces between the time-series. Overall,
+libroadrunner simulates more than jaxkineticmodel due to some event rules not yet being implemented. In the future 
+we hope to address all these edge-cases.
+
+| Test Name            | Similar Simulation | Failed Simulation | Discrepancies | Total |
+|----------------------|--------------------|-------------------|---------------|-------|
+| jaxkineticmodel (l2v1) | 162                | 75                | 52            | 289   |
+| libroadrunner (l2v1) | 182                | 62                | 45            | 289   |
+| jaxkineticmodel (l2v2) | 188                | 99                | 56            | 343   |
+| libroadrunner (l2v2) | 219                | 68                | 56            | 343   |
+| jaxkineticmodel (l2v3) | 189                | 98                | 56            | 343   |
+| libroadrunner (l2v3) | 220                | 68                | 55            | 343   |
+| jaxkineticmodel (l2v4) | 191                | 103               | 56            | 133   |
+| libroadrunner (l2v4) | 219                | 73                | 58            | 133   |
+| jaxkineticmodel (l3v1) | 173                | 206               | 62            | 441   |
+| libroadrunner (l3v1) | 197                | 141               | 103           | 441   |
+| jaxkineticmodel (l3v2) | 171                | 230               | 59            | 460   |
+| libroadrunner (l3v2) | 197                | 160               | 103           | 460   |
+
+
+
+
 
 
 
 ## References
 [1] Hass, H., Loos, C., Raimundez-Alvarez, E., Timmer, J., Hasenauer, J., & Kreutz, C. (2019). Benchmark problems for dynamic modeling of intracellular processes. Bioinformatics, 35(17), 3073-3082.
 
-[2] Choi, K., Medley, J. K., König, M., Stocking, K., Smith, L., Gu, S., & Sauro, H. M. (2018). Tellurium: an extensible python-based modeling environment for systems and synthetic biology. Biosystems, 171, 74-79.
+[2]Somogyi, E. T., Bouteiller, J. M., Glazier, J. A., König, M., Medley, J. K., Swat, M. H., & Sauro, H. M. (2015). libRoadRunner: a high performance SBML simulation and analysis library. Bioinformatics, 31(20), 3315-3321.
