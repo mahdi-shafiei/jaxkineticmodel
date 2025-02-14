@@ -71,6 +71,7 @@ MAPPINGS = [
     Mapping(sympy.Symbol, None, 0),
     Mapping(sympy.Integer, None, 0),
     Mapping(sympy.Float, None, 0),
+    Mapping(sympy.Rational, None, 0),
     Mapping(None, libsbml.AST_NAME, 0),
     Mapping(None, libsbml.AST_NAME_TIME, 0),
     Mapping(None, libsbml.AST_INTEGER, 0),
@@ -164,6 +165,12 @@ class SympyConverter(Converter):
         else:
             result.setType(libsbml.AST_REAL)
             result.setValue(value)
+        return result
+
+    def convert_sympy_Rational(self, number, result) -> libsbml.ASTNode:
+        assert isinstance(number, sympy.Rational) and len(number.args) == 0
+        result.setType(libsbml.AST_RATIONAL)
+        result.setValue(number.p, number.q)
         return result
 
     def convert_sympy_NaN(self, nan, result) -> libsbml.ASTNode:
@@ -330,7 +337,7 @@ class LibSBMLConverter(Converter):
         """Convert rational to sympy float. Mapping directly to sympy.float didnt work."""
         assert node.getType() == libsbml.AST_RATIONAL
         assert len(children) == 0
-        return sympy.Float(node.getValue())
+        return sympy.Rational(node.getNumerator(), node.getDenominator())
 
     def convert_libsbml_NAME_AVOGADRO(self,node,children)-> sympy.Basic:
         assert node.getType() == libsbml.AST_NAME_AVOGADRO
