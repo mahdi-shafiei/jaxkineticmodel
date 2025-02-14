@@ -1,11 +1,12 @@
 from dataclasses import dataclass
 from logging import Logger
 from typing import Optional
+from jaxkineticmodel.utils import get_logger
 
 import libsbml
 import sympy
-from sympy.physics.units import avogadro_number
 
+logger = get_logger(__name__)
 
 LIBSBML_TIME_NAME = "time"
 
@@ -106,14 +107,18 @@ class SympyConverter(Converter):
         mp.sympy_op: mp for mp in MAPPINGS
     }
 
+    avogadro_number: float = libsbml.ASTNode(libsbml.AST_NAME_AVOGADRO).getValue()
     avogadro_lb: Optional[float] = None
     avogadro_ub: Optional[float] = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.precision:
-            self.avogadro_lb = avogadro_number.scale_factor * (1 - self.precision)
-            self.avogadro_ub = avogadro_number.scale_factor * (1 + self.precision)
+            # The SBML standard (Level 3 Version 2, section 3.4.6) stipulates that the value of Avogadro's constant is
+            # taken to be equivalent to the value one officially determined in 2006.  However, the current official
+            # value (also in sympy.physics.units) is very slightly lower.  This deals with this tiny variation.
+            self.avogadro_lb = self.avogadro_number * (1 - self.precision)
+            self.avogadro_ub = self.avogadro_number * (1 + self.precision)
 
     def sympy2libsbml(self, expression: sympy.Basic) -> libsbml.ASTNode:
         result = libsbml.ASTNode()
@@ -151,6 +156,8 @@ class SympyConverter(Converter):
         assert isinstance(number, sympy.Integer) and len(number.args) == 0
         value = int(number)
         if self.precision and self.avogadro_lb < value < self.avogadro_ub:
+            if value != self.avogadro_number:
+                logger.warning("Assumed approximation of Avogadro's number")
             result.setType(libsbml.AST_NAME_AVOGADRO)
         else:
             result.setType(libsbml.AST_INTEGER)
@@ -161,6 +168,8 @@ class SympyConverter(Converter):
         assert isinstance(number, sympy.Float) and len(number.args) == 0
         value = float(number)
         if self.precision and self.avogadro_lb < value < self.avogadro_ub:
+            if value != self.avogadro_number:
+                logger.warning("Assumed approximation of Avogadro's number")
             result.setType(libsbml.AST_NAME_AVOGADRO)
         else:
             result.setType(libsbml.AST_REAL)
@@ -341,7 +350,7 @@ class LibSBMLConverter(Converter):
 
     def convert_libsbml_NAME_AVOGADRO(self,node,children)-> sympy.Basic:
         assert node.getType() == libsbml.AST_NAME_AVOGADRO
-        return avogadro_number.scale_factor
+        return sympy.Float(node.getValue())
 
     def convert_libsbml_FUNCTION_DELAY(self,node,children)-> sympy.Basic:
         assert node.getType() == libsbml.AST_FUNCTION_DELAY
