@@ -4,6 +4,7 @@ from typing import Optional
 
 import libsbml
 import sympy
+from sympy.physics.units import avogadro_number
 
 
 LIBSBML_TIME_NAME = "time"
@@ -59,21 +60,23 @@ MAPPINGS = [
     Mapping(sympy.Ne, libsbml.AST_RELATIONAL_NEQ, 2),
     Mapping(sympy.sin, libsbml.AST_FUNCTION_SIN, 1),
     Mapping(sympy.cos, libsbml.AST_FUNCTION_COS, 1), #new
-    Mapping(sympy.ln,libsbml.AST_FUNCTION_LN,1), #new
+    Mapping(sympy.ln, libsbml.AST_FUNCTION_LN,1), #new
     Mapping(sympy.Min, libsbml.AST_FUNCTION_MIN, None),
     Mapping(sympy.Max, libsbml.AST_FUNCTION_MAX, None),  # new
-    Mapping(sympy.S.true, libsbml.AST_CONSTANT_TRUE, 0),
-    Mapping(sympy.S.false, libsbml.AST_CONSTANT_FALSE, 0),
+    Mapping(sympy.logic.boolalg.BooleanTrue, libsbml.AST_CONSTANT_TRUE, 0),
+    Mapping(sympy.logic.boolalg.BooleanFalse, libsbml.AST_CONSTANT_FALSE, 0),
+    Mapping(sympy.core.numbers.Exp1, libsbml.AST_CONSTANT_E, 0),
+    Mapping(sympy.core.numbers.Pi, libsbml.AST_CONSTANT_PI, 0),
+    Mapping(sympy.core.numbers.NaN, None, 0),
     Mapping(sympy.Symbol, None, 0),
     Mapping(sympy.Integer, None, 0),
     Mapping(sympy.Float, None, 0),
-    Mapping(sympy.S.NaN, None, 0),
     Mapping(None, libsbml.AST_NAME, 0),
     Mapping(None, libsbml.AST_NAME_TIME, 0),
     Mapping(None, libsbml.AST_INTEGER, 0),
     Mapping(None, libsbml.AST_REAL, 0),
     Mapping(None, libsbml.AST_RATIONAL, 0),
-    Mapping(None,libsbml.AST_NAME_AVOGADRO, 0),
+    Mapping(None, libsbml.AST_NAME_AVOGADRO, 0),
 ]
 
 AST_NODE_TYPE_NAMES = {
@@ -83,15 +86,33 @@ AST_NODE_TYPE_NAMES = {
 
 class Converter:
     time_variable_name: str
+    precision: Optional[float]
 
-    def __init__(self, time_variable_name='t'):
+    def __init__(self, time_variable_name='t', precision=1e-6):
+        """
+        Create a converter.
+        :param time_variable_name: the name of the time variable in sympy. Defaults to 't'.
+        :param precision: the desired precision for recognising constants
+        such as Avogadro's number.  Defaults to 1e-6.  Set to None to
+        disable recognising constants.
+        """
         self.time_variable_name = time_variable_name
+        self.precision = precision
 
 
 class SympyConverter(Converter):
     SYMPY2LIBSBML: dict[type[sympy.Basic], Mapping] = {
         mp.sympy_op: mp for mp in MAPPINGS
     }
+
+    avogadro_lb: Optional[float] = None
+    avogadro_ub: Optional[float] = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.precision:
+            self.avogadro_lb = avogadro_number.scale_factor * (1 - self.precision)
+            self.avogadro_ub = avogadro_number.scale_factor * (1 + self.precision)
 
     def sympy2libsbml(self, expression: sympy.Basic) -> libsbml.ASTNode:
         result = libsbml.ASTNode()
@@ -127,14 +148,22 @@ class SympyConverter(Converter):
 
     def convert_sympy_Integer(self, number, result) -> libsbml.ASTNode:
         assert isinstance(number, sympy.Integer) and len(number.args) == 0
-        result.setType(libsbml.AST_INTEGER)
-        result.setValue(int(number))
+        value = int(number)
+        if self.precision and self.avogadro_lb < value < self.avogadro_ub:
+            result.setType(libsbml.AST_NAME_AVOGADRO)
+        else:
+            result.setType(libsbml.AST_INTEGER)
+            result.setValue(value)
         return result
 
     def convert_sympy_Float(self, number, result) -> libsbml.ASTNode:
         assert isinstance(number, sympy.Float) and len(number.args) == 0
-        result.setType(libsbml.AST_REAL)
-        result.setValue(float(number))
+        value = float(number)
+        if self.precision and self.avogadro_lb < value < self.avogadro_ub:
+            result.setType(libsbml.AST_NAME_AVOGADRO)
+        else:
+            result.setType(libsbml.AST_REAL)
+            result.setValue(value)
         return result
 
     def convert_sympy_NaN(self, nan, result) -> libsbml.ASTNode:
@@ -305,7 +334,7 @@ class LibSBMLConverter(Converter):
 
     def convert_libsbml_NAME_AVOGADRO(self,node,children)-> sympy.Basic:
         assert node.getType() == libsbml.AST_NAME_AVOGADRO
-        return sympy.Float(node.getValue())
+        return avogadro_number.scale_factor
 
     def convert_libsbml_FUNCTION_DELAY(self,node,children)-> sympy.Basic:
         assert node.getType() == libsbml.AST_FUNCTION_DELAY
