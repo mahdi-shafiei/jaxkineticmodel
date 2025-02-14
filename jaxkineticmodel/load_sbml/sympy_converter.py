@@ -155,7 +155,7 @@ class SympyConverter(Converter):
     def convert_sympy_Integer(self, number, result) -> libsbml.ASTNode:
         assert isinstance(number, sympy.Integer) and len(number.args) == 0
         value = int(number)
-        if self.precision and self.avogadro_lb < value < self.avogadro_ub:
+        if self.precision and self.avogadro_lb <= value <= self.avogadro_ub:
             if value != self.avogadro_number:
                 logger.warning("Assumed approximation of Avogadro's number")
             result.setType(libsbml.AST_NAME_AVOGADRO)
@@ -167,7 +167,7 @@ class SympyConverter(Converter):
     def convert_sympy_Float(self, number, result) -> libsbml.ASTNode:
         assert isinstance(number, sympy.Float) and len(number.args) == 0
         value = float(number)
-        if self.precision and self.avogadro_lb < value < self.avogadro_ub:
+        if self.precision and self.avogadro_lb <= value <= self.avogadro_ub:
             if value != self.avogadro_number:
                 logger.warning("Assumed approximation of Avogadro's number")
             result.setType(libsbml.AST_NAME_AVOGADRO)
