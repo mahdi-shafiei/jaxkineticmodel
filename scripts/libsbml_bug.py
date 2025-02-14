@@ -1,5 +1,12 @@
+# type_of_bug = "NONE"
+# type_of_bug = "ONLY_MEMORY_LEAK"
+type_of_bug = "BOTH"
+
+if type_of_bug == "ONLY_MEMORY_LEAK":
+    import libcombine
 import libsbml
-import tellurium
+if type_of_bug == "BOTH":
+    import libcombine
 
 plus_minus = {libsbml.AST_PLUS, libsbml.AST_MINUS}
 
