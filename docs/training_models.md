@@ -46,7 +46,7 @@ one can continue the optimization by re-running the `trainer` object with the se
 <span style="font-size: 0.8em;"><b>Figure 2:</b> Loss per iteration for five initializations, extended with 500 rounds of
 gradient descent.</span>
 
-## Trainer object configurability
+## Trainer configurability
 ### Optimization in logarithmic or linear space
 Optimization in logarithmic space has shown to work well for systems biology models[2] and is implemented as the default. 
 To change to using gradient descent in a linear parameter space, you can restart the `Trainer` object. 
@@ -78,7 +78,8 @@ NOTE: the use of custom loss function can depend on whether you perform your opt
 you want to perform a custom loss function in log-space, you need to exponentiate your parameters within 
 the loss function.
 
-
+### Future configuration options
+We aim to further add configurability of the adjoint option from Diffrax.  
 
 
 

@@ -10,7 +10,7 @@ import os
 # Suddenly this jaxkineticmodel.utils doesnt load anymore without adding path directly. Make an init file?
 import sys
 
-sys.path.append("/home/plent/Documenten/Gitlab/NeuralODEs/symplectic_adjoint/")
+
 
 from jaxkineticmodel.utils import get_logger
 

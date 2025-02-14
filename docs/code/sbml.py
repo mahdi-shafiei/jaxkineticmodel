@@ -1,5 +1,7 @@
-from jaxkineticmodel.load_sbml.sbml_load import *
+
 from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
+import jax.numpy as jnp
+import pandas as pd
 
 filepath = ("../../models/sbml_models/working_models/simple_sbml.xml")
 

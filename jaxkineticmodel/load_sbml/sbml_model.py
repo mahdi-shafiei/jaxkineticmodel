@@ -1,4 +1,3 @@
-
 from typing import Union
 
 import sympy as sp
@@ -28,16 +27,19 @@ class SBMLModel:
         self.species_names = list(self.S.index)
 
         self.parameters = self._get_parameters()
-        self.initial_assignments=self._get_initial_assignments()
+        self.initial_assignments = self._get_initial_assignments()
         self.y0 = self._get_initial_conditions()
 
-
-        self.y0,self.parameters=self._update_with_initial_assignments()
+        self.y0, self.parameters = self._update_with_initial_assignments()
         self.y0 = jnp.array(list(self.y0.values()))
         self.compartments, self.species_compartment_values = self._get_compartments()
 
         self.v, self.v_symbols = self._get_fluxes()
         self.met_point_dict = self._construct_flux_pointer_dictionary()
+
+        #
+
+
 
     @staticmethod
     def _load_model(file_path):
@@ -69,22 +71,21 @@ class SBMLModel:
         """Update parameters and species with initial assignments."""
 
         #As far as I am aware, only parameters and species can be updated through initial assignments"""
-        parameters=self.parameters
-        y0=self.y0
-        for key,value in self.initial_assignments.items():
+        parameters = self.parameters
+        y0 = self.y0
+        for key, value in self.initial_assignments.items():
             if key in self.parameters.keys():
-                value=value.subs(self.parameters) #substitutes parameters
+                value = value.subs(self.parameters)  #substitutes parameters
                 value = value.subs(self.parameters)  # substitutes parameters
-                parameters[key]=float(value) #force it to be a float
+                parameters[key] = float(value)  #force it to be a float
             elif key in self.y0.keys():
-                value=value.subs(self.parameters)
-                value=value.subs(self.y0)
+                value = value.subs(self.parameters)
+                value = value.subs(self.y0)
                 y0[key] = float(value)  # force it to be a float
             else:
                 logger.warning(f"initial assignment rule not in species or parameters. Assignment for"
                                "{key} is ignored and simulation might be wrong")
         return y0, parameters
-
 
     def _get_initial_assignments(self):
         "retrieve all rules that are defined outside of species and parameters, we then use these rules to update y0 and parameters"
@@ -104,7 +105,7 @@ class SBMLModel:
         compartments = {cmp.id: cmp.size for cmp in compartments}
         compartment_list = self._get_compartments_initial_conditions(compartments)
 
-        return compartments,compartment_list
+        return compartments, compartment_list
 
     def _get_stoichiometric_matrix(self):
         """Retrieves the stoichiometric matrix from the model."""
@@ -178,7 +179,7 @@ class SBMLModel:
     def _get_parameters(self):
         """Retrieves the parameters from the SBML model. Both local (with a identifier lp.{reaction.id}.) and global."""
 
-        parameters={}
+        parameters = {}
         #retrieve global parameters
         global_params = self.model.getListOfParameters()
         global_parameters = {param.id: param.value for param in global_params}
@@ -187,7 +188,8 @@ class SBMLModel:
         #retrieve local parameters
         for reaction in self.model.reactions:
             r = reaction.getKineticLaw()
-            local_parameters = {"lp."+str(reaction.id)+"."+param.id: param.value for param in r.getListOfParameters()}
+            local_parameters = {"lp." + str(reaction.id) + "." + param.id: param.value for param in
+                                r.getListOfParameters()}
             parameters.update(local_parameters)
         return parameters
 
@@ -219,9 +221,9 @@ class SBMLModel:
 
         libsbml_converter = LibSBMLConverter()
         species_ic = self._get_initial_conditions()
-        constant_boundaries=get_constant_boundary_species(self.model)
-        lambda_functions=get_lambda_function_dictionary(self.model)
-        assignments_rules=get_assignment_rules_dictionary(self.model)
+        constant_boundaries = get_constant_boundary_species(self.model)
+        lambda_functions = get_lambda_function_dictionary(self.model)
+        assignments_rules = get_assignment_rules_dictionary(self.model)
         event_rules = get_events_dictionary(self.model)
 
         v = {}
@@ -229,33 +231,30 @@ class SBMLModel:
 
         for reaction in self.model.reactions:
 
-            astnode_reaction=reaction.getKineticLaw().math
-            equation=libsbml_converter.libsbml2sympy(astnode_reaction) #sympy type
+            astnode_reaction = reaction.getKineticLaw().math
+            equation = libsbml_converter.libsbml2sympy(astnode_reaction)  #sympy type
 
             # arguments from the lambda expression are mapped to their respective symbols.
             for func in equation.atoms(sp.Function):
                 if hasattr(func, 'name'):
-                    variables=lambda_functions[func.name].variables
+                    variables = lambda_functions[func.name].variables
                     variable_substitution = dict(zip(variables, func.args))
-                    expression=lambda_functions[func.name].expr
-                    expression=expression.subs(variable_substitution)
-                    equation=equation.subs({func:expression})
+                    expression = lambda_functions[func.name].expr
+                    expression = expression.subs(variable_substitution)
+                    equation = equation.subs({func: expression})
+
+            equation = equation.subs(self.compartments)
+            equation = equation.subs(assignments_rules)
+            equation = equation.subs(constant_boundaries)
+
+            free_symbols = list(equation.free_symbols)
+
+            equation = sp.lambdify(free_symbols, equation, "jax")
+
+            filtered_dict = dict(zip([str(i) for i in free_symbols], free_symbols))
 
 
-
-            equation=equation.subs(self.compartments)
-            equation=equation.subs(assignments_rules)
-            equation=equation.subs(constant_boundaries)
-
-
-            free_symbols=list(equation.free_symbols)
-
-            equation=sp.lambdify(free_symbols, equation,"jax")
-
-            filtered_dict=dict(zip([str(i) for i in free_symbols],free_symbols))
-
-            # v[reaction.id] = vi  # the jitted equation
-            v[reaction.id]=equation
+            v[reaction.id] = equation
             v_symbol_dict[reaction.id] = filtered_dict
 
         return v, v_symbol_dict
@@ -289,8 +288,7 @@ def get_lambda_function_dictionary(model):
     for function in model.function_definitions:
         id = function.getId()
         math = function.getMath()
-        equation=libsbml_converter.libsbml2sympy(math)
-
+        equation = libsbml_converter.libsbml2sympy(math)
 
         functional_dict[id] = equation
     return functional_dict
@@ -475,65 +473,6 @@ def get_leaf_nodes(node, leaf_nodes):
     return leaf_nodes
 
 
-
-
-def replace_piecewise(formula):
-    """Replace libsbml piecewise with sympy piecewise."""
-    # Code taken from: https://github.com/matthiaskoenig/sbmlsim/blob/develop/src/sbmlsim/combine/mathml.py
-    # FIXME This approach is not robust (or very Pythonic). Rewrite with
-    #  regular expressions, or by iterating through the AST.
-    while True:
-        index = formula.find("piecewise(")
-        if index == -1:
-            break
-
-        # process piecewise
-        search_idx = index + 9
-
-        # init counters
-        bracket_open = 0
-        pieces = []
-        piece_chars = []
-
-        while search_idx < len(formula):
-            c = formula[search_idx]
-            if c == ",":
-                if bracket_open == 1:
-                    pieces.append("".join(piece_chars).strip())
-                    piece_chars = []
-            else:
-                if c == "(":
-                    if bracket_open != 0:
-                        piece_chars.append(c)
-                    bracket_open += 1
-                elif c == ")":
-                    if bracket_open != 1:
-                        piece_chars.append(c)
-                    bracket_open -= 1
-                else:
-                    piece_chars.append(c)
-
-            if bracket_open == 0:
-                pieces.append("".join(piece_chars).strip())
-                break
-
-            # next character
-            search_idx += 1
-
-        # find end index
-        if (len(pieces) % 2) == 1:
-            pieces.append("True")  # last condition is True
-        sympy_pieces = []
-        for k in range(0, int(len(pieces) / 2)):
-            sympy_pieces.append(f"({pieces[2*k]}, {pieces[2*k+1]})")
-        new_str = f"Piecewise({','.join(sympy_pieces)})"
-        formula = formula.replace(formula[index : search_idx + 1], new_str)
-
-    return formula
-
-
-
-
 def separate_params(params):
     global_params = {}
     local_params = collections.defaultdict(dict)
@@ -565,7 +504,6 @@ def time_dependency_symbols(v_symbol_dictionaries, t):
 #   return time_dependencies
 
 
-
 def get_assignment_rules_dictionary(model):
     """Get rules that assign to variables. I did not lambdify here"""
     libsbml_converter = LibSBMLConverter()
@@ -573,14 +511,11 @@ def get_assignment_rules_dictionary(model):
     for rule in model.rules:
         id = rule.getId()
         expr = rule.getMath()
-        expr=libsbml_converter.libsbml2sympy(expr)
-
+        expr = libsbml_converter.libsbml2sympy(expr)
 
         assignment_dict[id] = expr
 
     return assignment_dict
-
-
 
 
 def get_events_dictionary(model):

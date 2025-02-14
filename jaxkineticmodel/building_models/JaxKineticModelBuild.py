@@ -204,7 +204,7 @@ class NeuralODEBuild:
             self.solver=solver
             self.stepsize_controller=diffrax.ConstantStepSize()
         else:
-            logger.error(f"solver {type(solver)} not support yet")
+            logger.error(f"solver {type(solver)} not supported yet")
 
         return logger.info(f"solver changed to {type(solver)}")
 

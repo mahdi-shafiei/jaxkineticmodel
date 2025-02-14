@@ -43,16 +43,20 @@ MAPPINGS = [
     Mapping(None, libsbml.AST_FUNCTION_DELAY,2), #new
     Mapping(None, libsbml.AST_MINUS, None), #new
     Mapping(None, libsbml.AST_REAL_E, 0), #new
+    Mapping(sympy.exp,libsbml.AST_FUNCTION_EXP,1),
     Mapping(None, libsbml.AST_FUNCTION_PIECEWISE, None),
+    Mapping(sympy.root, libsbml.AST_FUNCTION_ROOT, 2),
     Mapping(None, libsbml.AST_LAMBDA, None), #new
     Mapping(sympy.Piecewise, None, None),
     Mapping(sympy.Pow, libsbml.AST_POWER, 2),
     Mapping(sympy.Pow, libsbml.AST_FUNCTION_POWER, 2), #new
+    Mapping(sympy.log,libsbml.AST_FUNCTION_LOG, None),
     Mapping(sympy.Lt, libsbml.AST_RELATIONAL_LT, 2),
     Mapping(sympy.Le, libsbml.AST_RELATIONAL_LEQ, 2),
     Mapping(sympy.Gt, libsbml.AST_RELATIONAL_GT, 2),
     Mapping(sympy.Ge, libsbml.AST_RELATIONAL_GEQ, 2),
     Mapping(sympy.Eq, libsbml.AST_RELATIONAL_EQ, 2),
+
 
     Mapping(sympy.And,libsbml.AST_LOGICAL_AND, None),
     Mapping(sympy.Or,libsbml.AST_LOGICAL_OR, None),
@@ -79,6 +83,7 @@ MAPPINGS = [
     Mapping(None, libsbml.AST_REAL, 0),
     Mapping(None, libsbml.AST_RATIONAL, 0),
     Mapping(None, libsbml.AST_NAME_AVOGADRO, 0),
+
 ]
 
 AST_NODE_TYPE_NAMES = {
@@ -311,7 +316,7 @@ class LibSBMLConverter(Converter):
             a, b = children
             return sympy.Add(a, -b)
         else:
-            raise Logger.error(f"ERROR: Unexpected number of children for MINUS: {len(children)}")
+            raise logger.error(f"ERROR: Unexpected number of children for MINUS: {len(children)}")
 
     def convert_libsbml_REAL_E(self, node, children) -> sympy.Basic:
         assert node.getType() == libsbml.AST_REAL_E

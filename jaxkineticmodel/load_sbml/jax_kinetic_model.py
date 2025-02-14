@@ -7,7 +7,7 @@ import jax
 from jaxkineticmodel.load_sbml.sbml_load import construct_param_point_dictionary, separate_params
 from jaxkineticmodel.load_sbml.sbml_load import time_dependency_symbols
 from jaxkineticmodel.utils import get_logger
-
+import inspect
 
 jax.config.update("jax_enable_x64", True)
 
@@ -41,13 +41,11 @@ class JaxKineticModel:
 
     def __call__(self, t, y, args):
         """I explicitly add params to call for gradient calculations. Find out whether this is actually necessary"""
-        params, local_params, time_dict = args
+        params, local_params = args
 
-        # evaluate the time dictionary values at time t (for event functions e.g.)
-        time_dict = time_dict(t)
 
         # function evaluates the flux vi given y, parameter, local parameters, time dictionary
-        def apply_func(i, y, flux_point_dict, local_params, time_dict):
+        def apply_func(i, y, flux_point_dict, local_params):
             if len(flux_point_dict) != 0:
                 y = y[flux_point_dict]
                 species = self.species_names[flux_point_dict]
@@ -57,13 +55,16 @@ class JaxKineticModel:
 
             parameters = params[i]
 
-            eval_dict = {**y, **parameters, **local_params, **time_dict}
+
+            eval_dict = {**y, **parameters, **local_params}
+            eval_dict['t']=t
+            eval_dict={i:eval_dict[i] for i in self.func[i].__code__.co_varnames}
             vi = self.func[i](**eval_dict)
             return vi
 
         # Vectorize the application of the functions
         v = jnp.stack(
-            [apply_func(i, y, self.flux_point_dict[i], local_params[i], time_dict[i]) for i in self.reaction_names]
+            [apply_func(i, y, self.flux_point_dict[i], local_params[i]) for i in self.reaction_names]
         )  # perhaps there is a way to vectorize this in a better way
         dY = jnp.matmul(self.stoichiometry, v)  # dMdt=S*v(t)
         dY /= self.compartment_values
@@ -94,16 +95,10 @@ class NeuralODE:
         self.solver=diffrax.Kvaerno5()
         self.stepsize_controller=diffrax.PIDController(rtol=self.rtol, atol=self.atol,pcoeff=0.4, icoeff=0.3, dcoeff=0)
 
-        def wrap_time_symbols(t):
-            time_dependencies = time_dependency_symbols(v_symbols, t)
-            return time_dependencies
 
-        ## time dependencies: a function that return for all fluxes whether there is a time dependency
-        self.time_dict = jax.jit(wrap_time_symbols)
 
     def _change_solver(self,solver,**kwargs):
         """To change the ODE solver object to any solver class from diffrax
-
         Does not support multiterm objects yet."""
 
         if isinstance(solver,diffrax.AbstractAdaptiveSolver):
@@ -141,7 +136,7 @@ class NeuralODE:
             t1=ts[-1],
             dt0=self.dt0,
             y0=y0,
-            args=(global_params, local_params, self.time_dict),
+            args=(global_params, local_params),
             stepsize_controller=self.stepsize_controller,
             saveat=diffrax.SaveAt(ts=ts),
             max_steps=self.max_steps,

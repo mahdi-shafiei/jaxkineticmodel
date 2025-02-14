@@ -9,7 +9,7 @@ from jaxkineticmodel.parameter_estimation.initialize_parameters import *
 from jaxkineticmodel.parameter_estimation.training import *
 import time
 import argparse
-from jaxkineticmodel.parameter_estimation.jacobian import *
+
 
 jax.config.update("jax_enable_x64", True)
 
