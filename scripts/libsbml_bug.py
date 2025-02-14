@@ -1,6 +1,7 @@
 # type_of_bug = "NONE"
 # type_of_bug = "ONLY_MEMORY_LEAK"
 type_of_bug = "BOTH"
+workaround = False
 
 if type_of_bug == "ONLY_MEMORY_LEAK":
     import libcombine
@@ -11,9 +12,11 @@ if type_of_bug == "BOTH":
 plus_minus = {libsbml.AST_PLUS, libsbml.AST_MINUS}
 
 m = libsbml.parseL3Formula('42')
-t = m.getType()  # This yields a memory leak message
+if workaround:
+    m = libsbml.ASTNode(m)
+t = m.getType()  # This yields the memory leak message
 try:
-    if t in plus_minus:  # This yields a TypeError
+    if t in plus_minus:  # This yields the TypeError
         pass
 except TypeError as e:
     print(e)
