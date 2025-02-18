@@ -1,7 +1,6 @@
 from typing import Union
 
 import sympy as sp
-import jax
 import libsbml
 import jax.numpy as jnp
 import numpy as np
@@ -37,10 +36,15 @@ class SBMLModel:
         # and species_compartment_values
         self.species_compartments, self.compartments, self.species_compartment_values = self._get_compartments()
 
-        self.v, self.v_symbols = self._get_fluxes()
-        self.met_point_dict = self._construct_flux_pointer_dictionary()
+        self.v = self._get_fluxes()
 
-        #
+        #defined after running compile
+        self.constant_boundaries = {}
+        self.lambda_functions = {}
+        self.assignments_rules = {}
+        self.event_rules = {}
+        self.v_symbols = {}
+        self.met_point_dict = {}
 
     @staticmethod
     def _load_model(file_path):
@@ -74,6 +78,7 @@ class SBMLModel:
         #As far as I am aware, only parameters and species can be updated through initial assignments"""
         parameters = self.parameters
         y0 = self.y0
+
         for key, value in self.initial_assignments.items():
             if key in self.parameters.keys():
                 value = value.subs(self.parameters)  #substitutes parameters
@@ -219,48 +224,53 @@ class SBMLModel:
         return species_compartments, compartment_list
 
     def _get_fluxes(self):
-        """Retrieves flux functions from the SBML model for simulation,
-        It already replaces some values that are constant."""
-
+        """Retrieves flux functions from the SBML model and converts to sympy expressions"""
         libsbml_converter = LibSBMLConverter()
-        species_ic = self._get_initial_conditions()
-        constant_boundaries = get_constant_boundary_species(self.model)
-        lambda_functions = get_lambda_function_dictionary(self.model)
-        assignments_rules = get_assignment_rules_dictionary(self.model)
-        event_rules = get_events_dictionary(self.model)
-
         v = {}
-        v_symbol_dict = {}  # all symbols that are used in the equation.
         for reaction in self.model.reactions:
-
             astnode_reaction = reaction.getKineticLaw().math
             equation = libsbml_converter.libsbml2sympy(astnode_reaction)  #sympy type
+            v[reaction.id] = equation
+            # v_symbol_dict[reaction.id] = filtered_dict
+        return v
 
-            # arguments from the lambda expression are mapped to their respective symbols.
+    def compile(self):
+        """Compiles the sympy expressions from _get_fluxes. Substitutes
+        assignment rules, boundary conditions,lambda functions, compartments, etc..."""
+
+        # species_ic = self._get_initial_conditions()
+        self.constant_boundaries = get_constant_boundary_species(self.model)
+        self.lambda_functions = get_lambda_function_dictionary(self.model)
+        self.assignments_rules = get_assignment_rules_dictionary(self.model)
+        self.event_rules = get_events_dictionary(self.model) #at some point add this.
+
+        # arguments from the lambda expression are mapped to their respective symbols.
+        for reaction_name, equation in self.v.items():
             for func in equation.atoms(sp.Function):
                 if hasattr(func, 'name'):
-                    variables = lambda_functions[func.name].variables
+                    variables = self.lambda_functions[func.name].variables
                     variable_substitution = dict(zip(variables, func.args))
-                    expression = lambda_functions[func.name].expr
+                    expression = self.lambda_functions[func.name].expr
                     expression = expression.subs(variable_substitution)
                     equation = equation.subs({func: expression})
-
-
             equation = equation.subs(self.compartments)
-            equation = equation.subs(assignments_rules)
-            equation = equation.subs(constant_boundaries)
+            equation = equation.subs(self.assignments_rules)
+            equation = equation.subs(self.constant_boundaries)
 
             free_symbols = list(equation.free_symbols)
-
             equation = sp.lambdify(free_symbols, equation, "jax")
-
             filtered_dict = dict(zip([str(i) for i in free_symbols], free_symbols))
 
+            #maps back the filled in equations, lambdified.
+            self.v[reaction_name] = equation
 
-            v[reaction.id] = equation
-            v_symbol_dict[reaction.id] = filtered_dict
+            # all symbols that should be mapped to the equation
+            self.v_symbols[reaction_name] = filtered_dict
 
-        return v, v_symbol_dict
+        # for each flux, metabolites are retrieved and mapped to the respective values in y0
+        self.met_point_dict=self._construct_flux_pointer_dictionary()
+
+        return print("compilation complete")
 
     def _construct_flux_pointer_dictionary(self):
         """In jax, the values that are used need to be pointed directly in y0."""
@@ -370,58 +380,6 @@ def get_reaction_symbols_dict(eval_dict):
     while the rest is simply substituted in the expression."""
     symbol_dict = {i: sp.Symbol(i) for i in eval_dict.keys() if not callable(eval_dict[i])}  # skip functions symbols
     return symbol_dict
-
-
-# we want the output to be a list v, which contains jitted function
-def sympify_lambidify_and_jit_equation(equation, nested_local_dict):
-    """Sympifies, lambdifies, and then jits a string rate law
-    equation: the string rate law equation
-    nested_local_dict: a dictionary having dictionaries of
-      global parameters,local parameters, compartments, and boundary conditions
-
-      #returns
-      the jitted equation
-      a filtered dictionary. This will be used to construct the flux_pointer_dictionary.
-
-    """
-    # unpacking the nested_local_dictionary, with global and local parameters symbols
-    globals = get_reaction_symbols_dict(nested_local_dict["globals"])
-    locals = get_reaction_symbols_dict(nested_local_dict["locals"])
-    species = get_reaction_symbols_dict(nested_local_dict["species"])
-    boundaries = nested_local_dict["boundary"]
-    lambda_funcs = nested_local_dict["lambda_functions"]
-
-    assignment_rules = nested_local_dict["boundary_assignments"]
-
-    compartments = nested_local_dict["compartments"]  # learnable
-    local_dict = {**species, **globals, **locals}
-
-    equation = sp.sympify(equation, locals={**local_dict, **assignment_rules, **lambda_funcs})
-
-    # these are filled in before compiling
-
-    equation = equation.subs(assignment_rules)
-    equation = equation.subs(compartments)
-    equation = equation.subs(boundaries)
-    equation = equation.subs({"pi": sp.pi})
-
-    # free symbols are used for lambdifying
-    free_symbols = list(equation.free_symbols)
-
-    filtered_dict = {key: value for key, value in local_dict.items() if value in free_symbols or key in locals}
-
-    # perhaps a bit hacky, but some sbml models have symbols that are
-    # predefined
-    for symbol in free_symbols:
-        if str(symbol) == "time":
-            logger.info("time")
-            filtered_dict["time"] = sp.Symbol("time")
-
-    equation = sp.lambdify((filtered_dict.values()), equation, "jax")
-    equation = jax.jit(equation)
-
-    return equation, filtered_dict
-
 
 def species_match_to_S(initial_conditions, species_names):
     """Small helper function ensures that y0 is properly matched to rows of S
