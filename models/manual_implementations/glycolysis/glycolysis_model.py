@@ -223,8 +223,8 @@ print("n_parameters", len(params))
 
 ##
 v_GLT = Jax_Facilitated_Diffusion(
-    substrate_extracellular="ECglucose",
-    product_intracellular="ICglucose",
+    substrate="ECglucose",
+    product="ICglucose",
     vmax="p_GLT_VmGLT",
     km_internal="p_GLT_KmGLTGLCi",
     km_external="p_GLT_KmGLTGLCo",
@@ -453,7 +453,7 @@ vsinkACE = Jax_MM_Sink(substrate="ICACE", v_sink="poly_sinkACE", km_sink="km_sin
 v_EtohT = Jax_Diffusion(substrate="ICETOH", enzyme="f_ETOH_e", transport_coef="p_kETOHtransport")
 
 # new
-v_ATPmito = Jax_MM_Irrev_Bi("ICADP", "ICPHOS", vmax="p_mitoVmax", km_substrate1="p_mitoADPKm", km_substrate2="p_mitoPiKm")
+v_ATPmito = Jax_MM_Irrev_Bi(substrate1="ICADP",substrate2="ICPHOS", vmax="p_mitoVmax", km_substrate1="p_mitoADPKm", km_substrate2="p_mitoPiKm")
 v_ATPase = Jax_ATPase("ICATP", "ICADP", ATPase_ratio="p_ATPase_ratio")
 v_ADK = Jax_MA_Rev_Bi(
     substrate1="ICADP", substrate2="ICADP", product1="ICATP", product2="ICAMP", k_equilibrium="p_ADK1_Keq", k_fwd="p_ADK1_k"
@@ -624,6 +624,12 @@ class glycolysis:
             +rate_ETOH_transport * self.ECbiomass * 0.002 - (y["ECETOH"] / 3600) * self.dilution_rate
         )  # ethanol production
         dECglyc = +rate_vGLycT * self.ECbiomass * 0.002 - (y["ECETOH"] / 3600) * self.dilution_rate  # glycerol
+
+        # vooraf op v: modificaties (parameter), state variable (species initial conditions) en constanten
+
+        #jnp.matmul(S,v)
+
+
 
         return jnp.stack(
             [
