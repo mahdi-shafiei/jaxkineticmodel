@@ -17,7 +17,7 @@ file_path="/home/plent/Documenten/Gitlab/sbml-test-suite/cases/semantic"
 
 n_models=500
 
-sbml_level="l3v2.xml"
+sbml_level="l2v1.xml"
 
 
 def parse_file(filename):

@@ -32,14 +32,15 @@ class SBMLModel:
 
         self.y0, self.parameters = self._update_with_initial_assignments()
         self.y0 = jnp.array(list(self.y0.values()))
-        self.compartments, self.species_compartment_values = self._get_compartments()
+
+        # species compartments are the string names, compartments is a dictionary,
+        # and species_compartment_values
+        self.species_compartments, self.compartments, self.species_compartment_values = self._get_compartments()
 
         self.v, self.v_symbols = self._get_fluxes()
         self.met_point_dict = self._construct_flux_pointer_dictionary()
 
         #
-
-
 
     @staticmethod
     def _load_model(file_path):
@@ -103,9 +104,9 @@ class SBMLModel:
 
         compartments = self.model.getListOfCompartments()
         compartments = {cmp.id: cmp.size for cmp in compartments}
-        compartment_list = self._get_compartments_initial_conditions(compartments)
+        species_compartments, compartment_list = self._get_compartments_initial_conditions(compartments)
 
-        return compartments, compartment_list
+        return species_compartments, compartments, compartment_list
 
     def _get_stoichiometric_matrix(self):
         """Retrieves the stoichiometric matrix from the model."""
@@ -194,10 +195,11 @@ class SBMLModel:
         return parameters
 
     def _get_compartments_initial_conditions(self, compartments):
-        """Returns a list of the compartment values of
+        """Returns a list of the compartment names and values of
         the initial conditions. This is necessary in the dMdt to properly scale."""
         species = self.model.getListOfSpecies()
         compartment_list = []
+        species_compartments = []
 
         for specimen in species:
             if specimen.isSetConstant() and specimen.isSetBoundaryCondition():
@@ -211,9 +213,10 @@ class SBMLModel:
                     continue  # not a boundary, but still a constant
                 elif not specimen.getBoundaryCondition() and not specimen.getConstant():
                     compartment_list.append(compartments[specimen.compartment])
+                    species_compartments.append(specimen.getCompartment())
 
         compartment_list = jnp.array(compartment_list)
-        return compartment_list
+        return species_compartments, compartment_list
 
     def _get_fluxes(self):
         """Retrieves flux functions from the SBML model for simulation,
@@ -228,7 +231,6 @@ class SBMLModel:
 
         v = {}
         v_symbol_dict = {}  # all symbols that are used in the equation.
-
         for reaction in self.model.reactions:
 
             astnode_reaction = reaction.getKineticLaw().math
@@ -242,6 +244,7 @@ class SBMLModel:
                     expression = lambda_functions[func.name].expr
                     expression = expression.subs(variable_substitution)
                     equation = equation.subs({func: expression})
+
 
             equation = equation.subs(self.compartments)
             equation = equation.subs(assignments_rules)
@@ -276,6 +279,7 @@ class SBMLModel:
             met_point_dict=self.met_point_dict,
             v_symbols=self.v_symbols,
             compartment_values=self.species_compartment_values,
+            species_compartments=self.species_compartments
         )
 
 
@@ -508,7 +512,8 @@ def get_assignment_rules_dictionary(model):
     """Get rules that assign to variables. I did not lambdify here"""
     libsbml_converter = LibSBMLConverter()
     assignment_dict = {}
-    for rule in model.rules:
+    sorted_rules = sorted(model.rules, key=lambda r: r.getMetaId())
+    for rule in sorted_rules:
         id = rule.getId()
         expr = rule.getMath()
         expr = libsbml_converter.libsbml2sympy(expr)

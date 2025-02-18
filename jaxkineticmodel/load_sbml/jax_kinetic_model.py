@@ -1,13 +1,11 @@
-import logging
+
 
 import diffrax
 import numpy as np
 import jax.numpy as jnp
 import jax
 from jaxkineticmodel.load_sbml.sbml_load import construct_param_point_dictionary, separate_params
-from jaxkineticmodel.load_sbml.sbml_load import time_dependency_symbols
 from jaxkineticmodel.utils import get_logger
-import inspect
 
 jax.config.update("jax_enable_x64", True)
 
@@ -22,7 +20,7 @@ class JaxKineticModel:
         species_names,
         reaction_names,
         compartment_values,
-    ):  # params,
+        species_compartments):
         """Initialize given the following arguments:
         v: the flux functions given as lambdified jax functions,
         S: a stoichiometric matrix. For now only support dense matrices, but later perhaps add for sparse
@@ -38,6 +36,7 @@ class JaxKineticModel:
         self.species_names = np.array(species_names)
         self.reaction_names = np.array(reaction_names)
         self.compartment_values = jnp.array(compartment_values)
+        self.species_compartments=dict(zip(species_names, species_compartments))
 
     def __call__(self, t, y, args):
         """I explicitly add params to call for gradient calculations. Find out whether this is actually necessary"""
@@ -54,8 +53,6 @@ class JaxKineticModel:
                 y = {}
 
             parameters = params[i]
-
-
             eval_dict = {**y, **parameters, **local_params}
             eval_dict['t']=t
             eval_dict={i:eval_dict[i] for i in self.func[i].__code__.co_varnames}
@@ -81,19 +78,25 @@ class NeuralODE:
             met_point_dict,
             v_symbols,
             compartment_values,
+            species_compartments
     ):
-        self.func = JaxKineticModel(fluxes, jnp.array(stoichiometric_matrix), met_point_dict,
-                                    list(stoichiometric_matrix.index), list(stoichiometric_matrix.columns),
-                                    compartment_values)
+        self.func = JaxKineticModel(fluxes=fluxes,
+                                    stoichiometric_matrix=jnp.array(stoichiometric_matrix),
+                                    flux_point_dict=met_point_dict,
+                                    species_names=list(stoichiometric_matrix.index),
+                                    reaction_names=(stoichiometric_matrix.columns),
+                                    compartment_values=compartment_values,
+                                    species_compartments=species_compartments)
         self.reaction_names = list(stoichiometric_matrix.columns)
+        self.species_names = list(stoichiometric_matrix.index)
         self.v_symbols = v_symbols
         self.Stoichiometry = stoichiometric_matrix
         self.max_steps = 300000
         self.rtol = 1e-7
         self.atol = 1e-10
-        self.dt0=1e-11
-        self.solver=diffrax.Kvaerno5()
-        self.stepsize_controller=diffrax.PIDController(rtol=self.rtol, atol=self.atol,pcoeff=0.4, icoeff=0.3, dcoeff=0)
+        self.dt0 = 1e-11
+        self.solver = diffrax.Kvaerno5()
+        self.stepsize_controller = diffrax.PIDController(rtol=self.rtol, atol=self.atol,pcoeff=0.4, icoeff=0.3, dcoeff=0)
 
 
 
@@ -118,7 +121,6 @@ class NeuralODE:
             logger.error(f"solver {type(solver)} not support yet")
 
         return logger.info(f"solver changed to {type(solver)}")
-
 
 
     def __call__(self, ts, y0, params):

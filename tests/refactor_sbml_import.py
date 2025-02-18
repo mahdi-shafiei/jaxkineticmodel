@@ -21,30 +21,30 @@ print(os.getcwd())
 
 
 
-model_name="mosbacher2022_mixed_Hog1_phosphorylation_l2v4"
-filepath = (f"models/sbml_models/failing_models/{model_name}.xml")
+model_name="y3m1_gp"
+filepath = (f"models/sbml_models/{model_name}.xml")
 ##
 
-# # load model from file_path
+# # # load model from file_path
 model = SBMLModel(filepath)
 S=model._get_stoichiometric_matrix()
 
 
 JaxKmodel = model.get_kinetic_model()
 # JaxKmodel._change_solver(solver=diffrax.Kvaerno3())
-
-
-
-ts = jnp.linspace(0,10,200)
-
-#simulate given the initial conditions defined in the sbml
-
 #
+#
+#
+ts = jnp.linspace(0,1000,200)
+#
+# #simulate given the initial conditions defined in the sbml
 #
 # #
 # #
+# # #
+# # #
+# # #
 # #
-#
 JaxKmodel=equinox.filter_jit(JaxKmodel)
 #
 ys = JaxKmodel(ts=ts,
@@ -52,41 +52,43 @@ ys = JaxKmodel(ts=ts,
             params=model.parameters)
 
 ys=pd.DataFrame(ys,columns=S.index)
-plt.plot(ts,ys)
+for i in ys.columns:
+    plt.plot(ts,ys[i],label=i)
 plt.title("jaxkmodel")
+plt.legend()
 plt.show()
-#
+
 # print(model.parameters)
 # #
 # # #
-start=time.time()
-for i in range(100):
-    print(i)
-    ys = JaxKmodel(ts=ts,
-                y0=model.y0,
-                params=model.parameters)
-end=time.time()
-jaxkmodel_timing=end-start
+# start=time.time()
+# for i in range(100):
+#     print(i)
+#     ys = JaxKmodel(ts=ts,
+#                 y0=model.y0,
+#                 params=model.parameters)
+# end=time.time()
+# jaxkmodel_timing=end-start
 # print(jaxkmodel_timing)
 # # #
-# rr = roadrunner.RoadRunner(filepath)
-# rr.integrator.absolute_tolerance = 1e-10
-# rr.integrator.relative_tolerance = 1e-7
-# rr.integrator.initial_time_step = 1e-11
-# rr.integrator.max_steps=300000
-# rr.simulate(0,10,200)
-# #
-# rr.plot()
-# #
-# # # #%%
-# tellurium_model = te.loadSBMLModel(filepath)
-# tellurium_model.integrator.rtol = 1e-7
-# tellurium_model.integrator.atol = 1e-10
-# tellurium_model.integrator.initial_time_step = 1e-11
-# tellurium_model.integrator.max_steps = 300000
+rr = roadrunner.RoadRunner(filepath)
+rr.integrator.absolute_tolerance = 1e-10
+rr.integrator.relative_tolerance = 1e-7
+rr.integrator.initial_time_step = 1e-11
+rr.integrator.max_steps=300000
+rr.simulate(0,1000,200)
 #
-# sol_tellurium = tellurium_model.simulate(0, 10, 200)
-#
-# tellurium_model.plot()
+rr.plot()
+# # #
+# # # # #%%
+tellurium_model = te.loadSBMLModel(filepath)
+tellurium_model.integrator.rtol = 1e-7
+tellurium_model.integrator.atol = 1e-10
+tellurium_model.integrator.initial_time_step = 1e-11
+tellurium_model.integrator.max_steps = 300000
+
+sol_tellurium = tellurium_model.simulate(0, 10, 200)
+
+tellurium_model.plot()
 
 #%%

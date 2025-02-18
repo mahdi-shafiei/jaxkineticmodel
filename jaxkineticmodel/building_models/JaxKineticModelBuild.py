@@ -144,10 +144,17 @@ class JaxKineticModel_Build:
         #boundary conditions will not be evaluated in S*v(t)
         self.S = jnp.delete(self.S, index, axis=0)
 
+        # remove it from the species_compartments list.
+        # While a boundary could still lie inside/outside a compartment, from an evaluation
+        # perspective it should not matter.
+
+        self.species_compartments.pop(metabolite_name)
+
         # same here, but then for the pandas
         # (refactor this later)
         self.stoichiometric_matrix = self.stoichiometric_matrix.drop(labels=metabolite_name, axis=0)
         self.compartment_values = jnp.delete(self.compartment_values, index)
+
 
     def __call__(self, t, y, args):
         params, boundary_conditions = args

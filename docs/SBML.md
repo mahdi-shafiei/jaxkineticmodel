@@ -21,20 +21,20 @@ differnces between the time-series. Overall,
 libroadrunner simulates more than jaxkineticmodel due to some event rules not yet being implemented. In the future 
 we hope to address all these edge-cases.
 
-| Test Name            | Similar Simulation | Failed Simulation | Discrepancies | Total |
-|----------------------|--------------------|-------------------|---------------|-------|
-| jaxkineticmodel (l2v1) | 162                | 75                | 52            | 289   |
-| libroadrunner (l2v1) | 182                | 62                | 45            | 289   |
-| jaxkineticmodel (l2v2) | 188                | 99                | 56            | 343   |
-| libroadrunner (l2v2) | 219                | 68                | 56            | 343   |
-| jaxkineticmodel (l2v3) | 189                | 98                | 56            | 343   |
-| libroadrunner (l2v3) | 220                | 68                | 55            | 343   |
-| jaxkineticmodel (l2v4) | 191                | 103               | 56            | 133   |
-| libroadrunner (l2v4) | 219                | 73                | 58            | 133   |
-| jaxkineticmodel (l3v1) | 173                | 206               | 62            | 441   |
-| libroadrunner (l3v1) | 197                | 141               | 103           | 441   |
-| jaxkineticmodel (l3v2) | 171                | 230               | 59            | 460   |
-| libroadrunner (l3v2) | 197                | 160               | 103           | 460   |
+| Test Name              | Similar Simulation | Failed Simulation | Discrepancies | Total | Last run |
+|------------------------|--------------------|-------------------|---------------|-------|----------|
+| jaxkineticmodel (l2v1) | 169                | 68                | 52            | 289   | 15-02-25 |
+| libroadrunner (l2v1)   | 185                | 62                | 42            | 289   | 15-02-25 |
+| jaxkineticmodel (l2v2) | 188                | 99                | 56            | 343   | 12-02-25 |
+| libroadrunner (l2v2)   | 219                | 68                | 56            | 343   | 12-02-25 |
+| jaxkineticmodel (l2v3) | 189                | 98                | 56            | 343   | 12-02-25 |
+| libroadrunner (l2v3)   | 220                | 68                | 55            | 343   | 12-02-25 |
+| jaxkineticmodel (l2v4) | 191                | 103               | 56            | 133   | 12-02-25 |
+| libroadrunner (l2v4)   | 219                | 73                | 58            | 133   | 12-02-25 |
+| jaxkineticmodel (l3v1) | 173                | 206               | 62            | 441   | 12-02-25 |
+| libroadrunner (l3v1)   | 197                | 141               | 103           | 441   | 12-02-25 |
+| jaxkineticmodel (l3v2) | 171                | 230               | 59            | 460   | 12-02-25 |
+| libroadrunner (l3v2)   | 197                | 160               | 103           | 460   | 12-02-25 |
 
 
 
