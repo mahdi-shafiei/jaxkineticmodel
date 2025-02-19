@@ -83,7 +83,7 @@ def import_new_sbml(filepath_export: str):
     jaxkmodel = model.get_kinetic_model()
     S = model._get_stoichiometric_matrix()
     jaxkmodel = equinox.filter_jit(jaxkmodel)
-    ts = jnp.linspace(0, 5, 3000)
+    ts = jnp.linspace(0, 10, 3000)
     ys = jaxkmodel(ts=ts,
                    y0=model.y0,
                    params=model.parameters)
