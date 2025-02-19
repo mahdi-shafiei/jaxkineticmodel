@@ -522,9 +522,9 @@ def separate_params(params):
     local_params = collections.defaultdict(dict)
 
     for key in params.keys():
-        if re.match("lp.*.", key):
-            fkey = key.removeprefix("lp.")
-            list = fkey.split(".")
+        if re.match("lp_*_", key):
+            fkey = key.removeprefix("lp_")
+            list = fkey.split("_")
             value = params[key]
             newkey = list[1]
             local_params[list[0]][newkey] = value
