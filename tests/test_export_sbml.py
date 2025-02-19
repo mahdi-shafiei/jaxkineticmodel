@@ -2,8 +2,6 @@
 
 import jax.numpy as jnp
 from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
-from jaxkineticmodel.load_sbml.export_sbml import SBMLExporter
-
 from jaxkineticmodel.kinetic_mechanisms import JaxKineticMechanisms as jm
 from jaxkineticmodel.building_models import JaxKineticModelBuild as jkm
 from jaxkineticmodel.load_sbml.export_sbml import SBMLExporter
@@ -29,8 +27,6 @@ def export_sbml1(filepath: str,model_name:str,
 
 def export_sbml2(output_dir: str,model_name: str):
     """Test export of file directly from self-build jaxkineticmodel"""
-
-
     # Add reactions v1 to v3
     v1 = jkm.Reaction(
         name="v1",
@@ -81,14 +77,14 @@ def export_sbml2(output_dir: str,model_name: str):
 
 def test_export_NeuralODE():
     model_name = "Smallbone2013_SerineBiosynthesis"
-    filepath = f"../models/sbml_models/working_models/{model_name}.xml"
-    output_dir = "../models/manual_implementations/export_sbml_test"
+    filepath = f"models/sbml_models/working_models/{model_name}.xml"
+    output_dir = "models/manual_implementations/export_sbml_test"
 
     assert export_sbml1(filepath, model_name, output_dir)
 
 def test_export_sbml_NeuralODEBuild():
     model_name = "test.xml"
-    output_dir = "../models/manual_implementations/export_sbml_test"
+    output_dir = "models/manual_implementations/export_sbml_test"
     assert export_sbml2(output_dir, model_name)
 
 
