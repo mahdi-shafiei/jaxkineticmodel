@@ -21,8 +21,8 @@ print(os.getcwd())
 
 
 
-model_name="dano1"
-filepath = (f"models/sbml_models/discrepancies/{model_name}.xml")
+model_name="Garde2020"
+filepath = (f"models/sbml_models/working_models/{model_name}.xml")
 ##
 
 # # # load model from file_path
@@ -42,7 +42,7 @@ ts = jnp.linspace(0,20,200)
 
 # simulate given the initial conditions defined in the sbml
 
-JaxKmodel=equinox.filter_jit(JaxKmodel)
+JaxKmodel=jax.jit(JaxKmodel)
 # #
 ys = JaxKmodel(ts=ts,
             y0=model.y0,
@@ -58,15 +58,15 @@ plt.show()
 # print(model.parameters)
 # #
 # # #
-# start=time.time()
-# for i in range(100):
-#     print(i)
-#     ys = JaxKmodel(ts=ts,
-#                 y0=model.y0,
-#                 params=model.parameters)
-# end=time.time()
-# jaxkmodel_timing=end-start
-# print(jaxkmodel_timing)
+start=time.time()
+for i in range(500):
+    print(i)
+    ys = JaxKmodel(ts=ts,
+                y0=model.y0,
+                params=model.parameters)
+end=time.time()
+jaxkmodel_timing=end-start
+print(jaxkmodel_timing)
 # # #
 # rr = roadrunner.RoadRunner(filepath)
 # rr.integrator.absolute_tolerance = 1e-10

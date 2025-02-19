@@ -246,7 +246,7 @@ for reaction in reactions:
     check(r1, 'create reaction')
     check(r1.setId(str(reaction.name)), 'set reaction id')
     check(r1.setReversible(False), 'set reversible') #required
-    check(r1.setFast(False), 'set reversible')
+
     for (s_id, stoich) in reaction.stoichiometry.items():
         if stoich < 0:
             species_ref1 = r1.createReactant()

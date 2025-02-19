@@ -1,4 +1,4 @@
-"""Test script for the export of sbml files"""
+"""Test script for the export of sbml files and importing """
 
 import jax.numpy as jnp
 from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
@@ -19,7 +19,7 @@ model = SBMLModel(filepath)
 
 S = model._get_stoichiometric_matrix()
 
-
+print(S)
 
 JaxKmodel = model.get_kinetic_model()
 
@@ -37,7 +37,14 @@ sbml.export(initial_conditions=model.y0,
             output_file=f"{output_dir}/{model_name}.xml")
 
 
-#%%
+
+
+
+model_name="Smallbone2013_SerineBiosynthesis"
+filepath = (f"models/sbml_models/working_models/{model_name}.xml")
+output_dir="models/manual_implementations/export_sbml_test"
+
+# #%%
 from jaxkineticmodel.kinetic_mechanisms import JaxKineticMechanisms as jm
 from jaxkineticmodel.building_models import JaxKineticModelBuild as jkm
 from jaxkineticmodel.load_sbml.export_sbml import SBMLExporter

@@ -10,6 +10,7 @@ from jaxkineticmodel.load_sbml.jax_kinetic_model import NeuralODE
 from jaxkineticmodel.building_models.JaxKineticModelBuild import NeuralODEBuild, BoundaryCondition
 from jaxkineticmodel.utils import get_logger
 import sympy
+from jaxkineticmodel.load_sbml.sbml_model import separate_params
 
 jax.config.update("jax_enable_x64", True)
 
@@ -80,45 +81,53 @@ class SBMLExporter:
             # check(c1.setUnits('litre'),               'set compartment size units')
 
         # boundary conditions and species
+        boundary_species = {}
         for (s_id, s_comp) in species_compartments.items():
-            s1 = export_model.createSpecies()
-            if s_id not in boundaries.keys():
 
-                check(s1, 'create species')
-                check(s1.setId(s_id), 'set species id')
-                check(s1.setCompartment(s_comp), 'set species s1 compartment')
+            s1 = export_model.createSpecies()
+            check(s1, 'create species')
+            check(s1.setId(s_id), 'set species id')
+            check(s1.setCompartment(s_comp), 'set species s1 compartment')
+            check(s1.setHasOnlySubstanceUnits(False), 'set "hasOnlySubstanceUnits" on s1')
+
+            if s_id not in boundaries.keys():
                 check(s1.setConstant(False), 'set "constant" attribute on s1')
                 check(s1.setInitialAmount(float(initial_conditions[s_id])), 'set initial amount for s1')
                 check(s1.setSubstanceUnits('mole'), 'set substance units for s1')
                 check(s1.setBoundaryCondition(False), 'set "boundaryCondition" on s1')
-                check(s1.setHasOnlySubstanceUnits(False), 'set "hasOnlySubstanceUnits" on s1')
+
                 species_reference[s_id] = s1
             elif s_id in boundaries.keys():
+
+                check(s1.setBoundaryCondition(True), 'set "boundaryCondition" on s1')
+
                 for (species_id, condition) in boundaries.items():
                     check(s1, 'create species')
-                    check(s1.setId(species_id), 'set species id')
-                    # check(s1.setConstant(compartment), 'set "constant" attribute on s1')
+                    check(s1.setCompartment(s_comp), 'set "compartment" attribute on s1')
                     if condition.is_constant:
                         assert isinstance(condition.sympified, sympy.Number)
                         check(s1.setConstant(True), 'set "constant" attribute on s1')
                         check(s1.setInitialAmount(float(condition.sympified)), 'set "initialAmount" attribute on s1')
-
                     elif not condition.is_constant:
                         logger.info(f"boundary not constant, support not tested yet")
                         check(s1.setConstant(False), 'set "constant" attribute on s1')
                         check(s1.setInitialAmount(jnp.nan), 'set "initialAmount" attribute on s1')
-
                         math_ast = self.sympy_converter.sympy2libsbml(condition.sympified)
                         orig = self.libsbml_converter.libsbml2sympy(math_ast)
                         assert str(condition.sympified) == str(orig)
-
                         rule = export_model.createAssignmentRule()
                         check(rule.setVariable(s1.id), 'set "rule" attribute on s1')
                         check(rule.setMath(math_ast), 'set "math" attribute on s1')
+
+                    boundary_species[s_id] = s1  # need to save this for later use in reactions
             species_reference[s_id] = s1
 
+
+
         #we use an parameter dict input argument for export
-        for p_name, p_value in parameters.items():
+        global_parameters, local_parameters = separate_params(parameters)
+
+        for p_name, p_value in global_parameters.items():
             p1 = export_model.createParameter()
             check(p1.setId(str(p_name)), 'set parameter name')
             check(p1.setConstant(True), 'set parameter name')
@@ -135,7 +144,7 @@ class SBMLExporter:
                 check(r1.setId(str(reaction)), 'set reaction name')
                 check(r1.setReversible(False), 'set reversible')  # required
 
-                #to include id, stoichiometry, symbolic mechanism
+                # include species reference based on stoichiometry
                 stoichiometry = self.kmodel.Stoichiometry[reaction].to_dict()
                 for (s_id, stoich) in stoichiometry.items():
                     if stoich < 0:
@@ -151,13 +160,36 @@ class SBMLExporter:
                     check(species_ref1.setConstant(specimen.getConstant()), 'set reactant species id')
                     check(species_ref1.setStoichiometry(abs(stoich)), 'set absolute reactant/product stoichiometry')
 
-                    math_ast = self.sympy_converter.sympy2libsbml(mechanism)
-                    orig = self.libsbml_converter.libsbml2sympy(math_ast)
-                    assert str(mechanism) == str(orig)
 
-                    kinetic_law = r1.createKineticLaw()
-                    check(kinetic_law, 'create kinetic law')
-                    check(kinetic_law.setMath(math_ast), 'set math on kinetic law')
+                str_mechanism=[str(i) for i in mechanism.free_symbols]
+                for (s_id, specimen) in boundary_species.items():
+                    if str(s_id) in str_mechanism:
+                        species_ref1=r1.createModifier()
+                        check(species_ref1, 'create boundary species')
+                        check(species_ref1.setSpecies(specimen.getId()), 'set boundary species id')
+
+
+
+                #include modifiers reference based on boundary
+                 # mechanism.free_symbols
+
+
+                math_ast = self.sympy_converter.sympy2libsbml(mechanism)
+                orig = self.libsbml_converter.libsbml2sympy(math_ast)
+                assert str(mechanism) == str(orig)
+
+                kinetic_law = r1.createKineticLaw()
+                check(kinetic_law, 'create kinetic law')
+                check(kinetic_law.setMath(math_ast), 'set math on kinetic law')
+
+                for p_name, p_value in local_parameters[reaction].items():
+                    local_param=kinetic_law.createParameter()
+                    check(local_param.setId(str(p_name)), 'set parameter name')
+                    check(local_param.setValue(float(p_value)), 'set parameter name')
+
+                #local parameters (based on identifier)
+
+
 
         elif isinstance(self.kmodel, NeuralODEBuild):
             for reaction in self.kmodel.func.reactions:
