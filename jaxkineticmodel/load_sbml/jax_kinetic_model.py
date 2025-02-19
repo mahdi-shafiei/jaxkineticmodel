@@ -1,4 +1,4 @@
-
+from typing import Dict, Any
 
 import diffrax
 import numpy as np
@@ -6,6 +6,7 @@ import jax.numpy as jnp
 import jax
 from jaxkineticmodel.load_sbml.sbml_load import construct_param_point_dictionary, separate_params
 from jaxkineticmodel.utils import get_logger
+import pandas as pd
 
 jax.config.update("jax_enable_x64", True)
 
@@ -20,7 +21,9 @@ class JaxKineticModel:
         species_names,
         reaction_names,
         compartment_values,
-        species_compartments):
+        species_compartments,
+        boundary_conditions
+    ):
         """Initialize given the following arguments:
         v: the flux functions given as lambdified jax functions,
         S: a stoichiometric matrix. For now only support dense matrices, but later perhaps add for sparse
@@ -36,7 +39,8 @@ class JaxKineticModel:
         self.species_names = np.array(species_names)
         self.reaction_names = np.array(reaction_names)
         self.compartment_values = jnp.array(compartment_values)
-        self.species_compartments=dict(zip(species_names, species_compartments))
+        self.species_compartments= species_compartments
+        self.boundary_conditions = boundary_conditions
 
     def __call__(self, t, y, args):
         """I explicitly add params to call for gradient calculations. Find out whether this is actually necessary"""
@@ -69,24 +73,29 @@ class JaxKineticModel:
 
 
 class NeuralODE:
+    """ Class that wraps the kinetic model for simulation """
     func: JaxKineticModel
 
     def __init__(
         self,
-            fluxes,
-            stoichiometric_matrix,
-            met_point_dict,
-            v_symbols,
-            compartment_values,
-            species_compartments
+            fluxes: list,
+            stoichiometric_matrix: pd.DataFrame,
+            met_point_dict: dict,
+            v_symbols: dict,
+            compartment_values: list,
+            species_compartments: dict,
+            boundary_conditions: dict
     ):
+
         self.func = JaxKineticModel(fluxes=fluxes,
                                     stoichiometric_matrix=jnp.array(stoichiometric_matrix),
                                     flux_point_dict=met_point_dict,
                                     species_names=list(stoichiometric_matrix.index),
-                                    reaction_names=(stoichiometric_matrix.columns),
+                                    reaction_names=stoichiometric_matrix.columns,
                                     compartment_values=compartment_values,
-                                    species_compartments=species_compartments)
+                                    species_compartments=species_compartments,
+                                    boundary_conditions=boundary_conditions)
+        self.fluxes=fluxes
         self.reaction_names = list(stoichiometric_matrix.columns)
         self.species_names = list(stoichiometric_matrix.index)
         self.v_symbols = v_symbols

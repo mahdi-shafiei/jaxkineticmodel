@@ -33,16 +33,20 @@ class SBMLModel:
         self.y0 = jnp.array(list(self.y0.values()))
 
         # species compartments are the string names, compartments is a dictionary,
-        # and species_compartment_values
+        # and species_compartment_values are the values corresponding to each species
         self.species_compartments, self.compartments, self.species_compartment_values = self._get_compartments()
 
         self.v = self._get_fluxes()
 
-        #defined after running compile
-        self.constant_boundaries = {}
-        self.lambda_functions = {}
-        self.assignments_rules = {}
-        self.event_rules = {}
+        self.constant_boundaries, boundary_compartments = get_constant_boundary_species(self.model)
+
+        self.species_compartments={**self.species_compartments, **boundary_compartments}
+
+        self.lambda_functions = get_lambda_function_dictionary(self.model)
+        self.assignments_rules = get_assignment_rules_dictionary(self.model)
+        self.event_rules = get_events_dictionary(self.model)
+
+        # defined after running compile
         self.v_symbols = {}
         self.met_point_dict = {}
 
@@ -113,7 +117,7 @@ class SBMLModel:
 
         return species_compartments, compartments, compartment_list
 
-    def _get_stoichiometric_matrix(self):
+    def _get_stoichiometric_matrix(self) -> object:
         """Retrieves the stoichiometric matrix from the model."""
         species_ids = []
         reduced_species_list = []
@@ -194,7 +198,7 @@ class SBMLModel:
         #retrieve local parameters
         for reaction in self.model.reactions:
             r = reaction.getKineticLaw()
-            local_parameters = {"lp." + str(reaction.id) + "." + param.id: param.value for param in
+            local_parameters = {"lp_" + str(reaction.id) + "_" + param.id: param.value for param in
                                 r.getListOfParameters()}
             parameters.update(local_parameters)
         return parameters
@@ -204,7 +208,7 @@ class SBMLModel:
         the initial conditions. This is necessary in the dMdt to properly scale."""
         species = self.model.getListOfSpecies()
         compartment_list = []
-        species_compartments = []
+        species_compartments = {}
 
         for specimen in species:
             if specimen.isSetConstant() and specimen.isSetBoundaryCondition():
@@ -218,7 +222,7 @@ class SBMLModel:
                     continue  # not a boundary, but still a constant
                 elif not specimen.getBoundaryCondition() and not specimen.getConstant():
                     compartment_list.append(compartments[specimen.compartment])
-                    species_compartments.append(specimen.getCompartment())
+                    species_compartments[specimen.id] = specimen.getCompartment()
 
         compartment_list = jnp.array(compartment_list)
         return species_compartments, compartment_list
@@ -239,10 +243,6 @@ class SBMLModel:
         assignment rules, boundary conditions,lambda functions, compartments, etc..."""
 
         # species_ic = self._get_initial_conditions()
-        self.constant_boundaries = get_constant_boundary_species(self.model)
-        self.lambda_functions = get_lambda_function_dictionary(self.model)
-        self.assignments_rules = get_assignment_rules_dictionary(self.model)
-        self.event_rules = get_events_dictionary(self.model) #at some point add this.
 
         # arguments from the lambda expression are mapped to their respective symbols.
         for reaction_name, equation in self.v.items():
@@ -268,7 +268,7 @@ class SBMLModel:
             self.v_symbols[reaction_name] = filtered_dict
 
         # for each flux, metabolites are retrieved and mapped to the respective values in y0
-        self.met_point_dict=self._construct_flux_pointer_dictionary()
+        self.met_point_dict = self._construct_flux_pointer_dictionary()
 
         return print("compilation complete")
 
@@ -289,7 +289,8 @@ class SBMLModel:
             met_point_dict=self.met_point_dict,
             v_symbols=self.v_symbols,
             compartment_values=self.species_compartment_values,
-            species_compartments=self.species_compartments
+            species_compartments=self.species_compartments,
+            boundary_conditions=self.constant_boundaries
         )
 
 
@@ -338,16 +339,14 @@ def get_string_expression(reaction):
 def get_constant_boundary_species(model):
     """Species that are boundary conditions should be fed as fixed, non-learnable parameters
     https://synonym.caltech.edu/software/libsbml/5.18.0/docs/formatted/python-api/classlibsbml_1_1_species.html"""
-    constant_boundary_dict = {}
+    constant_boundary = {}
+    boundary_compartments = {}
     species = model.getListOfSpecies()
     for specimen in species:
         if specimen.getBoundaryCondition():
-            if model.getLevel() == 2:
-                logger.info(f"Assume that boundary {specimen.id} is constant for level 2")
-                constant_boundary_dict[specimen.id] = specimen.initial_concentration
-
-            constant_boundary_dict[specimen.id] = specimen.initial_concentration
-    return constant_boundary_dict
+            constant_boundary[specimen.id] = specimen.initial_concentration
+            boundary_compartments[specimen.id] = specimen.getCompartment()
+    return constant_boundary, boundary_compartments
 
 
 def get_local_parameters(reaction):
@@ -380,6 +379,7 @@ def get_reaction_symbols_dict(eval_dict):
     while the rest is simply substituted in the expression."""
     symbol_dict = {i: sp.Symbol(i) for i in eval_dict.keys() if not callable(eval_dict[i])}  # skip functions symbols
     return symbol_dict
+
 
 def species_match_to_S(initial_conditions, species_names):
     """Small helper function ensures that y0 is properly matched to rows of S
@@ -440,9 +440,9 @@ def separate_params(params):
     local_params = collections.defaultdict(dict)
 
     for key in params.keys():
-        if re.match("lp.*.", key):
-            fkey = key.removeprefix("lp.")
-            list = fkey.split(".")
+        if re.match("lp_*.", key):
+            fkey = key.removeprefix("lp_")
+            list = fkey.split("_")
             value = params[key]
             newkey = list[1]
             local_params[list[0]][newkey] = value

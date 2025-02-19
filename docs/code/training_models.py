@@ -9,6 +9,7 @@ import jax.numpy as jnp
 model_name="Smallbone2013_SerineBiosynthesis"
 filepath="models/sbml_models/working_models/"+model_name+".xml"
 model = SBMLModel(filepath)
+model.compile()
 
 #load data
 dataset=pd.read_csv("datasets/Smallbone2013 - Serine biosynthesis/Smallbone2013 - Serine biosynthesis_dataset.csv",index_col=0)

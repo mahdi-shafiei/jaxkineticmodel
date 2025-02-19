@@ -9,11 +9,16 @@ from jaxkineticmodel.load_sbml.export_sbml import SBMLExporter
 
 model_name="Smallbone2013_SerineBiosynthesis"
 filepath = (f"models/sbml_models/working_models/{model_name}.xml")
+output_dir="models/manual_implementations/export_sbml_test"
 ##
 
 # # # load model from file_path
 model = SBMLModel(filepath)
-S=model._get_stoichiometric_matrix()
+
+# model.compile()
+
+S = model._get_stoichiometric_matrix()
+
 
 
 JaxKmodel = model.get_kinetic_model()
@@ -25,16 +30,19 @@ JaxKmodel = model.get_kinetic_model()
 ###
 
 
-sbml=SBMLExporter(model=JaxKmodel)
+sbml = SBMLExporter(model=JaxKmodel)
 
 sbml.export(initial_conditions=model.y0,
-            parameters=model.parameters)
+            parameters=model.parameters,
+            output_file=f"{output_dir}/{model_name}.xml")
 
 
 #%%
 from jaxkineticmodel.kinetic_mechanisms import JaxKineticMechanisms as jm
 from jaxkineticmodel.building_models import JaxKineticModelBuild as jkm
 from jaxkineticmodel.load_sbml.export_sbml import SBMLExporter
+
+
 
 
 ReactionA = jkm.Reaction(
@@ -85,8 +93,9 @@ y0 = jnp.array([2, 0, 0])
 params = dict(zip(kmodel.parameter_names, jnp.array([1, 1, 1, 1, 1.5, 1])))
 
 
-
+model_name="test_model"
 sbml=SBMLExporter(model=kmodel_sim)
 
 sbml.export(initial_conditions=y0,
-            parameters=params)
+            parameters=params,
+            output_file=f"{output_dir}/{model_name}.xml")

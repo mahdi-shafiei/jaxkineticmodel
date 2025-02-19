@@ -7,25 +7,26 @@ import jax.numpy as jnp
 from typing import Union
 from jaxkineticmodel.load_sbml.sympy_converter import SympyConverter, LibSBMLConverter
 from jaxkineticmodel.load_sbml.jax_kinetic_model import NeuralODE
-from jaxkineticmodel.building_models.JaxKineticModelBuild import NeuralODEBuild
+from jaxkineticmodel.building_models.JaxKineticModelBuild import NeuralODEBuild, BoundaryCondition
 from jaxkineticmodel.utils import get_logger
+import sympy
 
 jax.config.update("jax_enable_x64", True)
 
 logger = get_logger(__name__)
 
 
-## design choice: separate export class instead of integrated with the SBML document
-## this seems the way to go because when we use self-made models the sbml export
+# design choice: separate export class instead of integrated with the SBML document
+# this seems the way to go because when we use self-made models the sbml export
 
 
-class SBMLExporter():
+class SBMLExporter:
     """class used to export SBML model from a NeuralODE.JaxKineticModel object"""
 
     def __init__(self,
                  model: Union[NeuralODE, NeuralODEBuild]):
         assert isinstance(model, (NeuralODE, NeuralODEBuild))
-
+        logger.info(f"Exporting Neural ODE model of instance {type(model)}")
         self.kmodel = model
         self.sympy_converter = SympyConverter()
         self.libsbml_converter = LibSBMLConverter()
@@ -35,7 +36,8 @@ class SBMLExporter():
 
     def export(self,
                initial_conditions: jnp.ndarray,
-               parameters: dict):
+               parameters: dict,
+               output_file: str):
         """Exports model based on the input arguments to .xml file
         Input:
         - initial_conditions: initial conditions of the model
@@ -47,18 +49,23 @@ class SBMLExporter():
 
         export_model = document.createModel()
 
-        #initial conditions and the compartments species belong to
+        # initial conditions and the compartments species belong to
         # (non-constant, non-boundary species)
         initial_conditions = dict(zip(self.kmodel.species_names, initial_conditions))
         species_compartments = self.kmodel.func.species_compartments  #same for both
         species_reference = {}
 
-
-
-        #compartments: we need to retrieve compartment dictionary without interacting with
+        # compartments: we need to retrieve compartment dictionary without interacting with
         compartments = [float(i) for i in self.kmodel.func.compartment_values]
         compartments = list(zip(species_compartments.values(), compartments))
         compartments = dict(set(compartments))
+
+        if isinstance(self.kmodel, NeuralODE):  # needs an extra step to convert to boundary condition class
+            boundaries = self.kmodel.func.boundary_conditions
+            boundaries = {key: BoundaryCondition(value) for key, value in boundaries.items()}
+
+        elif isinstance(self.kmodel, NeuralODEBuild):
+            boundaries = self.kmodel.func.boundary_conditions
 
         for (c_id, c_size) in compartments.items():
             # Create a compartment inside this model, and set the required
@@ -70,75 +77,123 @@ class SBMLExporter():
             check(c1.setConstant(True), 'set compartment "constant"')
             check(c1.setSize(c_size), 'set compartment "size"')
             check(c1.setSpatialDimensions(3), 'set compartment dimensions')
-            # check(c1.setUnits('litre'),
+            # check(c1.setUnits('litre'),               'set compartment size units')
 
-        # we should save species we have made in a dictionary for later reference in
-        #reactions
-
-
+        # boundary conditions and species
         for (s_id, s_comp) in species_compartments.items():
             s1 = export_model.createSpecies()
-            check(s1, 'create species')
-            check(s1.setId(s_id), 'set species id')
-            check(s1.setCompartment(s_comp), 'set species s1 compartment')
-            check(s1.setConstant(False), 'set "constant" attribute on s1')
-            check(s1.setInitialAmount(float(initial_conditions[s_id])), 'set initial amount for s1')
-            check(s1.setSubstanceUnits('mole'), 'set substance units for s1')
-            check(s1.setBoundaryCondition(False), 'set "boundaryCondition" on s1')
-            check(s1.setHasOnlySubstanceUnits(False), 'set "hasOnlySubstanceUnits" on s1')
+            if s_id not in boundaries.keys():
+
+                check(s1, 'create species')
+                check(s1.setId(s_id), 'set species id')
+                check(s1.setCompartment(s_comp), 'set species s1 compartment')
+                check(s1.setConstant(False), 'set "constant" attribute on s1')
+                check(s1.setInitialAmount(float(initial_conditions[s_id])), 'set initial amount for s1')
+                check(s1.setSubstanceUnits('mole'), 'set substance units for s1')
+                check(s1.setBoundaryCondition(False), 'set "boundaryCondition" on s1')
+                check(s1.setHasOnlySubstanceUnits(False), 'set "hasOnlySubstanceUnits" on s1')
+                species_reference[s_id] = s1
+            elif s_id in boundaries.keys():
+                for (species_id, condition) in boundaries.items():
+                    check(s1, 'create species')
+                    check(s1.setId(species_id), 'set species id')
+                    # check(s1.setConstant(compartment), 'set "constant" attribute on s1')
+                    if condition.is_constant:
+                        assert isinstance(condition.sympified, sympy.Number)
+                        check(s1.setConstant(True), 'set "constant" attribute on s1')
+                        check(s1.setInitialAmount(float(condition.sympified)), 'set "initialAmount" attribute on s1')
+
+                    elif not condition.is_constant:
+                        logger.info(f"boundary not constant, support not tested yet")
+                        check(s1.setConstant(False), 'set "constant" attribute on s1')
+                        check(s1.setInitialAmount(jnp.nan), 'set "initialAmount" attribute on s1')
+
+                        math_ast = self.sympy_converter.sympy2libsbml(condition.sympified)
+                        orig = self.libsbml_converter.libsbml2sympy(math_ast)
+                        assert str(condition.sympified) == str(orig)
+
+                        rule = export_model.createAssignmentRule()
+                        check(rule.setVariable(s1.id), 'set "rule" attribute on s1')
+                        check(rule.setMath(math_ast), 'set "math" attribute on s1')
             species_reference[s_id] = s1
 
-        # one we have made a species, we should save it
-        # in a dictionary for later reference in the reactions
+        #we use an parameter dict input argument for export
+        for p_name, p_value in parameters.items():
+            p1 = export_model.createParameter()
+            check(p1.setId(str(p_name)), 'set parameter name')
+            check(p1.setConstant(True), 'set parameter name')
+            check(p1.setValue(float(p_value)), 'set parameter value')
 
+        # reactions and boundaries are dealt with slightly different right now between two objects.
+        # NeuralODE objects has sympy expressions for reactions, while in the NeuralODEBuild class
+        # they are implemented through the Mechanism/Reaction objects.
+        # We therefore deal with them (for now) separately
         if isinstance(self.kmodel, NeuralODE):
-            #do something
-            logger.info(f"Exporting Neural ODE model of instance {type(self.kmodel)}")
-            # print(self.kmodel.)
+            for (reaction, mechanism) in self.kmodel.fluxes.items():
+                r1 = export_model.createReaction()
+                check(r1, 'create reaction')
+                check(r1.setId(str(reaction)), 'set reaction name')
+                check(r1.setReversible(False), 'set reversible')  # required
 
-            # do something slightly different
-            logger.info(f"Exporting Neural ODE model of instance {type(self.kmodel)}")
-            self.kmodel.boundary_conditions
+                #to include id, stoichiometry, symbolic mechanism
+                stoichiometry = self.kmodel.Stoichiometry[reaction].to_dict()
+                for (s_id, stoich) in stoichiometry.items():
+                    if stoich < 0:
+                        species_ref1 = r1.createReactant()
+                    elif stoich > 0:
+                        species_ref1 = r1.createProduct()
+                    else:
+                        continue
 
-        # check(model, 'create model')
-        # check(model.setTimeUnits("second"), 'set model-wide time units')
-        #
-        # # compartments are required. If a model does not define a compartmnet, we make a dummy compartments
-        # compartments=self.model.compartments
-        # if not compartments:
-        #     compartments={'dummy':1}
-        #
-        # for (c_id, c_size) in compartments.items():
-        #     # Create a compartment inside this model, and set the required
-        #     # attributes for an SBML compartment in SBML Level 3.
-        #
-        #     c1 = model.createCompartment()
-        #     check(c1, 'create compartment')
-        #     check(c1.setId(c_id), 'set compartment id')
-        #     check(c1.setConstant(True), 'set compartment "constant"')
-        #     check(c1.setSize(c_size), 'set compartment "size"')
-        #     check(c1.setSpatialDimensions(3), 'set compartment dimensions')
-        #
-        # # species (that are not boundaries and not constant)
-        # # initial conditions for species are needed as an input
-        # initial_conditions=dict(zip(self.model.species_names,initial_conditions))
-        # species_reference= {}
-        #
-        # for (s_id, s_comp) in initial_conditions.items():
-        #     s1 = model.createSpecies()
-        #     check(s1, 'create species')
-        #     check(s1.setId(s_id), 'set species id')
-        #     # check(s1.setCompartment(s_comp), 'set species s1 compartment')
-        #     check(s1.setConstant(False), 'set "constant" attribute on s1')
-        #     check(s1.setInitialAmount(float(initial_conditions[s_id])), 'set initial amount for s1')
-        #     check(s1.setSubstanceUnits('mole'), 'set substance units for s1')
-        #     check(s1.setBoundaryCondition(False), 'set "boundaryCondition" on s1')
-        #     check(s1.setHasOnlySubstanceUnits(False), 'set "hasOnlySubstanceUnits" on s1')
-        #     species_reference[s_id] = s1
-        #
-        # print(self.model.boundary_conditions)
-        #
-        #
+                    specimen = species_reference[s_id]
+                    check(species_ref1, 'create species')
+                    check(species_ref1.setSpecies(specimen.getId()), 'set reactant species id')
+                    check(species_ref1.setConstant(specimen.getConstant()), 'set reactant species id')
+                    check(species_ref1.setStoichiometry(abs(stoich)), 'set absolute reactant/product stoichiometry')
+
+                    math_ast = self.sympy_converter.sympy2libsbml(mechanism)
+                    orig = self.libsbml_converter.libsbml2sympy(math_ast)
+                    assert str(mechanism) == str(orig)
+
+                    kinetic_law = r1.createKineticLaw()
+                    check(kinetic_law, 'create kinetic law')
+                    check(kinetic_law.setMath(math_ast), 'set math on kinetic law')
+
+        elif isinstance(self.kmodel, NeuralODEBuild):
+            for reaction in self.kmodel.func.reactions:
+                r1 = export_model.createReaction()
+                check(r1, 'create reaction')
+                check(r1.setId(str(reaction.name)), 'set reaction id')
+                check(r1.setReversible(False), 'set reversible')  # required
+                for (s_id, stoich) in reaction.stoichiometry.items():
+                    if stoich < 0:
+                        species_ref1 = r1.createReactant()
+
+                    elif stoich > 0:
+                        species_ref1 = r1.createProduct()
+                    else:
+                        raise ValueError('stoich may not be 0')
+
+                    # use the dictionary with species references
+                    specimen = species_reference[s_id]
+                    check(species_ref1, 'create reactant')
+                    check(species_ref1.setSpecies(specimen.getId()), 'set reactant species id')
+                    check(species_ref1.setConstant(specimen.getConstant()), 'set reactant species id')
+                    check(species_ref1.setStoichiometry(abs(stoich)), 'set absolute reactant/product stoichiometry')
+
+                math_ast = self.sympy_converter.sympy2libsbml(reaction.mechanism.symbolic())
+                orig = self.libsbml_converter.libsbml2sympy(math_ast)
+                assert str(reaction.mechanism.symbolic()) == str(orig)
+
+                kinetic_law = r1.createKineticLaw()
+                check(kinetic_law, 'create kinetic law')
+                check(kinetic_law.setMath(math_ast), 'set math on kinetic law')
+
+        sbml = libsbml.writeSBMLToString(document)
+
+        file = open(output_file, "w")
+        file.write(sbml)
+        file.close()
 
 
 def check(value, message):
@@ -160,5 +215,3 @@ def check(value, message):
                       + 'LibSBML returned error code ' + str(value) + ': "' \
                       + libsbml.OperationReturnValue_toString(value).strip() + '"'
             raise SystemExit(err_msg)
-    else:
-        return

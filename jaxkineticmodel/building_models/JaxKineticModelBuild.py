@@ -80,7 +80,7 @@ class JaxKineticModel_Build:
         self.species_compartments = self._get_compartments_species()
 
 
-        self.compartments=compartments
+        self.compartments = compartments
         self.compartment_values = jnp.array([compartments[self.species_compartments[i]] for i in self.species_names])
 
         # only retrieve the mechanisms from each reaction
@@ -148,7 +148,6 @@ class JaxKineticModel_Build:
         # While a boundary could still lie inside/outside a compartment, from an evaluation
         # perspective it should not matter.
 
-        self.species_compartments.pop(metabolite_name)
 
         # same here, but then for the pandas
         # (refactor this later)

@@ -21,8 +21,8 @@ print(os.getcwd())
 
 
 
-model_name="Smallbone2013_SerineBiosynthesis"
-filepath = (f"models/sbml_models/working_models/{model_name}.xml")
+model_name="dano1"
+filepath = (f"models/sbml_models/discrepancies/{model_name}.xml")
 ##
 
 # # # load model from file_path
@@ -38,7 +38,7 @@ JaxKmodel = model.get_kinetic_model()
 # JaxKmodel._change_solver(solver=diffrax.Kvaerno3())
 
 
-ts = jnp.linspace(0,10,200)
+ts = jnp.linspace(0,20,200)
 
 # simulate given the initial conditions defined in the sbml
 
