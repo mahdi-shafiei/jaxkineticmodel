@@ -11,7 +11,7 @@ import sys
 import matplotlib.pyplot as plt
 from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
 
-sys.path.insert(0, "..")  # Ensure the parent directory is included
+
 
 
 
@@ -112,5 +112,5 @@ def test_export_sbml_NeuralODEBuild():
 
 def test_import_exported_SBML():
     input_file1 = "models/manual_implementations/export_sbml_test/test.xml"
-    # input_file2 = "models/manual_implementations/export_sbml_test/Smallbone2013_SerineBiosynthesis.xml"
+    input_file2 = "models/manual_implementations/export_sbml_test/Smallbone2013_SerineBiosynthesis.xml"
     assert import_new_sbml(input_file1)
