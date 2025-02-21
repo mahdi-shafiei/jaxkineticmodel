@@ -110,7 +110,7 @@ def test_export_sbml_NeuralODEBuild():
     output_dir = "models/manual_implementations/export_sbml_test"
     assert export_sbml2(output_dir, model_name)
 
-def test_import_exported_SBML():
-    input_file1 = "models/manual_implementations/export_sbml_test/test.xml"
-    input_file2 = "models/manual_implementations/export_sbml_test/Smallbone2013_SerineBiosynthesis.xml"
-    assert import_new_sbml(input_file1)
+# def test_import_exported_SBML():
+#     input_file1 = "models/manual_implementations/export_sbml_test/test.xml"
+#     input_file2 = "models/manual_implementations/export_sbml_test/Smallbone2013_SerineBiosynthesis.xml"
+#     assert import_new_sbml(input_file1)

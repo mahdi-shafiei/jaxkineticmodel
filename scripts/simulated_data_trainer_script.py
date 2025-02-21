@@ -7,7 +7,7 @@ import optax
 import argparse
 
 import numpy as np
-from jaxkineticmodel.load_sbml.sbml_load import get_global_parameters
+from jaxkineticmodel.load_sbml.sbml_load_utils import get_global_parameters
 from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
 import jax
 import jax.numpy as jnp

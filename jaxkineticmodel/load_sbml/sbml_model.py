@@ -34,21 +34,19 @@ class SBMLModel:
 
         # species compartments are the string names, compartments is a dictionary,
         # and species_compartment_values are the values corresponding to each species
-        self.species_compartments, self.compartments, self.species_compartment_values = self._get_compartments()
+        self.species_compartments, self.compartments, self.compartment_values = self._get_compartments()
 
         self.v = self._get_fluxes()
 
-        self.constant_boundaries, boundary_compartments = get_constant_boundary_species(self.model)
+        self.boundary_conditions, boundary_compartments = get_constant_boundary_species(self.model)
 
-        self.species_compartments={**self.species_compartments, **boundary_compartments}
+        self.species_compartments = {**self.species_compartments, **boundary_compartments}
 
         self.lambda_functions = get_lambda_function_dictionary(self.model)
         self.assignments_rules = get_assignment_rules_dictionary(self.model)
         self.event_rules = get_events_dictionary(self.model)
 
-        # defined after running compile
-        self.v_symbols = {}
-        self.met_point_dict = {}
+
 
     @staticmethod
     def _load_model(file_path):
@@ -145,7 +143,6 @@ class SBMLModel:
                 species_id = species_node.getId()
 
                 net_stoichiometry = -int(reactants.get(species_id, 0)) + int(products.get(species_id, 0))
-                # print(net_stoichiometry)
                 stoichiometry_matrix[species_index, reaction_index] = net_stoichiometry
 
         species_names = [s.getId() for s in reduced_species_list]
@@ -238,60 +235,23 @@ class SBMLModel:
             # v_symbol_dict[reaction.id] = filtered_dict
         return v
 
-    def compile(self):
-        """Compiles the sympy expressions from _get_fluxes. Substitutes
-        assignment rules, boundary conditions,lambda functions, compartments, etc..."""
 
-        # species_ic = self._get_initial_conditions()
 
-        # arguments from the lambda expression are mapped to their respective symbols.
-        for reaction_name, equation in self.v.items():
-            for func in equation.atoms(sp.Function):
-                if hasattr(func, 'name'):
-                    variables = self.lambda_functions[func.name].variables
-                    variable_substitution = dict(zip(variables, func.args))
-                    expression = self.lambda_functions[func.name].expr
-                    expression = expression.subs(variable_substitution)
-                    equation = equation.subs({func: expression})
-            equation = equation.subs(self.compartments)
-            equation = equation.subs(self.assignments_rules)
-            equation = equation.subs(self.constant_boundaries)
+    def get_kinetic_model(self,compile=True):
+        """returns a NeuralODE object with keywords arguments"""
+        assert isinstance(compile, bool)
+        kwargs = vars(self)
 
-            free_symbols = list(equation.free_symbols)
-            equation = sp.lambdify(free_symbols, equation, "jax")
-            filtered_dict = dict(zip([str(i) for i in free_symbols], free_symbols))
+        include = ['species_compartments',
+                   'compartment_values', 'boundary_conditions',
+                   'lambda_functions', 'assignments_rules', 'event_rules','compartments']
+        kwargs = {i: kwargs[i] for i in include}
 
-            #maps back the filled in equations, lambdified.
-            self.v[reaction_name] = equation
-
-            # all symbols that should be mapped to the equation
-            self.v_symbols[reaction_name] = filtered_dict
-
-        # for each flux, metabolites are retrieved and mapped to the respective values in y0
-        self.met_point_dict = self._construct_flux_pointer_dictionary()
-
-        return print("compilation complete")
-
-    def _construct_flux_pointer_dictionary(self):
-        """In jax, the values that are used need to be pointed directly in y0."""
-        flux_point_dict = {}
-        for k, reaction in enumerate(self.reaction_names):
-            v_dict = self.v_symbols[reaction]
-            filtered_dict = [self.species_names.index(key) for key in v_dict.keys() if key in self.species_names]
-            filtered_dict = jnp.array(filtered_dict)
-            flux_point_dict[reaction] = filtered_dict
-        return flux_point_dict
-
-    def get_kinetic_model(self):
         return NeuralODE(
             fluxes=self.v,
             stoichiometric_matrix=self.S,
-            met_point_dict=self.met_point_dict,
-            v_symbols=self.v_symbols,
-            compartment_values=self.species_compartment_values,
-            species_compartments=self.species_compartments,
-            boundary_conditions=self.constant_boundaries
-        )
+            compile=compile,
+            **kwargs)
 
 
 def get_lambda_function_dictionary(model):
@@ -309,31 +269,11 @@ def get_lambda_function_dictionary(model):
     return functional_dict
 
 
-def get_global_parameters(model):
-    """Most sbml models have their parameters defined globally,
-    this function retrieves them"""
-    params = model.getListOfParameters()
-    global_parameter_dict = {param.id: param.value for param in params}
-    return global_parameter_dict
-
-
 def get_compartments(model):
     """Some sbml models have compartments, retrieves them"""
     compartments = model.getListOfCompartments()
     compartment_dict = {cmp.id: cmp.size for cmp in compartments}
     return compartment_dict
-
-
-# We do not deal yet with non-constant boundaries
-def get_string_expression(reaction):
-    """retrieves the kinetic rate law from the reaction"""
-    kinetic_law = reaction.getKineticLaw()
-    # print(kinetic_law.name)
-    klaw_math = kinetic_law.math
-    string_rate_law = libsbml.formulaToString(klaw_math)
-    # here we sometimes need to add exceptions. For example, to evaluate tanh, we need to replace it with torch.Tanh
-    string_rate_law = string_rate_law.replace("^", "**")
-    return string_rate_law
 
 
 def get_constant_boundary_species(model):
@@ -344,8 +284,14 @@ def get_constant_boundary_species(model):
     species = model.getListOfSpecies()
     for specimen in species:
         if specimen.getBoundaryCondition():
-            constant_boundary[specimen.id] = specimen.initial_concentration
             boundary_compartments[specimen.id] = specimen.getCompartment()
+            if specimen.isSetInitialConcentration():
+                constant_boundary[specimen.id] = specimen.initial_concentration
+            elif specimen.isSetInitialAmount():
+                constant_boundary[specimen.id] = specimen.initial_amount
+            else:
+                logger.error(f"specimen {specimen.id} has no initial concentration or amount.")
+
     return constant_boundary, boundary_compartments
 
 
@@ -403,29 +349,12 @@ def reaction_match_to_S(flux_funcs, reaction_names):
     return v
 
 
-def construct_param_point_dictionary(v_symbol_dictionaries, reaction_names, parameters):
-    """In jax, the values that are used need to be pointed directly in y."""
-    flux_point_dict = {}
-    for k, reaction in enumerate(reaction_names):
-        v_dict = v_symbol_dictionaries[reaction]
-        filtered_dict = {}
-        for key, value in v_dict.items():
-            if key in parameters.keys():
-                filtered_dict[key] = parameters[key]
-        # params_point_dict=[parameters.index(key) for key in v_dict.keys() if key in parameters]
-        # print(params_point_dict)
-        # filtered_dict=jnp.array(params_point_dict)
-        flux_point_dict[reaction] = filtered_dict
-    return flux_point_dict
-
-
 def get_leaf_nodes(node, leaf_nodes):
     """Finds the leaf nodes of the mathml expression."""
     if node.getNumChildren() == 0:
         name = node.getName()
         if name is not None:
             leaf_nodes.append(name)
-        # print(node.getName())
     else:
         for i in range(node.getNumChildren()):
             get_leaf_nodes(node.getChild(i), leaf_nodes)
@@ -433,37 +362,6 @@ def get_leaf_nodes(node, leaf_nodes):
     leaf_nodes = np.unique(leaf_nodes)
     leaf_nodes = leaf_nodes.tolist()
     return leaf_nodes
-
-
-def separate_params(params):
-    global_params = {}
-    local_params = collections.defaultdict(dict)
-
-    for key in params.keys():
-        if re.match("lp_*.", key):
-            fkey = key.removeprefix("lp_")
-            list = fkey.split("_")
-            value = params[key]
-            newkey = list[1]
-            local_params[list[0]][newkey] = value
-        else:
-            global_params[key] = params[key]
-    return global_params, local_params
-
-
-# def wrap_time_symbols(t):
-def time_dependency_symbols(v_symbol_dictionaries, t):
-    time_dependencies = {}
-    for key, values in v_symbol_dictionaries.items():
-        time_dependencies[key] = {}
-        for value in values.keys():
-            if value == "time":
-                time_dependencies[key] = {value: t}
-    return time_dependencies
-
-
-#   time_dependencies=time_dependency_symbols(v_symbol_dictionaries,t)
-#   return time_dependencies
 
 
 def get_assignment_rules_dictionary(model):

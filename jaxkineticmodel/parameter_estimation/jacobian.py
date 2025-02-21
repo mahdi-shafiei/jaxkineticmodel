@@ -1,7 +1,7 @@
 # sys.path.append("/home/plent/Documenten/Gitlab/NeuralODEs/jax_neural_odes")
 
-from jaxkineticmodel.load_sbml.sbml_load import separate_params
-from jaxkineticmodel.load_sbml.sbml_load import construct_param_point_dictionary, separate_params_jac
+from jaxkineticmodel.load_sbml.sbml_load_utils import separate_params
+from jaxkineticmodel.load_sbml.sbml_load_utils import construct_param_point_dictionary, separate_params_jac
 import numpy as np
 import jax.numpy as jnp
 import jax

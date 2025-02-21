@@ -10,7 +10,7 @@ filepath = ("models/sbml_models/working_models/simple_sbml.xml")
 model = SBMLModel(filepath)
 
 #replaces assignment rules, boundary conditions, etc..
-model.compile()
+
 S=model._get_stoichiometric_matrix()
 
 JaxKmodel = model.get_kinetic_model()

@@ -1,4 +1,4 @@
-from jaxkineticmodel.load_sbml.sbml_load import get_global_parameters
+from jaxkineticmodel.load_sbml.sbml_load_utils import get_global_parameters
 from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
 import os
 import jax

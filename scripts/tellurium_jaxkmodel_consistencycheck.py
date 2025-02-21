@@ -2,7 +2,7 @@ import jaxlib.xla_extension
 import jax.numpy as jnp
 import jax
 import numpy as np
-from jaxkineticmodel.load_sbml.sbml_load import get_global_parameters
+from jaxkineticmodel.load_sbml.sbml_load_utils import get_global_parameters
 from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
 import pandas as pd
 import os

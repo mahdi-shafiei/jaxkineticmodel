@@ -3,7 +3,7 @@ import cProfile
 
 import diffrax
 import jax.numpy as jnp
-from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
+
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -15,36 +15,39 @@ import sys
 import roadrunner
 import tellurium as te
 
+from jaxkineticmodel.load_sbml import sbml_model
+
 jax.config.update("jax_enable_x64", True)
 
 print(os.getcwd())
 
 
 
-model_name="Garde2020"
+model_name="Smallbone2013_SerineBiosynthesis"
 filepath = (f"models/sbml_models/working_models/{model_name}.xml")
 ##
 
 # # # load model from file_path
-model = SBMLModel(filepath)
+model = sbml_model.SBMLModel(filepath)
 S=model._get_stoichiometric_matrix()
 
+#
 
-model.compile()
-JaxKmodel = model.get_kinetic_model()
-
-
-
-# JaxKmodel._change_solver(solver=diffrax.Kvaerno3())
+jaxkmodel = model.get_kinetic_model()
+# jaxkmodel._compile()
+#
+#
+#
+# # JaxKmodel._change_solver(solver=diffrax.Kvaerno3())
 
 
 ts = jnp.linspace(0,20,200)
-
-# simulate given the initial conditions defined in the sbml
-
-JaxKmodel=jax.jit(JaxKmodel)
+#
+# # simulate given the initial conditions defined in the sbml
+#
+jaxkmodel=jax.jit(jaxkmodel)
 # #
-ys = JaxKmodel(ts=ts,
+ys = jaxkmodel(ts=ts,
             y0=model.y0,
             params=model.parameters)
 #
@@ -54,20 +57,20 @@ for i in ys.columns:
 plt.title("jaxkmodel")
 plt.legend()
 plt.show()
-
-# print(model.parameters)
-# #
+#
+# # print(model.parameters)
 # # #
+# # # #
 start=time.time()
 for i in range(500):
     print(i)
-    ys = JaxKmodel(ts=ts,
+    ys = jaxkmodel(ts=ts,
                 y0=model.y0,
                 params=model.parameters)
 end=time.time()
 jaxkmodel_timing=end-start
 print(jaxkmodel_timing)
-# # #
+# # # #
 # rr = roadrunner.RoadRunner(filepath)
 # rr.integrator.absolute_tolerance = 1e-10
 # rr.integrator.relative_tolerance = 1e-7
