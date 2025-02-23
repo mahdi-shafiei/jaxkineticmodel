@@ -1,5 +1,4 @@
-from tkinter import BooleanVar
-
+import time
 import diffrax
 import numpy as np
 import jax.numpy as jnp
@@ -49,27 +48,31 @@ class JaxKineticModel:
 
     def __call__(self, t, y, args):
         """I explicitly add params to call for gradient calculations. Find out whether this is actually necessary"""
-        params, local_params = args
+        global_params, local_params = args
+        y=dict(zip(self.species_names, y))
+
+        reaction_names = list(self.func.keys())
 
         # function evaluates the flux vi given y, parameter, local parameters, time dictionary
-        def apply_func(i, y, flux_met_pointer, local_params):
-            if len(flux_met_pointer) != 0:
-                y = y[flux_met_pointer]
-                species = self.species_names[flux_met_pointer]
-                y = dict(zip(species, y))
-            else:
-                y = {}
 
-            parameters = params[i]
-            eval_dict = {**y, **parameters, **local_params}
+        def apply_func(func: dict,
+                       y: jnp.ndarray,
+                       global_params: dict,
+                       local_params: dict,):
+
+            eval_dict = {**y, **global_params, **local_params}
             eval_dict['t'] = t
-            eval_dict = {i: eval_dict[i] for i in self.func[i].__code__.co_varnames}
-            vi = self.func[i](**eval_dict)
+            eval_dict = {i: eval_dict[i] for i in func.__code__.co_varnames}
+            vi = func(**eval_dict)
             return vi
 
-        # Vectorize the application of the functions
         v = jnp.stack(
-            [apply_func(i, y, self.flux_met_pointer[i], local_params[i]) for i in self.reaction_names]
+            [apply_func(func=self.func[i],
+                        y=y,
+                        global_params=global_params[i],
+                        local_params=local_params[i]
+                        )
+             for i in reaction_names]
         )  # perhaps there is a way to vectorize this in a better way
         dY = jnp.matmul(self.stoichiometry, v)  # dMdt=S*v(t)
         dY /= self.compartment_values
@@ -84,8 +87,6 @@ class NeuralODE:
             self,
             fluxes: list,
             stoichiometric_matrix: pd.DataFrame,
-            # flux_met_pointer: dict,
-            # v_symbols: dict,
             compartment_values: list,
             species_compartments: list,
             boundary_conditions: dict,
@@ -93,7 +94,7 @@ class NeuralODE:
             lambda_functions: dict,
             event_rules: dict,
             compartments: dict,
-            compile: BooleanVar,
+            compile: bool,
 
 
     ):

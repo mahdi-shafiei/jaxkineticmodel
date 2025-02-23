@@ -289,8 +289,8 @@ def get_constant_boundary_species(model):
                 constant_boundary[specimen.id] = specimen.initial_concentration
             elif specimen.isSetInitialAmount():
                 constant_boundary[specimen.id] = specimen.initial_amount
-            else:
-                logger.error(f"specimen {specimen.id} has no initial concentration or amount.")
+            # else:
+            #     logger.error(f"specimen {specimen.id} has no initial concentration or amount.")
 
     return constant_boundary, boundary_compartments
 

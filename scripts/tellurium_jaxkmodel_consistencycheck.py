@@ -39,7 +39,6 @@ for sbml_file in sbml_files:
     file_path = pathname + sbml_file
     try:
         model = SBMLModel(file_path)
-        model.compile()
         S = model._get_stoichiometric_matrix()
         JaxKmodel = model.get_kinetic_model()
         # simulate for jax kinetic model
