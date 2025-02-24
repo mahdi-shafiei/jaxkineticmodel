@@ -4,7 +4,7 @@
 from jaxkineticmodel.kinetic_mechanisms.JaxKineticMechanisms import *
 from jaxkineticmodel.kinetic_mechanisms.JaxKineticMechanismsCustom import *
 from jaxkineticmodel.kinetic_mechanisms.JaxKineticModifiers import *
-
+import jax.numpy as jnp
 ## set up a small term system for state variables
 # S=pd.DataFrame(np.array([[-1,1,2]]),index=['ICglucose'],columns=['v_GLT','v_HXK','v_NTH1'])
 import diffrax
@@ -247,6 +247,7 @@ v_HXK = Jax_MM_Rev_BiBi_w_Inhibition(
 
 
 v_NTH1 = Jax_MM_Irrev_Uni(substrate="ICtreh", vmax="p_NTH1_Vmax", km_substrate="p_NTH1_Ktre")
+
 v_PGI = Jax_MM_Rev_UniUni(
     substrate="ICG6P",
     product="ICF6P",
@@ -266,7 +267,7 @@ v_PGM1 = Jax_MM_Rev_UniUni(
     km_product="p_PGM1_Kg6p",
 )  # to do v_TPS1 for 2nd rate law
 
-# inhibitor_TPS1=SimpleInhibitor(k_I='p_TPS1_Kpi')
+inhibitor_TPS1=SimpleInhibitor(k_I='p_TPS1_Kpi')
 activator_TPS1 = SimpleActivator(k_A="p_TPS1_KmF6P")
 v_TPS1 = Jax_MM_Irrev_Bi_w_Modifiers(
     substrate1="ICG6P",
@@ -280,7 +281,8 @@ v_TPS1 = Jax_MM_Irrev_Bi_w_Modifiers(
 
 # v_TPS1=Jax_MM_Irrev_Bi(substrate1="ICG6P",substrate2="ICG1P",vmax="p_TPS1_Vmax",km_substrate1="p_TPS1_Kg6p",km_substrate2="p_TPS1_Kudp_glc")
 v_TPS2 = Jax_MM_Irrev_Bi_w_Inhibition(
-    substrate="ICT6P", product="ICPHOS", vmax="p_TPS2_Vmax", km_substrate1="p_TPS2_Kt6p", ki="p_TPS2_Kpi"
+    substrate="ICT6P", product="ICPHOS",
+    vmax="p_TPS2_Vmax", km_substrate1="p_TPS2_Kt6p", ki="p_TPS2_Kpi"
 )
 
 

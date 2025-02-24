@@ -79,7 +79,6 @@ class JaxKineticModel_Build:
 
         self.species_compartments = self._get_compartments_species()
 
-
         self.compartments = compartments
         self.compartment_values = jnp.array([compartments[self.species_compartments[i]] for i in self.species_names])
 
@@ -88,9 +87,21 @@ class JaxKineticModel_Build:
 
         # retrieve parameter names
         self.parameter_names = self._flatten([reaction.parameters for reaction in self.reactions])
+
+        #
+        self.parameter_names= self._filter_parameters()
         self._check_parameter_uniqueness()
 
         self.boundary_conditions = {}
+
+    def _filter_parameters(self):
+        """Filters out species from parameter list when a function has modifiers"""
+        parameter_names = []
+        for parameter in self.parameter_names:
+            if parameter not in self.species_names:
+                parameter_names.append(parameter)
+        return parameter_names
+
 
     def _get_stoichiometry(self):
         """Build stoichiometric matrix from reactions"""
@@ -148,12 +159,10 @@ class JaxKineticModel_Build:
         # While a boundary could still lie inside/outside a compartment, from an evaluation
         # perspective it should not matter.
 
-
         # same here, but then for the pandas
         # (refactor this later)
         self.stoichiometric_matrix = self.stoichiometric_matrix.drop(labels=metabolite_name, axis=0)
         self.compartment_values = jnp.delete(self.compartment_values, index)
-
 
     def __call__(self, t, y, args):
         params, boundary_conditions = args
@@ -173,6 +182,7 @@ class JaxKineticModel_Build:
 
         return dY
 
+
 class NeuralODEBuild:
     def __init__(self, func):
         self.func = func
@@ -186,29 +196,28 @@ class NeuralODEBuild:
         self.max_steps = 300000
         self.rtol = 1e-7
         self.atol = 1e-10
-        self.dt0=1e-11
-        self.solver=diffrax.Kvaerno5()
-        self.stepsize_controller=diffrax.PIDController(rtol=self.rtol, atol=self.atol,pcoeff=0.4, icoeff=0.3, dcoeff=0)
+        self.dt0 = 1e-11
+        self.solver = diffrax.Kvaerno5()
+        self.stepsize_controller = diffrax.PIDController(rtol=self.rtol, atol=self.atol, pcoeff=0.4, icoeff=0.3,
+                                                         dcoeff=0)
 
-
-
-    def _change_solver(self,solver,**kwargs):
+    def _change_solver(self, solver, **kwargs):
         """To change the ODE solver object to any solver class from diffrax
         Does not support multiterm objects yet."""
 
-        if isinstance(solver,diffrax.AbstractAdaptiveSolver):
+        if isinstance(solver, diffrax.AbstractAdaptiveSolver):
             # for what i recall, only the adaptive part is important to ensure
             #it can be loaded properly
-            self.solver=solver
-            step_size_control_parameters={'rtol':self.rtol, 'atol':self.atol,
-                                          "pcoeff":0.4,"icoeff":0.3,"dcoeff":0}
+            self.solver = solver
+            step_size_control_parameters = {'rtol': self.rtol, 'atol': self.atol,
+                                            "pcoeff": 0.4, "icoeff": 0.3, "dcoeff": 0}
             for key in kwargs:
                 if key in step_size_control_parameters:
                     step_size_control_parameters[key] = kwargs[key]
-            self.stepsize_controller=diffrax.PIDController(**step_size_control_parameters)
-        elif not isinstance(solver,diffrax.AbstractAdaptiveSolver):
-            self.solver=solver
-            self.stepsize_controller=diffrax.ConstantStepSize()
+            self.stepsize_controller = diffrax.PIDController(**step_size_control_parameters)
+        elif not isinstance(solver, diffrax.AbstractAdaptiveSolver):
+            self.solver = solver
+            self.stepsize_controller = diffrax.ConstantStepSize()
         else:
             logger.error(f"solver {type(solver)} not supported yet")
 

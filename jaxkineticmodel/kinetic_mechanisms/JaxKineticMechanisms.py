@@ -9,9 +9,11 @@ class Mechanism:
         # Initialize the parameter names
         try:
             inspect.signature(self.compute).bind(**kwargs)
+
         except TypeError:
             raise
         self.param_names = kwargs
+
 
     def symbolic(self):
         symbol_dict = {k: sympy.Symbol(v) for k, v in self.param_names.items()}
