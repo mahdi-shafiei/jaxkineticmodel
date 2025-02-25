@@ -17,7 +17,10 @@ class Mechanism:
 
     def symbolic(self):
         symbol_dict = {k: sympy.Symbol(v) for k, v in self.param_names.items()}
-        return self.compute(**symbol_dict)
+        result = self.compute(**symbol_dict)
+        for modifier in self.modifiers:
+            result *= modifier.symbolic()
+        return result
 
     def __str__(self):
         return str(self.symbolic())
