@@ -268,16 +268,14 @@ v_PGM1 = Jax_MM_Rev_UniUni(
 )  # to do v_TPS1 for 2nd rate law
 
 inhibitor_TPS1=SimpleInhibitor(k_I='p_TPS1_Kpi')
-activator_TPS1 = SimpleActivator(k_A="p_TPS1_KmF6P")
-v_TPS1 = Jax_MM_Irrev_Bi_w_Modifiers(
+v_TPS1 = Jax_MM_Irrev_Bi(
     substrate1="ICG6P",
     substrate2="ICG1P",
-    modifiers_list=["ICF6P"],
     vmax="p_TPS1_Vmax",
     km_substrate1="p_TPS1_Kg6p",
     km_substrate2="p_TPS1_Kudp_glc",
-    modifiers=[activator_TPS1],
 )
+v_TPS1.add_modifier(SimpleActivator(activator="ICF6P", k_A="p_TPS1_KmF6P"))
 
 # v_TPS1=Jax_MM_Irrev_Bi(substrate1="ICG6P",substrate2="ICG1P",vmax="p_TPS1_Vmax",km_substrate1="p_TPS1_Kg6p",km_substrate2="p_TPS1_Kudp_glc")
 v_TPS2 = Jax_MM_Irrev_Bi_w_Inhibition(

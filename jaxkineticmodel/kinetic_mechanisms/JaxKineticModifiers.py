@@ -1,10 +1,10 @@
 from jaxkineticmodel.kinetic_mechanisms.JaxKineticMechanisms import Mechanism
 
+
 class SimpleActivator(Mechanism):
     """ activation class modifier """
-
     @staticmethod
-    def compute(activator,k_A):
+    def compute(activator, k_A):
         return 1 + activator / k_A
 
 

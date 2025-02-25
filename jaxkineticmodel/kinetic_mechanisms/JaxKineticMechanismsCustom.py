@@ -39,6 +39,7 @@ class Jax_MM_Irrev_Bi_w_Modifiers:
                 / ((1 + (substrate1 / km_substrate1)) * (1 + (substrate2 / km_substrate2)))
         )
 
+
         for i, modifier in enumerate(self.modifiers):
             modifier_conc = eval_dict[self.modifiers_list[i]]
             v *= modifier.add_modifier(modifier_conc, eval_dict)

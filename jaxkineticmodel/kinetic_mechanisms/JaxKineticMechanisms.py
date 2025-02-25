@@ -4,6 +4,7 @@ import sympy
 
 class Mechanism:
     param_names: dict[str, str]
+    modifiers: list["Mechanism"] = []
 
     def __init__(self, **kwargs):
         # Initialize the parameter names
@@ -14,7 +15,6 @@ class Mechanism:
             raise
         self.param_names = kwargs
 
-
     def symbolic(self):
         symbol_dict = {k: sympy.Symbol(v) for k, v in self.param_names.items()}
         return self.compute(**symbol_dict)
@@ -24,7 +24,13 @@ class Mechanism:
 
     def __call__(self, eval_dict):
         kwargs = {k: eval_dict[v] for k, v in self.param_names.items()}
-        return self.compute(**kwargs)
+        result = self.compute(**kwargs)
+        for modifier in self.modifiers:
+            result *= modifier(eval_dict)
+        return result
+
+    def add_modifier(self, modifier: "Mechanism"):
+        self.modifiers.append(modifier)
 
     @staticmethod
     def compute(**kwargs):
