@@ -1,71 +1,10 @@
 from jaxkineticmodel.kinetic_mechanisms.JaxKineticMechanisms import Mechanism
 
 
-class Jax_MM_Irrev_Bi_w_Modifiers:
-    """Michaelis-Menten equation with modifiers: can be activator or inhibition
-    the names of the modifiers concentrations should be added as strings as well as classes,
-    in the same order as the classes"""
-
-    def __init__(
-            self,
-            substrate1: str,
-            substrate2: str,
-            modifiers_list: list,  # strings
-            vmax: str,
-            km_substrate1: str,
-            km_substrate2: str,
-            modifiers,
-    ):  # classes
-        self.substrate1 = substrate1
-        self.substrate2 = substrate2
-        self.vmax = vmax
-        self.km_substrate1 = km_substrate1
-        self.km_substrate2 = km_substrate2
-        self.modifiers = modifiers
-        self.modifiers_list = modifiers_list
-
-    def __call__(self, eval_dict):
-        vmax = eval_dict[self.vmax]
-        km_substrate1 = eval_dict[self.km_substrate1]
-        km_substrate2 = eval_dict[self.km_substrate2]
-
-        substrate1 = eval_dict[self.substrate1]
-        substrate2 = eval_dict[self.substrate2]
-
-        v = (
-                vmax
-                * (substrate1 / km_substrate1)
-                * (substrate2 / km_substrate2)
-                / ((1 + (substrate1 / km_substrate1)) * (1 + (substrate2 / km_substrate2)))
-        )
 
 
-        for i, modifier in enumerate(self.modifiers):
-            modifier_conc = eval_dict[self.modifiers_list[i]]
-            v *= modifier.add_modifier(modifier_conc, eval_dict)
-
-        return v
 
 
-class TPS1_Func_TEMP(Mechanism):
-    """Temporary function until I have figured how to deal with simple activator constructs
-    and Mechanism object"""
-
-    @staticmethod
-    def compute(substrate1, substrate2,
-                vmax, km_substrate1,
-                km_substrate2, k_a,
-                activator
-                ):
-        v = (
-                vmax
-                * (substrate1 / km_substrate1)
-                * (substrate2 / km_substrate2)
-                / ((1 + (substrate1 / km_substrate1)) * (1 + (substrate2 / km_substrate2)))
-        )
-
-        v *= 1 + activator / k_a
-        return v
 
 
 class HOR2_Func_TEMP(Mechanism):
@@ -277,24 +216,12 @@ class Jax_Hill_Irreversible_Bi_Activation(Mechanism):
         return numerator / (denominator * activator_term + hill_term)
 
 
-class Jax_Hill_Irreversible_Inhibition:
+class Jax_Hill_Irreversible_Inhibition(Mechanism):
     """Hill irreversible model with inhibition."""
 
-    def __init__(self, substrate: str, inhibitor: str, vmax: str, hill: str, k_half_substrate: str, ki: str):
-        self.vmax = vmax
-        self.hill = hill
-        self.k_half_substrate = k_half_substrate
-        self.ki = ki
-        self.substrate = substrate
-        self.inhibitor = inhibitor
-
-    def __call__(self, eval_dict):
-        vmax = eval_dict[self.vmax]
-        hill = eval_dict[self.hill]
-        k_half_substrate = eval_dict[self.k_half_substrate]
-        ki = eval_dict[self.ki]
-        substrate = eval_dict[self.substrate]
-        inhibitor = eval_dict[self.inhibitor]
+    @staticmethod
+    def compute(substrate, vmax, hill, k_half_substrate,
+                ki,inhibitor):
 
         # Calculate the numerator
         numerator = vmax * ((substrate / k_half_substrate) ** hill)

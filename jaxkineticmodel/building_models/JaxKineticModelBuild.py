@@ -1,7 +1,6 @@
 from typing import List, Any
 
 import jax.numpy as jnp
-from collections import Counter
 import diffrax
 import pandas as pd
 import sympy as sp
@@ -55,8 +54,23 @@ class Reaction:
         # exclude species as parameters, but add as seperate variable
         self.parameters = [x for x in mechanism.param_names.values()
                            if x not in species]
+        self.parameters = self._add_modifier_parameters()
         self.species_in_mechanism = [x for x in mechanism.param_names.values()
                                      if x in species]
+
+    def _add_modifier_parameters(self):
+        if self.mechanism.param_names_modifiers:
+            modifier_parameters=[x for x in self.mechanism.param_names_modifiers.values()
+                                 if x not in self.species]
+            parameters = [*self.parameters, *modifier_parameters]
+        else:
+            parameters = self.parameters
+
+        return parameters
+
+
+
+
 
 
 class JaxKineticModel_Build:
@@ -88,9 +102,8 @@ class JaxKineticModel_Build:
         # retrieve parameter names
         self.parameter_names = self._flatten([reaction.parameters for reaction in self.reactions])
 
-        #
         self.parameter_names= self._filter_parameters()
-        self._check_parameter_uniqueness()
+
 
         self.boundary_conditions = {}
 
@@ -132,13 +145,6 @@ class JaxKineticModel_Build:
                         )
         return comp_dict
 
-    def _check_parameter_uniqueness(self):
-        """Checks whether parameters are unique.
-        Throws info if not, since some compounds might be governed by global (process) parameters"""
-        count_list = Counter(self.parameter_names).values()
-        for count, k in enumerate(count_list):
-            if k != 1:
-                logger.info(f"parameter {self.parameter_names[k]} is in multiple reactions.")
 
     def add_boundary(self, metabolite_name: str, boundary_condition: BoundaryCondition):
         """Add a metabolite boundary condition

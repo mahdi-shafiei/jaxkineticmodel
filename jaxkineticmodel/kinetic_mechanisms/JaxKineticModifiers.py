@@ -8,13 +8,8 @@ class SimpleActivator(Mechanism):
         return 1 + activator / k_A
 
 
-class SimpleInhibitor:
+class SimpleInhibitor(Mechanism):
     """inhibition class modifier"""
-
-    def __init__(self, k_I: str):
-        super(SimpleInhibitor, self).__init__()
-        self.k_I = k_I
-
-    def add_modifier(self, inhibitor, eval_dict):
-        k_I = eval_dict[self.k_I]
+    @staticmethod
+    def compute(inhibitor, k_I):
         return 1 / (1 + inhibitor / k_I)
