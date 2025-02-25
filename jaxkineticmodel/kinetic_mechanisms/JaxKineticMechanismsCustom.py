@@ -66,18 +66,16 @@ class TPS1_Func_TEMP(Mechanism):
         v *= 1 + activator / k_a
         return v
 
+
 class HOR2_Func_TEMP(Mechanism):
     """Temporary function until I have figured how to deal with simple activator constructs
     and Mechanism object"""
 
     @staticmethod
-    def compute(substrate,vmax,km_substrate, inhibitor, k_I):
-
-
+    def compute(substrate, vmax, km_substrate, inhibitor, k_I):
         # Initial velocity calculation (without modifiers)
         v = (vmax * substrate / km_substrate) / (1 + substrate / km_substrate)
         v *= 1 + inhibitor / k_I
-
 
         return v
 
@@ -90,7 +88,6 @@ class G3PDH_Func_TEMP(Mechanism):
                 modifier1, modifier2, modifier3, vmax,
                 k_equilibrium, km_substrate1, km_substrate2,
                 km_product1, km_product2, ka1, ka2, ka3):
-
         denominator = (
                 (1 + substrate1 / km_substrate1 + product1 / km_product1)
                 * (1 + substrate2 / km_substrate2 + product2 / km_product2)
@@ -100,7 +97,6 @@ class G3PDH_Func_TEMP(Mechanism):
         numerator = (vmax / (km_substrate1 * km_substrate2)) * (
                 substrate1 * substrate2 - (product1 * product2 / k_equilibrium)
         )
-
 
         return numerator / denominator
 
@@ -133,7 +129,7 @@ class Jax_PFK(Mechanism):
                 * ((1 + ci_ATP * substrate2 / kATP) / (1 + substrate2 / kATP))
                 * ((1 + ci_AMP * modifiers / kAMP) / (modifiers / kAMP))
                 * ((1 + ci_F26BP * F26BP / kF26BP + ci_F16BP * product / kF16BP) / (
-                    1 + F26BP / kF26BP + product / kF16BP))
+                1 + F26BP / kF26BP + product / kF16BP))
         )
 
         return vmax * gr * lambda1 * lambda2 * R / (R ** 2 + L * T ** 2)
@@ -214,9 +210,8 @@ class Jax_MM_Ordered_Bi_Tri(Mechanism):
     """Ordered Bi-Tri MM model with co-factor binding first."""
 
     @staticmethod
-    def compute(substrate1,substrate2, substrate3, product1, product2,
-                vmax, k_equilibrium,km_substrate1, km_substrate2, km_product1, km_product2,ki):
-
+    def compute(substrate1, substrate2, substrate3, product1, product2,
+                vmax, k_equilibrium, km_substrate1, km_substrate2, km_product1, km_product2, ki):
         s1 = substrate1
         s2 = substrate2
         s3 = substrate3
@@ -261,49 +256,14 @@ class Jax_MM_Irrev_Uni_w_Modifiers:
         return v
 
 
-class Jax_Hill_Irreversible_Bi_Activation:
+class Jax_Hill_Irreversible_Bi_Activation(Mechanism):
     """Hill Bi-substrate irreversible model with activation. (PYK1)"""
 
-    def __init__(
-            self,
-            substrate1: str,
-            substrate2: str,
-            product: str,
-            activator: str,
-            vmax: str,
-            hill: str,
-            k_substrate1: str,
-            k_substrate2: str,
-            k_product: str,
-            k_activator: str,
-            l: str,
-    ):
-        self.vmax = vmax
-        self.hill = hill
-        self.k_substrate1 = k_substrate1
-        self.k_substrate2 = k_substrate2
-        self.k_product = k_product
-        self.k_activator = k_activator
-        self.l = l
-        self.substrate1 = substrate1
-        self.substrate2 = substrate2
-        self.product = product
-        self.activator = activator
-
-    def __call__(self, eval_dict):
-        vmax = eval_dict[self.vmax]
-        hill = eval_dict[self.hill]
-        k_substrate1 = eval_dict[self.k_substrate1]
-        k_substrate2 = eval_dict[self.k_substrate2]
-        k_product = eval_dict[self.k_product]
-        k_activator = eval_dict[self.k_activator]
-        l = eval_dict[self.l]
-
-        substrate1 = eval_dict[self.substrate1]
-        substrate2 = eval_dict[self.substrate2]
-        product = eval_dict[self.product]
-        activator = eval_dict[self.activator]
-
+    @staticmethod
+    def compute(substrate1, substrate2,
+                product, activator, vmax,
+                k_substrate1, k_substrate2,
+                k_product, k_activator, hill, l):
         # Calculate velocity using Hill equation with activation
         numerator = vmax * substrate1 * substrate2 / (k_substrate1 * k_substrate2)
         denominator = ((1 + substrate1 / k_substrate1) * (1 + substrate2 / k_substrate2)) * (
@@ -385,61 +345,13 @@ class Jax_MM_Rev_BiBi_w_Inhibition(Mechanism):
         return v
 
 
-class Jax_ADH:
+class Jax_ADH(Mechanism):
     """JAX class for the ADH reaction with detailed rate expression."""
 
-    def __init__(
-            self,
-            NAD: str,
-            ETOH: str,
-            NADH: str,
-            ACE: str,
-            vmax: str,
-            k_equilibrium: str,
-            km_substrate1: str,
-            km_substrate2: str,
-            km_product1: str,
-            km_product2: str,
-            ki_substrate1: str,
-            ki_substrate2: str,
-            ki_product1: str,
-            ki_product2: str,
-            exprs_cor: str,
-    ):
-        self.vmax = vmax
-        self.k_equilibrium = k_equilibrium
-        self.km_substrate1 = km_substrate1
-        self.km_substrate2 = km_substrate2
-        self.km_product1 = km_product1
-        self.km_product2 = km_product2
-        self.ki_substrate1 = ki_substrate1
-        self.ki_substrate2 = ki_substrate2
-        self.ki_product1 = ki_product1
-        self.ki_product2 = ki_product2
-        self.exprs_cor = exprs_cor
-        self.ETOH = ETOH
-        self.NADH = NADH
-        self.NAD = NAD
-        self.ACE = ACE
-
-    def __call__(self, eval_dict):
-        vmax = eval_dict[self.vmax]
-        k_equilibrium = eval_dict[self.k_equilibrium]
-        km_substrate1 = eval_dict[self.km_substrate1]
-        km_substrate2 = eval_dict[self.km_substrate2]
-        km_product1 = eval_dict[self.km_product1]
-        km_product2 = eval_dict[self.km_product2]
-        ki_substrate1 = eval_dict[self.ki_substrate1]
-        ki_substrate2 = eval_dict[self.ki_substrate2]
-        ki_product1 = eval_dict[self.ki_product1]
-        ki_product2 = eval_dict[self.ki_product2]
-        exprs_cor = eval_dict[self.exprs_cor]
-
-        NAD = eval_dict.get(self.NAD)
-        ETOH = eval_dict.get(self.ETOH)
-        NADH = eval_dict.get(self.NADH)
-        ACE = eval_dict[self.ACE]
-
+    @staticmethod
+    def compute(NAD, ETOH, NADH, ACE, vmax, k_equilibrium,
+                km_substrate1, km_substrate2, km_product1, km_product2,
+                ki_substrate1, ki_substrate2, ki_product1, ki_product2, exprs_cor, ):
         # Numerator calculation
         numerator = (vmax / (ki_substrate1 * km_substrate2)) * ((NAD * ETOH - NADH * ACE) / k_equilibrium)
 
@@ -460,85 +372,39 @@ class Jax_ADH:
         return -exprs_cor * (numerator / denominator)
 
 
-class Jax_ATPase:
+class Jax_ATPase(Mechanism):
     """
     JAX class to represent ATPase reaction with a potentially learnable ATPase ratio.
     """
 
-    def __init__(self, substrate: str, product: str, ATPase_ratio: str):
-        self.substrate = substrate
-        self.product = product
-        self.ATPase_ratio = ATPase_ratio
-
-    def __call__(self, eval_dict):
-        # Fetch the relevant values from eval_dict
-        substrate = eval_dict[self.substrate]
-        product = eval_dict[self.product]
-        ATPase_ratio = eval_dict[self.ATPase_ratio]
-
+    @staticmethod
+    def compute(substrate, product, ATPase_ratio):
         # Compute the reaction rate
         rate = ATPase_ratio * substrate / product
 
         return rate
 
 
-class Jax_MA_Rev_Bi:
+class Jax_MA_Rev_Bi(Mechanism):
     """Mass-action reversible bi-bi kinetic model."""
 
-    def __init__(self, substrate1: str, substrate2: str, product1: str, product2: str, k_equilibrium: str, k_fwd: str):
-        self.k_equilibrium = k_equilibrium
-        self.k_fwd = k_fwd
-        self.substrate1 = substrate1
-        self.substrate2 = substrate2
-        self.product1 = product1
-        self.product2 = product2
 
-    def __call__(self, eval_dict):
-        k_equilibrium = eval_dict[self.k_equilibrium]
-        k_fwd = eval_dict[self.k_fwd]
-        substrate1 = eval_dict[self.substrate1]  # Assumed to be a list with two elements
-        substrate2 = eval_dict[self.substrate2]
-        product1 = eval_dict[self.product1]  # Assumed to be a list with two elements
-        product2 = eval_dict[self.product2]
-
+    @staticmethod
+    def compute(substrate1, substrate2, product1, product2, k_equilibrium, k_fwd):
         return k_fwd * (substrate1 * substrate2 - product1 * product2 / k_equilibrium)
 
 
-class Jax_MA_Rev:
+class Jax_MA_Rev(Mechanism):
     """Mass-action reversible kinetic model."""
 
-    def __init__(self, substrate: str, k: str, steady_state_substrate: str):
-        self.k = k
-        self.steady_state_substrate = steady_state_substrate
-        self.substrate = substrate
-
-    def __call__(self, eval_dict):
-        k = eval_dict[self.k]
-        steady_state_substrate = eval_dict[self.steady_state_substrate]
-        substrate = eval_dict[self.substrate]
+    @staticmethod
+    def compute(substrate, steady_state_substrate,k):
 
         return k * (steady_state_substrate - substrate)
 
 
-class Jax_Amd1:
+class Jax_Amd1(Mechanism):
     """Amd1 kinetic model."""
-
-    def __init__(self, substrate: str, product: str, modifier: str, vmax: str, k50: str, ki: str, k_atp: str):
-        self.vmax = vmax
-        self.k50 = k50
-        self.ki = ki
-        self.k_atp = k_atp
-        self.substrate = substrate
-        self.product = product
-        self.modifier = modifier
-
-    def __call__(self, eval_dict):
-        vmax = eval_dict[self.vmax]
-        k50 = eval_dict[self.k50]
-        ki = eval_dict[self.ki]
-        k_atp = eval_dict[self.k_atp]
-        substrate = eval_dict[self.substrate]  # AMP
-        product = eval_dict[self.product]  # ATP
-        modifier = eval_dict[self.modifier]  # PI
-
+    @staticmethod
+    def compute(substrate,product, modifier, vmax, k50, ki, k_atp):
         return vmax * substrate / (k50 * (1 + modifier / ki) / (product / k_atp) + substrate)
