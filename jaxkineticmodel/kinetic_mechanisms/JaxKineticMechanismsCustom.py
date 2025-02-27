@@ -1,12 +1,6 @@
 from jaxkineticmodel.kinetic_mechanisms.JaxKineticMechanisms import Mechanism
 
 
-
-
-
-
-
-
 class HOR2_Func_TEMP(Mechanism):
     """Temporary function until I have figured how to deal with simple activator constructs
     and Mechanism object"""
@@ -221,8 +215,7 @@ class Jax_Hill_Irreversible_Inhibition(Mechanism):
 
     @staticmethod
     def compute(substrate, vmax, hill, k_half_substrate,
-                ki,inhibitor):
-
+                ki, inhibitor):
         # Calculate the numerator
         numerator = vmax * ((substrate / k_half_substrate) ** hill)
 
@@ -316,7 +309,6 @@ class Jax_ATPase(Mechanism):
 class Jax_MA_Rev_Bi(Mechanism):
     """Mass-action reversible bi-bi kinetic model."""
 
-
     @staticmethod
     def compute(substrate1, substrate2, product1, product2, k_equilibrium, k_fwd):
         return k_fwd * (substrate1 * substrate2 - product1 * product2 / k_equilibrium)
@@ -326,13 +318,21 @@ class Jax_MA_Rev(Mechanism):
     """Mass-action reversible kinetic model."""
 
     @staticmethod
-    def compute(substrate, steady_state_substrate,k):
-
+    def compute(substrate, steady_state_substrate, k):
         return k * (steady_state_substrate - substrate)
 
 
 class Jax_Amd1(Mechanism):
     """Amd1 kinetic model."""
+
     @staticmethod
-    def compute(substrate,product, modifier, vmax, k50, ki, k_atp):
+    def compute(substrate, product, modifier, vmax, k50, ki, k_atp):
         return vmax * substrate / (k50 * (1 + modifier / ki) / (product / k_atp) + substrate)
+
+
+class Jax_Transport_Flux_Correction(Mechanism):
+    """Modelling reaction required for the glycolysis model's transport reaction. """
+
+    @staticmethod
+    def compute(substrate, dilution_rate):
+        return (substrate / 3600) * dilution_rate

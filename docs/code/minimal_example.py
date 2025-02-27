@@ -14,10 +14,10 @@ v1 = jkm.Reaction(
     mechanism=jm.Jax_MM_Irrev_Uni(substrate="m1", vmax="A_Vmax", km_substrate="A_Km"),
 )
 
-# add reaction to a JaxKineticModel_Build class + compartment values
+# add reaction to a JaxKineticModelBuild class + compartment values
 reactions = [v1]
 compartment_values = {'c': 1}
-kmodel = jkm.JaxKineticModel_Build(reactions, compartment_values)
+kmodel = jkm.JaxKineticModelBuild(reactions, compartment_values)
 kmodel_sim = jkm.NeuralODEBuild(kmodel)
 
 # setup simulation

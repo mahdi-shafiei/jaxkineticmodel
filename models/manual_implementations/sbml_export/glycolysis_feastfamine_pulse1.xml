@@ -1,0 +1,3299 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level2/version4" level="2" version="4">
+  <model>
+    <listOfCompartments>
+      <compartment id="c" spatialDimensions="3" size="1" constant="true"/>
+      <compartment id="e" spatialDimensions="3" size="1" constant="true"/>
+    </listOfCompartments>
+    <listOfSpecies>
+      <species id="ICATP" compartment="c" initialAmount="3.730584" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="ICglucose" compartment="c" initialAmount="0.196003" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="ICADP" compartment="c" initialAmount="1.376832" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="ICG6P" compartment="c" initialAmount="0.716385" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="ECglucose" compartment="e" initialAmount="NaN" hasOnlySubstanceUnits="false" boundaryCondition="true" constant="false"/>
+      <species id="ICtreh" compartment="c" initialAmount="63.31204" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="ICF6P" compartment="c" initialAmount="0.202293" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="ICG1P" compartment="c" initialAmount="0.064568" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="ICT6P" compartment="c" initialAmount="0.093705" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="ICPHOS" compartment="c" initialAmount="10" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="ICFBP" compartment="c" initialAmount="0.057001" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="ICGAP" compartment="c" initialAmount="0.006213" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="ICDHAP" compartment="c" initialAmount="0.048571" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="ICNADH" compartment="c" initialAmount="0.0106" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="ICG3P" compartment="c" initialAmount="0.020586" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="ICNAD" compartment="c" initialAmount="1.5794" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="ICBPG" compartment="c" initialAmount="0.0001" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="IC3PG" compartment="c" initialAmount="2.311074" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="ICglyc" compartment="c" initialAmount="0.1" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="ECglyc" compartment="e" initialAmount="0" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="IC2PG" compartment="c" initialAmount="0.297534" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="ICPEP" compartment="c" initialAmount="1.171415" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="ICPYR" compartment="c" initialAmount="0.152195" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="ICETOH" compartment="c" initialAmount="10" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="ICACE" compartment="c" initialAmount="0.04" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="ECETOH" compartment="e" initialAmount="0" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="ICAMP" compartment="c" initialAmount="0.431427" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="ICIMP" compartment="c" initialAmount="0.1" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="ICINO" compartment="c" initialAmount="0.1" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="ICHYP" compartment="c" initialAmount="1.5" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+    </listOfSpecies>
+    <listOfParameters>
+      <parameter id="p_HXK_Vmax" value="0.95" constant="true"/>
+      <parameter id="p_HXK1_Keq" value="3800" constant="true"/>
+      <parameter id="p_HXK1_Katp" value="0.15" constant="true"/>
+      <parameter id="p_HXK1_Kglc" value="0.08" constant="true"/>
+      <parameter id="p_HXK1_Kadp" value="0.23" constant="true"/>
+      <parameter id="p_HXK1_Kg6p" value="30" constant="true"/>
+      <parameter id="p_HXK1_Kt6p" value="0.2" constant="true"/>
+      <parameter id="p_GLT_VmGLT" value="0.734" constant="true"/>
+      <parameter id="p_GLT_KmGLTGLCi" value="1.1918" constant="true"/>
+      <parameter id="p_GLT_KmGLTGLCo" value="1.0078" constant="true"/>
+      <parameter id="p_NTH1_Vmax" value="0.2" constant="true"/>
+      <parameter id="p_NTH1_Ktre" value="2.88" constant="true"/>
+      <parameter id="p_PGI1_Vmax" value="13.4667" constant="true"/>
+      <parameter id="p_PGI1_Keq" value="0.2586" constant="true"/>
+      <parameter id="p_PGI1_Kg6p" value="1.0257" constant="true"/>
+      <parameter id="p_PGI1_Kf6p" value="0.307" constant="true"/>
+      <parameter id="poly_sinkG6P" value="0.0778536" constant="true"/>
+      <parameter id="km_sinkG6P" value="0.01" constant="true"/>
+      <parameter id="poly_sinkF6P" value="0.024574614" constant="true"/>
+      <parameter id="km_sinkF6P" value="0.0001" constant="true"/>
+      <parameter id="p_PGM1_Vmax" value="100" constant="true"/>
+      <parameter id="p_PGM1_Keq" value="0.166666666666667" constant="true"/>
+      <parameter id="p_PGM1_Kg1p" value="0.023" constant="true"/>
+      <parameter id="p_PGM1_Kg6p" value="0.05" constant="true"/>
+      <parameter id="p_TPS1_Vmax" value="1.4" constant="true"/>
+      <parameter id="p_TPS1_Kg6p" value="3.8" constant="true"/>
+      <parameter id="p_TPS1_Kudp_glc" value="0.886" constant="true"/>
+      <parameter id="p_TPS1_KmF6P" value="1" constant="true"/>
+      <parameter id="p_TPS2_Vmax" value="0.105885" constant="true"/>
+      <parameter id="p_TPS2_Kt6p" value="0.5" constant="true"/>
+      <parameter id="p_TPS2_Kpi" value="0.7023" constant="true"/>
+      <parameter id="p_PFK_Vmax" value="0.71" constant="true"/>
+      <parameter id="p_PFK_Kf6p" value="0.1" constant="true"/>
+      <parameter id="p_PFK_Katp" value="0.71" constant="true"/>
+      <parameter id="p_PFK_gR" value="5.12" constant="true"/>
+      <parameter id="p_PFK_Catp" value="3" constant="true"/>
+      <parameter id="p_PFK_Ciatp" value="100" constant="true"/>
+      <parameter id="p_PFK_Camp" value="0.0845" constant="true"/>
+      <parameter id="p_PFK_Cf26bp" value="0.0174" constant="true"/>
+      <parameter id="p_PFK_Cf16bp" value="0.397" constant="true"/>
+      <parameter id="p_PFK_L" value="0.66" constant="true"/>
+      <parameter id="p_PFK_Kiatp" value="0.65" constant="true"/>
+      <parameter id="p_PFK_Kamp" value="0.095" constant="true"/>
+      <parameter id="p_PFK_F26BP" value="0.001" constant="true"/>
+      <parameter id="p_PFK_Kf26bp" value="0.0012" constant="true"/>
+      <parameter id="p_PFK_Kf16bp" value="0.111" constant="true"/>
+      <parameter id="p_FBA1_Vmax" value="3.15" constant="true"/>
+      <parameter id="p_FBA1_Keq" value="0.069" constant="true"/>
+      <parameter id="p_FBA1_Kf16bp" value="0.451" constant="true"/>
+      <parameter id="p_FBA1_Kglyceral3p" value="2" constant="true"/>
+      <parameter id="p_FBA1_Kdhap" value="2.4" constant="true"/>
+      <parameter id="p_TPI1_Vmax" value="78.396" constant="true"/>
+      <parameter id="p_TPI1_Keq" value="0.0391" constant="true"/>
+      <parameter id="p_TPI1_Kdhap" value="6.45" constant="true"/>
+      <parameter id="p_TPI1_Kglyceral3p" value="5.25" constant="true"/>
+      <parameter id="poly_sinkGAP" value="0.012626" constant="true"/>
+      <parameter id="p_GPD1_Vmax" value="1.169" constant="true"/>
+      <parameter id="p_GPD1_Keq" value="10000" constant="true"/>
+      <parameter id="p_GPD1_Kdhap" value="0.54" constant="true"/>
+      <parameter id="p_GPD1_Knadh" value="0.023" constant="true"/>
+      <parameter id="p_GPD1_Kglyc3p" value="1.2" constant="true"/>
+      <parameter id="p_GPD1_Knad" value="0.93" constant="true"/>
+      <parameter id="p_GPD1_Kf16bp" value="4.8" constant="true"/>
+      <parameter id="p_GPD1_Katp" value="0.73" constant="true"/>
+      <parameter id="p_GPD1_Kadp" value="2" constant="true"/>
+      <parameter id="p_GAPDH_Vmax" value="30.98" constant="true"/>
+      <parameter id="p_TDH1_Keq" value="0.0056" constant="true"/>
+      <parameter id="p_TDH1_Kglyceral3p" value="0.459" constant="true"/>
+      <parameter id="p_TDH1_Knad" value="2.92" constant="true"/>
+      <parameter id="p_TDH1_Kpi" value="1.5" constant="true"/>
+      <parameter id="p_TDH1_Kglycerate13bp" value="0.908" constant="true"/>
+      <parameter id="p_TDH1_Knadh" value="0.022" constant="true"/>
+      <parameter id="p_PGK_VmPGK" value="44.5" constant="true"/>
+      <parameter id="p_PGK_KeqPGK" value="3200" constant="true"/>
+      <parameter id="p_PGK_KmPGKBPG" value="0.003" constant="true"/>
+      <parameter id="p_PGK_KmPGKADP" value="0.2" constant="true"/>
+      <parameter id="p_PGK_KmPGKP3G" value="0.53" constant="true"/>
+      <parameter id="p_PGK_KmPGKATP" value="0.3" constant="true"/>
+      <parameter id="poly_sinkP3G" value="0.007881" constant="true"/>
+      <parameter id="km_sinkP3G" value="0.001" constant="true"/>
+      <parameter id="p_HOR2_Vmax" value="0.5" constant="true"/>
+      <parameter id="p_HOR2_Kglyc3p" value="5.99" constant="true"/>
+      <parameter id="p_HOR2_Kpi" value="1" constant="true"/>
+      <parameter id="f_GLYCEROL_e" value="0.1" constant="true"/>
+      <parameter id="p_GlycerolTransport" value="0.1" constant="true"/>
+      <parameter id="ECbiomass" value="3.7683659" constant="true"/>
+      <parameter id="p_PGM_Vm" value="14.2667" constant="true"/>
+      <parameter id="p_PGM_Keq" value="0.19" constant="true"/>
+      <parameter id="p_PGM_K3pg" value="1.2" constant="true"/>
+      <parameter id="p_PGM_K2pg" value="0.08" constant="true"/>
+      <parameter id="p_ENO1_Vm" value="5.95" constant="true"/>
+      <parameter id="p_ENO1_Keq" value="4.011" constant="true"/>
+      <parameter id="p_ENO1_K2pg" value="0.043" constant="true"/>
+      <parameter id="p_ENO1_Kpep" value="0.5" constant="true"/>
+      <parameter id="poly_sinkPEP" value="0.007607" constant="true"/>
+      <parameter id="km_sinkPEP" value="0.001" constant="true"/>
+      <parameter id="p_PYK1_Vm" value="9.3167" constant="true"/>
+      <parameter id="p_PYK1_hill" value="4" constant="true"/>
+      <parameter id="p_PYK1_Kpep" value="0.281" constant="true"/>
+      <parameter id="p_PYK1_Kadp" value="0.243" constant="true"/>
+      <parameter id="p_PYK1_Katp" value="9.3" constant="true"/>
+      <parameter id="p_PYK1_Kf16bp" value="0.2" constant="true"/>
+      <parameter id="p_PYK1_L" value="60000" constant="true"/>
+      <parameter id="poly_sinkPYR" value="0.1613283" constant="true"/>
+      <parameter id="km_sinkPYR" value="0.001" constant="true"/>
+      <parameter id="p_ADH_VmADH" value="13.5" constant="true"/>
+      <parameter id="p_ADH_KeqADH" value="6.9e-05" constant="true"/>
+      <parameter id="p_ADH_KiADHNAD" value="0.92" constant="true"/>
+      <parameter id="p_ADH_KmADHETOH" value="17" constant="true"/>
+      <parameter id="p_ADH_KmADHACE" value="1.11" constant="true"/>
+      <parameter id="p_ADH_KmADHNADH" value="0.11" constant="true"/>
+      <parameter id="p_ADH_KiADHETOH" value="90" constant="true"/>
+      <parameter id="p_ADH_KiADHACE" value="1.1" constant="true"/>
+      <parameter id="p_ADH_KiADHNADH" value="0.031" constant="true"/>
+      <parameter id="p_ADH_ExprsCor" value="1" constant="true"/>
+      <parameter id="poly_sinkACE" value="0.0348361668" constant="true"/>
+      <parameter id="km_sinkACE" value="0.0001" constant="true"/>
+      <parameter id="f_ETOH_e" value="1e-05" constant="true"/>
+      <parameter id="p_kETOHtransport" value="0.1" constant="true"/>
+      <parameter id="p_mitoVmax" value="1" constant="true"/>
+      <parameter id="p_mitoADPKm" value="0.5" constant="true"/>
+      <parameter id="p_mitoPiKm" value="1" constant="true"/>
+      <parameter id="p_ATPase_ratio" value="0.12" constant="true"/>
+      <parameter id="p_ADK1_Keq" value="0.45" constant="true"/>
+      <parameter id="p_ADK1_k" value="100" constant="true"/>
+      <parameter id="p_vacuolePi_k" value="0.17" constant="true"/>
+      <parameter id="p_vacuolePi_steadyStatePi" value="10" constant="true"/>
+      <parameter id="p_Amd1_Vmax" value="4" constant="true"/>
+      <parameter id="p_Amd1_K50" value="10.9184" constant="true"/>
+      <parameter id="p_Amd1_Kpi" value="1618.4" constant="true"/>
+      <parameter id="p_Amd1_Katp" value="5000" constant="true"/>
+      <parameter id="p_Ade13_Ade12_k" value="0.05" constant="true"/>
+      <parameter id="p_Isn1_k" value="0.1" constant="true"/>
+      <parameter id="p_Pnp1_k" value="0.03" constant="true"/>
+      <parameter id="p_Hpt1_k" value="0.02" constant="true"/>
+      <parameter id="p_PDC1_Vmax" value="6.4538" constant="true"/>
+      <parameter id="p_PDC1_Kpyr" value="8.5" constant="true"/>
+      <parameter id="p_PDC1_hill" value="1.9" constant="true"/>
+      <parameter id="p_PDC1_Kpi" value="14.7" constant="true"/>
+      <parameter id="p_mitoNADHVmax" value="1" constant="true"/>
+      <parameter id="p_mitoNADHKm" value="0.1" constant="true"/>
+      <parameter id="flux_ugp" value="0.00031" constant="true"/>
+      <parameter id="D" value="0.1" constant="true"/>
+    </listOfParameters>
+    <listOfRules>
+      <assignmentRule variable="ECglucose">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <piecewise>
+            <piece>
+              <apply>
+                <plus/>
+                <cn> 0.0943666793891201 </cn>
+                <apply>
+                  <times/>
+                  <cn> 0.00254520415702144 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 2 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> 0.0136112090281313 </cn>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> -0.000155615724072252 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 3 </cn>
+                  </apply>
+                </apply>
+              </apply>
+              <apply>
+                <and/>
+                <apply>
+                  <leq/>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                  <cn> 10 </cn>
+                </apply>
+                <apply>
+                  <geq/>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                  <cn type="integer"> 0 </cn>
+                </apply>
+              </apply>
+            </piece>
+            <piece>
+              <apply>
+                <plus/>
+                <cn> -0.279324201801845 </cn>
+                <apply>
+                  <times/>
+                  <cn> 0.000218075157118714 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 3 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> 0.125718473385421 </cn>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> -0.00866552227870752 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 2 </cn>
+                  </apply>
+                </apply>
+              </apply>
+              <apply>
+                <and/>
+                <apply>
+                  <geq/>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                  <cn> 10 </cn>
+                </apply>
+                <apply>
+                  <leq/>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                  <cn> 15 </cn>
+                </apply>
+                <apply>
+                  <or/>
+                  <apply>
+                    <gt/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn> 10 </cn>
+                  </apply>
+                  <apply>
+                    <lt/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 0 </cn>
+                  </apply>
+                </apply>
+              </apply>
+            </piece>
+            <piece>
+              <apply>
+                <plus/>
+                <cn> 1.154407202533 </cn>
+                <apply>
+                  <times/>
+                  <cn> 0.0104508964457571 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 2 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> -0.161027807481549 </cn>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> -0.00020673414786939 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 3 </cn>
+                  </apply>
+                </apply>
+              </apply>
+              <apply>
+                <and/>
+                <apply>
+                  <geq/>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                  <cn> 15 </cn>
+                </apply>
+                <apply>
+                  <leq/>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                  <cn> 20 </cn>
+                </apply>
+                <apply>
+                  <or/>
+                  <apply>
+                    <gt/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn> 15 </cn>
+                  </apply>
+                  <apply>
+                    <lt/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 0 </cn>
+                  </apply>
+                </apply>
+              </apply>
+            </piece>
+            <piece>
+              <apply>
+                <plus/>
+                <cn> -1.10924775831631 </cn>
+                <apply>
+                  <times/>
+                  <cn type="e-notation"> 7.62227222367743 <sep/> -5 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 3 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> 0.178520436645848 </cn>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> -0.00652651576061272 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 2 </cn>
+                  </apply>
+                </apply>
+              </apply>
+              <apply>
+                <and/>
+                <apply>
+                  <geq/>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                  <cn> 20 </cn>
+                </apply>
+                <apply>
+                  <leq/>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                  <cn> 30 </cn>
+                </apply>
+                <apply>
+                  <or/>
+                  <apply>
+                    <gt/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn> 20 </cn>
+                  </apply>
+                  <apply>
+                    <lt/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 0 </cn>
+                  </apply>
+                </apply>
+              </apply>
+            </piece>
+            <piece>
+              <apply>
+                <plus/>
+                <cn> 1.08120760578857 </cn>
+                <apply>
+                  <times/>
+                  <cn> 0.000775002119736891 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 2 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn type="e-notation"> -4.90525421155462 <sep/> -6 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 3 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> -0.0405250997646403 </cn>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                </apply>
+              </apply>
+              <apply>
+                <and/>
+                <apply>
+                  <geq/>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                  <cn> 30 </cn>
+                </apply>
+                <apply>
+                  <leq/>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                  <cn> 60 </cn>
+                </apply>
+                <apply>
+                  <or/>
+                  <apply>
+                    <gt/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn> 30 </cn>
+                  </apply>
+                  <apply>
+                    <lt/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 0 </cn>
+                  </apply>
+                </apply>
+              </apply>
+            </piece>
+            <piece>
+              <apply>
+                <plus/>
+                <cn> -0.325807119599717 </cn>
+                <apply>
+                  <times/>
+                  <cn type="e-notation"> 1.60870285042821 <sep/> -6 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 3 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> 0.0298256365047742 </cn>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> -0.000397510151420017 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 2 </cn>
+                  </apply>
+                </apply>
+              </apply>
+              <apply>
+                <and/>
+                <apply>
+                  <geq/>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                  <cn> 60 </cn>
+                </apply>
+                <apply>
+                  <leq/>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                  <cn> 90 </cn>
+                </apply>
+                <apply>
+                  <or/>
+                  <apply>
+                    <gt/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn> 60 </cn>
+                  </apply>
+                  <apply>
+                    <lt/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 0 </cn>
+                  </apply>
+                </apply>
+              </apply>
+            </piece>
+            <piece>
+              <apply>
+                <plus/>
+                <cn> 1.04826060427461 </cn>
+                <apply>
+                  <times/>
+                  <cn> 0.000111403820385288 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 2 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> -0.0159766209577032 </cn>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn type="e-notation"> -2.76163711813661 <sep/> -7 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 3 </cn>
+                  </apply>
+                </apply>
+              </apply>
+              <apply>
+                <and/>
+                <apply>
+                  <geq/>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                  <cn> 90 </cn>
+                </apply>
+                <apply>
+                  <leq/>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                  <cn> 150 </cn>
+                </apply>
+                <apply>
+                  <or/>
+                  <apply>
+                    <gt/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn> 90 </cn>
+                  </apply>
+                  <apply>
+                    <lt/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 0 </cn>
+                  </apply>
+                </apply>
+              </apply>
+            </piece>
+            <piece>
+              <apply>
+                <plus/>
+                <cn> -0.793219153920358 </cn>
+                <apply>
+                  <times/>
+                  <cn type="e-notation"> 2.69459920244106 <sep/> -7 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 3 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> 0.0208529742061961 </cn>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> -0.000134126814040708 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 2 </cn>
+                  </apply>
+                </apply>
+              </apply>
+              <apply>
+                <and/>
+                <apply>
+                  <geq/>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                  <cn> 150 </cn>
+                </apply>
+                <apply>
+                  <leq/>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                  <cn> 180 </cn>
+                </apply>
+                <apply>
+                  <or/>
+                  <apply>
+                    <gt/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn> 150 </cn>
+                  </apply>
+                  <apply>
+                    <lt/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 0 </cn>
+                  </apply>
+                </apply>
+              </apply>
+            </piece>
+            <piece>
+              <apply>
+                <plus/>
+                <cn> 1.42934119713794 </cn>
+                <apply>
+                  <times/>
+                  <cn type="e-notation"> 7.16658110572832 <sep/> -5 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 2 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn type="e-notation"> -1.11637533641062 <sep/> -7 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 3 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> -0.0161896983114423 </cn>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                </apply>
+              </apply>
+              <apply>
+                <and/>
+                <apply>
+                  <geq/>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                  <cn> 180 </cn>
+                </apply>
+                <apply>
+                  <leq/>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                  <cn> 220 </cn>
+                </apply>
+                <apply>
+                  <or/>
+                  <apply>
+                    <gt/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn> 180 </cn>
+                  </apply>
+                  <apply>
+                    <lt/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 0 </cn>
+                  </apply>
+                </apply>
+              </apply>
+            </piece>
+            <piece>
+              <apply>
+                <plus/>
+                <cn> -1.22753280418462 </cn>
+                <apply>
+                  <times/>
+                  <cn type="e-notation"> 1.37881061524467 <sep/> -7 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 3 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> 0.0200404017065926 </cn>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn type="e-notation"> -9.30164617519662 <sep/> -5 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 2 </cn>
+                  </apply>
+                </apply>
+              </apply>
+              <apply>
+                <and/>
+                <apply>
+                  <geq/>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                  <cn> 220 </cn>
+                </apply>
+                <apply>
+                  <leq/>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                  <cn> 250 </cn>
+                </apply>
+                <apply>
+                  <or/>
+                  <apply>
+                    <gt/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn> 220 </cn>
+                  </apply>
+                  <apply>
+                    <lt/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 0 </cn>
+                  </apply>
+                </apply>
+              </apply>
+            </piece>
+            <piece>
+              <apply>
+                <plus/>
+                <cn> 2.2226106060572 </cn>
+                <apply>
+                  <times/>
+                  <cn type="e-notation"> 7.25904219396407 <sep/> -5 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 2 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> -0.0213613192163091 </cn>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn type="e-notation"> -8.29281167310088 <sep/> -8 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 3 </cn>
+                  </apply>
+                </apply>
+              </apply>
+              <apply>
+                <and/>
+                <apply>
+                  <geq/>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                  <cn> 250 </cn>
+                </apply>
+                <apply>
+                  <leq/>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                  <cn> 300 </cn>
+                </apply>
+                <apply>
+                  <or/>
+                  <apply>
+                    <gt/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn> 250 </cn>
+                  </apply>
+                  <apply>
+                    <lt/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 0 </cn>
+                  </apply>
+                </apply>
+              </apply>
+            </piece>
+            <piece>
+              <apply>
+                <plus/>
+                <cn> -0.726213841978437 </cn>
+                <apply>
+                  <times/>
+                  <cn> 0.00812692526404723 </cn>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn type="e-notation"> 2.62876035666073 <sep/> -8 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 3 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn type="e-notation"> -2.57037263282137 <sep/> -5 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 2 </cn>
+                  </apply>
+                </apply>
+              </apply>
+              <apply>
+                <and/>
+                <apply>
+                  <geq/>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                  <cn> 300 </cn>
+                </apply>
+                <apply>
+                  <leq/>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                  <cn> 400 </cn>
+                </apply>
+                <apply>
+                  <or/>
+                  <apply>
+                    <gt/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn> 300 </cn>
+                  </apply>
+                  <apply>
+                    <lt/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 0 </cn>
+                  </apply>
+                </apply>
+              </apply>
+            </piece>
+            <piece>
+              <notanumber/>
+              <apply>
+                <or/>
+                <apply>
+                  <gt/>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                  <cn> 400 </cn>
+                </apply>
+                <apply>
+                  <lt/>
+                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                  <cn type="integer"> 0 </cn>
+                </apply>
+              </apply>
+            </piece>
+          </piecewise>
+        </math>
+      </assignmentRule>
+    </listOfRules>
+    <listOfReactions>
+      <reaction id="v_HXK" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICATP" stoichiometry="1"/>
+          <speciesReference species="ICglucose" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICADP" stoichiometry="1"/>
+          <speciesReference species="ICG6P" stoichiometry="1"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference species="ICT6P"/>
+        </listOfModifiers>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> ICATP </ci>
+              <ci> ICglucose </ci>
+              <ci> p_HXK_Vmax </ci>
+              <apply>
+                <power/>
+                <ci> p_HXK1_Katp </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <ci> p_HXK1_Kglc </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <cn type="integer"> 1 </cn>
+                  <apply>
+                    <times/>
+                    <ci> ICADP </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_HXK1_Kadp </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> ICATP </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_HXK1_Katp </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <cn type="integer"> 1 </cn>
+                  <apply>
+                    <times/>
+                    <ci> ICATP </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_HXK1_Kg6p </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> ICT6P </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_HXK1_Kt6p </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> ICglucose </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_HXK1_Kglc </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <plus/>
+                <cn type="integer"> 1 </cn>
+                <apply>
+                  <times/>
+                  <cn type="integer"> -1 </cn>
+                  <ci> ICADP </ci>
+                  <apply>
+                    <power/>
+                    <ci> ICglucose </ci>
+                    <cn type="integer"> -1 </cn>
+                  </apply>
+                  <apply>
+                    <power/>
+                    <ci> p_HXK1_Keq </ci>
+                    <cn type="integer"> -1 </cn>
+                  </apply>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_GLT" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ECglucose" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICglucose" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> p_GLT_VmGLT </ci>
+              <apply>
+                <power/>
+                <ci> p_GLT_KmGLTGLCo </ci>
+                <cn type="integer"> -2 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <cn type="integer"> 1 </cn>
+                  <apply>
+                    <times/>
+                    <ci> ECglucose </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_GLT_KmGLTGLCo </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> ICglucose </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_GLT_KmGLTGLCi </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <cn> 0.91 </cn>
+                    <ci> ECglucose </ci>
+                    <ci> ICglucose </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_GLT_KmGLTGLCi </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                    <apply>
+                      <power/>
+                      <ci> p_GLT_KmGLTGLCo </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <plus/>
+                <ci> ECglucose </ci>
+                <apply>
+                  <times/>
+                  <cn type="integer"> -1 </cn>
+                  <ci> ICglucose </ci>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_NTH1" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICtreh" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICglucose" stoichiometry="2"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> ICtreh </ci>
+              <ci> p_NTH1_Vmax </ci>
+              <apply>
+                <power/>
+                <ci> p_NTH1_Ktre </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <cn type="integer"> 1 </cn>
+                  <apply>
+                    <times/>
+                    <ci> ICtreh </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_NTH1_Ktre </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_PGI" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICG6P" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICF6P" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> ICG6P </ci>
+              <ci> p_PGI1_Vmax </ci>
+              <apply>
+                <power/>
+                <ci> p_PGI1_Kg6p </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <cn type="integer"> 1 </cn>
+                  <apply>
+                    <times/>
+                    <ci> ICF6P </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_PGI1_Kf6p </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> ICG6P </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_PGI1_Kg6p </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <plus/>
+                <cn type="integer"> 1 </cn>
+                <apply>
+                  <times/>
+                  <cn type="integer"> -1 </cn>
+                  <ci> ICF6P </ci>
+                  <apply>
+                    <power/>
+                    <ci> ICG6P </ci>
+                    <cn type="integer"> -1 </cn>
+                  </apply>
+                  <apply>
+                    <power/>
+                    <ci> p_PGI1_Keq </ci>
+                    <cn type="integer"> -1 </cn>
+                  </apply>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_sinkG6P" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICG6P" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICPHOS" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> ICG6P </ci>
+              <ci> poly_sinkG6P </ci>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <ci> ICG6P </ci>
+                  <ci> km_sinkG6P </ci>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_sinkf6P" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICPHOS" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICF6P" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> ICF6P </ci>
+              <ci> poly_sinkF6P </ci>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <ci> ICF6P </ci>
+                  <ci> km_sinkF6P </ci>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_PGM1" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICG1P" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICG6P" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> ICG1P </ci>
+              <ci> p_PGM1_Vmax </ci>
+              <apply>
+                <power/>
+                <ci> p_PGM1_Kg1p </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <cn type="integer"> 1 </cn>
+                  <apply>
+                    <times/>
+                    <ci> ICG1P </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_PGM1_Kg1p </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> ICG6P </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_PGM1_Kg6p </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <plus/>
+                <cn type="integer"> 1 </cn>
+                <apply>
+                  <times/>
+                  <cn type="integer"> -1 </cn>
+                  <ci> ICG6P </ci>
+                  <apply>
+                    <power/>
+                    <ci> ICG1P </ci>
+                    <cn type="integer"> -1 </cn>
+                  </apply>
+                  <apply>
+                    <power/>
+                    <ci> p_PGM1_Keq </ci>
+                    <cn type="integer"> -1 </cn>
+                  </apply>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_TPS1" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICG6P" stoichiometry="1"/>
+          <speciesReference species="ICG1P" stoichiometry="1"/>
+          <speciesReference species="ICATP" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICT6P" stoichiometry="1"/>
+          <speciesReference species="ICADP" stoichiometry="1"/>
+          <speciesReference species="ICPHOS" stoichiometry="2"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference species="ICF6P"/>
+        </listOfModifiers>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> ICG1P </ci>
+              <ci> ICG6P </ci>
+              <ci> p_TPS1_Vmax </ci>
+              <apply>
+                <power/>
+                <ci> p_TPS1_Kg6p </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <ci> p_TPS1_Kudp_glc </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <cn type="integer"> 1 </cn>
+                  <apply>
+                    <times/>
+                    <ci> ICG1P </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_TPS1_Kudp_glc </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <cn type="integer"> 1 </cn>
+                  <apply>
+                    <times/>
+                    <ci> ICG6P </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_TPS1_Kg6p </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <plus/>
+                <cn type="integer"> 1 </cn>
+                <apply>
+                  <times/>
+                  <ci> ICF6P </ci>
+                  <apply>
+                    <power/>
+                    <ci> p_TPS1_KmF6P </ci>
+                    <cn type="integer"> -1 </cn>
+                  </apply>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_TPS2" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICT6P" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICtreh" stoichiometry="1"/>
+          <speciesReference species="ICPHOS" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> ICPHOS </ci>
+              <ci> ICT6P </ci>
+              <ci> p_TPS2_Vmax </ci>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <apply>
+                    <times/>
+                    <ci> p_TPS2_Kpi </ci>
+                    <ci> p_TPS2_Kt6p </ci>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> ICPHOS </ci>
+                    <ci> ICT6P </ci>
+                    <ci> p_TPS2_Kt6p </ci>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_PFK" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICF6P" stoichiometry="1"/>
+          <speciesReference species="ICATP" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICFBP" stoichiometry="1"/>
+          <speciesReference species="ICADP" stoichiometry="1"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference species="ICAMP"/>
+        </listOfModifiers>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> ICATP </ci>
+              <ci> ICF6P </ci>
+              <ci> p_PFK_Vmax </ci>
+              <ci> p_PFK_gR </ci>
+              <apply>
+                <power/>
+                <ci> p_PFK_Katp </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <ci> p_PFK_Kf6p </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <apply>
+                    <power/>
+                    <apply>
+                      <plus/>
+                      <cn type="integer"> 1 </cn>
+                      <apply>
+                        <times/>
+                        <ci> ICATP </ci>
+                        <ci> ICF6P </ci>
+                        <apply>
+                          <power/>
+                          <ci> p_PFK_Katp </ci>
+                          <cn type="integer"> -1 </cn>
+                        </apply>
+                        <apply>
+                          <power/>
+                          <ci> p_PFK_Kf6p </ci>
+                          <cn type="integer"> -1 </cn>
+                        </apply>
+                      </apply>
+                      <apply>
+                        <times/>
+                        <ci> ICATP </ci>
+                        <ci> ICF6P </ci>
+                        <ci> p_PFK_gR </ci>
+                        <apply>
+                          <power/>
+                          <ci> p_PFK_Katp </ci>
+                          <cn type="integer"> -1 </cn>
+                        </apply>
+                        <apply>
+                          <power/>
+                          <ci> p_PFK_Kf6p </ci>
+                          <cn type="integer"> -1 </cn>
+                        </apply>
+                      </apply>
+                    </apply>
+                    <cn type="integer"> 2 </cn>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> p_PFK_Kamp </ci>
+                    <ci> p_PFK_L </ci>
+                    <apply>
+                      <power/>
+                      <ci> ICAMP </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                    <apply>
+                      <power/>
+                      <apply>
+                        <plus/>
+                        <cn type="integer"> 1 </cn>
+                        <apply>
+                          <times/>
+                          <ci> ICATP </ci>
+                          <apply>
+                            <power/>
+                            <ci> p_PFK_Kiatp </ci>
+                            <cn type="integer"> -1 </cn>
+                          </apply>
+                        </apply>
+                      </apply>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                    <apply>
+                      <power/>
+                      <apply>
+                        <plus/>
+                        <cn type="integer"> 1 </cn>
+                        <apply>
+                          <times/>
+                          <ci> ICATP </ci>
+                          <ci> p_PFK_Catp </ci>
+                          <apply>
+                            <power/>
+                            <ci> p_PFK_Katp </ci>
+                            <cn type="integer"> -1 </cn>
+                          </apply>
+                        </apply>
+                      </apply>
+                      <cn type="integer"> 2 </cn>
+                    </apply>
+                    <apply>
+                      <power/>
+                      <apply>
+                        <plus/>
+                        <cn type="integer"> 1 </cn>
+                        <apply>
+                          <times/>
+                          <ci> ICFBP </ci>
+                          <apply>
+                            <power/>
+                            <ci> p_PFK_Kf16bp </ci>
+                            <cn type="integer"> -1 </cn>
+                          </apply>
+                        </apply>
+                        <apply>
+                          <times/>
+                          <ci> p_PFK_F26BP </ci>
+                          <apply>
+                            <power/>
+                            <ci> p_PFK_Kf26bp </ci>
+                            <cn type="integer"> -1 </cn>
+                          </apply>
+                        </apply>
+                      </apply>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                    <apply>
+                      <plus/>
+                      <cn type="integer"> 1 </cn>
+                      <apply>
+                        <times/>
+                        <ci> ICAMP </ci>
+                        <ci> p_PFK_Camp </ci>
+                        <apply>
+                          <power/>
+                          <ci> p_PFK_Kamp </ci>
+                          <cn type="integer"> -1 </cn>
+                        </apply>
+                      </apply>
+                    </apply>
+                    <apply>
+                      <plus/>
+                      <cn type="integer"> 1 </cn>
+                      <apply>
+                        <times/>
+                        <ci> ICATP </ci>
+                        <ci> p_PFK_Ciatp </ci>
+                        <apply>
+                          <power/>
+                          <ci> p_PFK_Kiatp </ci>
+                          <cn type="integer"> -1 </cn>
+                        </apply>
+                      </apply>
+                    </apply>
+                    <apply>
+                      <plus/>
+                      <cn type="integer"> 1 </cn>
+                      <apply>
+                        <times/>
+                        <ci> ICFBP </ci>
+                        <ci> p_PFK_Cf16bp </ci>
+                        <apply>
+                          <power/>
+                          <ci> p_PFK_Kf16bp </ci>
+                          <cn type="integer"> -1 </cn>
+                        </apply>
+                      </apply>
+                      <apply>
+                        <times/>
+                        <ci> p_PFK_Cf26bp </ci>
+                        <ci> p_PFK_F26BP </ci>
+                        <apply>
+                          <power/>
+                          <ci> p_PFK_Kf26bp </ci>
+                          <cn type="integer"> -1 </cn>
+                        </apply>
+                      </apply>
+                    </apply>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <plus/>
+                <cn type="integer"> 1 </cn>
+                <apply>
+                  <times/>
+                  <ci> ICATP </ci>
+                  <ci> ICF6P </ci>
+                  <apply>
+                    <power/>
+                    <ci> p_PFK_Katp </ci>
+                    <cn type="integer"> -1 </cn>
+                  </apply>
+                  <apply>
+                    <power/>
+                    <ci> p_PFK_Kf6p </ci>
+                    <cn type="integer"> -1 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <ci> ICATP </ci>
+                  <ci> ICF6P </ci>
+                  <ci> p_PFK_gR </ci>
+                  <apply>
+                    <power/>
+                    <ci> p_PFK_Katp </ci>
+                    <cn type="integer"> -1 </cn>
+                  </apply>
+                  <apply>
+                    <power/>
+                    <ci> p_PFK_Kf6p </ci>
+                    <cn type="integer"> -1 </cn>
+                  </apply>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_ALD" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICFBP" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICGAP" stoichiometry="1"/>
+          <speciesReference species="ICDHAP" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> p_FBA1_Vmax </ci>
+              <apply>
+                <power/>
+                <ci> p_FBA1_Kf16bp </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <apply>
+                    <times/>
+                    <ci> ICFBP </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_FBA1_Kf16bp </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <apply>
+                      <plus/>
+                      <cn type="integer"> 1 </cn>
+                      <apply>
+                        <times/>
+                        <ci> ICDHAP </ci>
+                        <apply>
+                          <power/>
+                          <ci> p_FBA1_Kdhap </ci>
+                          <cn type="integer"> -1 </cn>
+                        </apply>
+                      </apply>
+                    </apply>
+                    <apply>
+                      <plus/>
+                      <cn type="integer"> 1 </cn>
+                      <apply>
+                        <times/>
+                        <ci> ICGAP </ci>
+                        <apply>
+                          <power/>
+                          <ci> p_FBA1_Kglyceral3p </ci>
+                          <cn type="integer"> -1 </cn>
+                        </apply>
+                      </apply>
+                    </apply>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <plus/>
+                <ci> ICFBP </ci>
+                <apply>
+                  <times/>
+                  <cn type="integer"> -1 </cn>
+                  <ci> ICDHAP </ci>
+                  <ci> ICGAP </ci>
+                  <apply>
+                    <power/>
+                    <ci> p_FBA1_Keq </ci>
+                    <cn type="integer"> -1 </cn>
+                  </apply>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_TPI1" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICDHAP" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICGAP" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> ICDHAP </ci>
+              <ci> p_TPI1_Vmax </ci>
+              <apply>
+                <power/>
+                <ci> p_TPI1_Kdhap </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <cn type="integer"> 1 </cn>
+                  <apply>
+                    <times/>
+                    <ci> ICDHAP </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_TPI1_Kdhap </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> ICGAP </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_TPI1_Kglyceral3p </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <plus/>
+                <cn type="integer"> 1 </cn>
+                <apply>
+                  <times/>
+                  <cn type="integer"> -1 </cn>
+                  <ci> ICGAP </ci>
+                  <apply>
+                    <power/>
+                    <ci> ICDHAP </ci>
+                    <cn type="integer"> -1 </cn>
+                  </apply>
+                  <apply>
+                    <power/>
+                    <ci> p_TPI1_Keq </ci>
+                    <cn type="integer"> -1 </cn>
+                  </apply>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_sinkGAP" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICPHOS" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICGAP" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> ICGAP </ci>
+              <ci> poly_sinkGAP </ci>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <ci> ICGAP </ci>
+                  <ci> poly_sinkGAP </ci>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_3GPDH" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICDHAP" stoichiometry="1"/>
+          <speciesReference species="ICNADH" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICG3P" stoichiometry="1"/>
+          <speciesReference species="ICNAD" stoichiometry="1"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference species="ICFBP"/>
+          <modifierSpeciesReference species="ICATP"/>
+          <modifierSpeciesReference species="ICADP"/>
+        </listOfModifiers>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> p_GPD1_Vmax </ci>
+              <apply>
+                <power/>
+                <ci> p_GPD1_Kdhap </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <ci> p_GPD1_Knadh </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <cn type="integer"> 1 </cn>
+                  <apply>
+                    <times/>
+                    <ci> ICDHAP </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_GPD1_Kdhap </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> ICG3P </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_GPD1_Kglyc3p </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <cn type="integer"> 1 </cn>
+                  <apply>
+                    <times/>
+                    <ci> ICNAD </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_GPD1_Knad </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> ICNADH </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_GPD1_Knadh </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <cn type="integer"> 1 </cn>
+                  <apply>
+                    <times/>
+                    <ci> ICADP </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_GPD1_Kadp </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> ICATP </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_GPD1_Katp </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> ICFBP </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_GPD1_Kf16bp </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <plus/>
+                <apply>
+                  <times/>
+                  <ci> ICDHAP </ci>
+                  <ci> ICNADH </ci>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn type="integer"> -1 </cn>
+                  <ci> ICG3P </ci>
+                  <ci> ICNAD </ci>
+                  <apply>
+                    <power/>
+                    <ci> p_GPD1_Keq </ci>
+                    <cn type="integer"> -1 </cn>
+                  </apply>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_GAPDH" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICGAP" stoichiometry="1"/>
+          <speciesReference species="ICNAD" stoichiometry="1"/>
+          <speciesReference species="ICPHOS" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICBPG" stoichiometry="1"/>
+          <speciesReference species="ICNADH" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> p_GAPDH_Vmax </ci>
+              <apply>
+                <power/>
+                <ci> p_TDH1_Kglyceral3p </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <ci> p_TDH1_Knad </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <ci> p_TDH1_Kpi </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <cn type="integer"> -1 </cn>
+                  <apply>
+                    <times/>
+                    <apply>
+                      <plus/>
+                      <cn type="integer"> 1 </cn>
+                      <apply>
+                        <times/>
+                        <ci> ICBPG </ci>
+                        <apply>
+                          <power/>
+                          <ci> p_TDH1_Kglycerate13bp </ci>
+                          <cn type="integer"> -1 </cn>
+                        </apply>
+                      </apply>
+                    </apply>
+                    <apply>
+                      <plus/>
+                      <cn type="integer"> 1 </cn>
+                      <apply>
+                        <times/>
+                        <ci> ICNADH </ci>
+                        <apply>
+                          <power/>
+                          <ci> p_TDH1_Knadh </ci>
+                          <cn type="integer"> -1 </cn>
+                        </apply>
+                      </apply>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <apply>
+                      <plus/>
+                      <cn type="integer"> 1 </cn>
+                      <apply>
+                        <times/>
+                        <ci> ICGAP </ci>
+                        <apply>
+                          <power/>
+                          <ci> p_TDH1_Kglyceral3p </ci>
+                          <cn type="integer"> -1 </cn>
+                        </apply>
+                      </apply>
+                    </apply>
+                    <apply>
+                      <plus/>
+                      <cn type="integer"> 1 </cn>
+                      <apply>
+                        <times/>
+                        <ci> ICNAD </ci>
+                        <apply>
+                          <power/>
+                          <ci> p_TDH1_Knad </ci>
+                          <cn type="integer"> -1 </cn>
+                        </apply>
+                      </apply>
+                    </apply>
+                    <apply>
+                      <plus/>
+                      <cn type="integer"> 1 </cn>
+                      <apply>
+                        <times/>
+                        <ci> ICPHOS </ci>
+                        <apply>
+                          <power/>
+                          <ci> p_TDH1_Kpi </ci>
+                          <cn type="integer"> -1 </cn>
+                        </apply>
+                      </apply>
+                    </apply>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <plus/>
+                <apply>
+                  <times/>
+                  <ci> ICGAP </ci>
+                  <ci> ICNAD </ci>
+                  <ci> ICPHOS </ci>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn type="integer"> -1 </cn>
+                  <ci> ICBPG </ci>
+                  <ci> ICNADH </ci>
+                  <apply>
+                    <power/>
+                    <ci> p_TDH1_Keq </ci>
+                    <cn type="integer"> -1 </cn>
+                  </apply>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_PGK" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICBPG" stoichiometry="1"/>
+          <speciesReference species="ICADP" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="IC3PG" stoichiometry="1"/>
+          <speciesReference species="ICATP" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> ICADP </ci>
+              <ci> ICBPG </ci>
+              <ci> p_PGK_VmPGK </ci>
+              <apply>
+                <power/>
+                <ci> p_PGK_KmPGKADP </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <ci> p_PGK_KmPGKBPG </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <cn type="integer"> 1 </cn>
+                  <apply>
+                    <times/>
+                    <ci> IC3PG </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_PGK_KmPGKP3G </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> ICBPG </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_PGK_KmPGKBPG </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <cn type="integer"> 1 </cn>
+                  <apply>
+                    <times/>
+                    <ci> ICADP </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_PGK_KmPGKADP </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> ICATP </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_PGK_KmPGKATP </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <plus/>
+                <cn type="integer"> 1 </cn>
+                <apply>
+                  <times/>
+                  <cn type="integer"> -1 </cn>
+                  <ci> IC3PG </ci>
+                  <ci> ICATP </ci>
+                  <apply>
+                    <power/>
+                    <ci> ICADP </ci>
+                    <cn type="integer"> -1 </cn>
+                  </apply>
+                  <apply>
+                    <power/>
+                    <ci> ICBPG </ci>
+                    <cn type="integer"> -1 </cn>
+                  </apply>
+                  <apply>
+                    <power/>
+                    <ci> p_PGK_KeqPGK </ci>
+                    <cn type="integer"> -1 </cn>
+                  </apply>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_sink3PGA" reversible="false">
+        <listOfReactants>
+          <speciesReference species="IC3PG" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICPHOS" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> IC3PG </ci>
+              <ci> poly_sinkP3G </ci>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <ci> IC3PG </ci>
+                  <ci> km_sinkP3G </ci>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_HOR2" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICG3P" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICglyc" stoichiometry="1"/>
+          <speciesReference species="ICPHOS" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> ICG3P </ci>
+              <ci> p_HOR2_Vmax </ci>
+              <apply>
+                <power/>
+                <ci> p_HOR2_Kglyc3p </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <cn type="integer"> 1 </cn>
+                  <apply>
+                    <times/>
+                    <ci> ICG3P </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_HOR2_Kglyc3p </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <cn type="integer"> 1 </cn>
+                  <apply>
+                    <times/>
+                    <ci> ICPHOS </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_HOR2_Kpi </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_GlycT_IC" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICglyc" stoichiometry="1"/>
+        </listOfReactants>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> p_GlycerolTransport </ci>
+              <apply>
+                <plus/>
+                <ci> ICglyc </ci>
+                <apply>
+                  <times/>
+                  <cn type="integer"> -1 </cn>
+                  <ci> f_GLYCEROL_e </ci>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_GlycT_EC" reversible="false">
+        <listOfProducts>
+          <speciesReference species="ECglyc" stoichiometry="1"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference species="ICglyc"/>
+        </listOfModifiers>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <cn> 0.002 </cn>
+              <ci> ECbiomass </ci>
+              <ci> p_GlycerolTransport </ci>
+              <apply>
+                <plus/>
+                <ci> ICglyc </ci>
+                <apply>
+                  <times/>
+                  <cn type="integer"> -1 </cn>
+                  <ci> f_GLYCEROL_e </ci>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_PGM" reversible="false">
+        <listOfReactants>
+          <speciesReference species="IC3PG" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="IC2PG" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> IC3PG </ci>
+              <ci> p_PGM_Vm </ci>
+              <apply>
+                <power/>
+                <ci> p_PGM_K3pg </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <cn type="integer"> 1 </cn>
+                  <apply>
+                    <times/>
+                    <ci> IC2PG </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_PGM_K2pg </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> IC3PG </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_PGM_K3pg </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <plus/>
+                <cn type="integer"> 1 </cn>
+                <apply>
+                  <times/>
+                  <cn type="integer"> -1 </cn>
+                  <ci> IC2PG </ci>
+                  <apply>
+                    <power/>
+                    <ci> IC3PG </ci>
+                    <cn type="integer"> -1 </cn>
+                  </apply>
+                  <apply>
+                    <power/>
+                    <ci> p_PGM_Keq </ci>
+                    <cn type="integer"> -1 </cn>
+                  </apply>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_ENO2" reversible="false">
+        <listOfReactants>
+          <speciesReference species="IC2PG" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICPEP" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> IC2PG </ci>
+              <ci> p_ENO1_Vm </ci>
+              <apply>
+                <power/>
+                <ci> p_ENO1_K2pg </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <cn type="integer"> 1 </cn>
+                  <apply>
+                    <times/>
+                    <ci> IC2PG </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_ENO1_K2pg </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> ICPEP </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_ENO1_Kpep </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <plus/>
+                <cn type="integer"> 1 </cn>
+                <apply>
+                  <times/>
+                  <cn type="integer"> -1 </cn>
+                  <ci> ICPEP </ci>
+                  <apply>
+                    <power/>
+                    <ci> IC2PG </ci>
+                    <cn type="integer"> -1 </cn>
+                  </apply>
+                  <apply>
+                    <power/>
+                    <ci> p_ENO1_Keq </ci>
+                    <cn type="integer"> -1 </cn>
+                  </apply>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_sinkPEP" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICPEP" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICPHOS" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> ICPEP </ci>
+              <ci> poly_sinkPEP </ci>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <ci> ICPEP </ci>
+                  <ci> km_sinkPEP </ci>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_PYK1" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICPEP" stoichiometry="1"/>
+          <speciesReference species="ICADP" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICPYR" stoichiometry="1"/>
+          <speciesReference species="ICATP" stoichiometry="1"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference species="ICFBP"/>
+        </listOfModifiers>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> ICADP </ci>
+              <ci> ICPEP </ci>
+              <ci> p_PYK1_Vm </ci>
+              <apply>
+                <power/>
+                <ci> p_PYK1_Kadp </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <ci> p_PYK1_Kpep </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <apply>
+                    <power/>
+                    <apply>
+                      <plus/>
+                      <cn type="integer"> 1 </cn>
+                      <apply>
+                        <times/>
+                        <ci> ICPEP </ci>
+                        <apply>
+                          <power/>
+                          <ci> p_PYK1_Kpep </ci>
+                          <cn type="integer"> -1 </cn>
+                        </apply>
+                      </apply>
+                    </apply>
+                    <ci> p_PYK1_hill </ci>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> p_PYK1_L </ci>
+                    <apply>
+                      <power/>
+                      <apply>
+                        <times/>
+                        <apply>
+                          <power/>
+                          <apply>
+                            <plus/>
+                            <cn type="integer"> 1 </cn>
+                            <apply>
+                              <times/>
+                              <ci> ICFBP </ci>
+                              <apply>
+                                <power/>
+                                <ci> p_PYK1_Kf16bp </ci>
+                                <cn type="integer"> -1 </cn>
+                              </apply>
+                            </apply>
+                          </apply>
+                          <cn type="integer"> -1 </cn>
+                        </apply>
+                        <apply>
+                          <plus/>
+                          <cn type="integer"> 1 </cn>
+                          <apply>
+                            <times/>
+                            <ci> ICATP </ci>
+                            <apply>
+                              <power/>
+                              <ci> p_PYK1_Katp </ci>
+                              <cn type="integer"> -1 </cn>
+                            </apply>
+                          </apply>
+                        </apply>
+                      </apply>
+                      <ci> p_PYK1_hill </ci>
+                    </apply>
+                    <apply>
+                      <power/>
+                      <apply>
+                        <plus/>
+                        <cn type="integer"> 1 </cn>
+                        <apply>
+                          <times/>
+                          <ci> ICPEP </ci>
+                          <apply>
+                            <power/>
+                            <ci> p_PYK1_Kpep </ci>
+                            <cn type="integer"> -1 </cn>
+                          </apply>
+                        </apply>
+                      </apply>
+                      <apply>
+                        <plus/>
+                        <cn type="integer"> -1 </cn>
+                        <ci> p_PYK1_hill </ci>
+                      </apply>
+                    </apply>
+                    <apply>
+                      <plus/>
+                      <cn type="integer"> 1 </cn>
+                      <apply>
+                        <times/>
+                        <ci> ICADP </ci>
+                        <apply>
+                          <power/>
+                          <ci> p_PYK1_Kadp </ci>
+                          <cn type="integer"> -1 </cn>
+                        </apply>
+                      </apply>
+                    </apply>
+                    <apply>
+                      <plus/>
+                      <cn type="integer"> 1 </cn>
+                      <apply>
+                        <times/>
+                        <ci> ICPEP </ci>
+                        <apply>
+                          <power/>
+                          <ci> p_PYK1_Kpep </ci>
+                          <cn type="integer"> -1 </cn>
+                        </apply>
+                      </apply>
+                    </apply>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_sinkPYR" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICPYR" stoichiometry="1"/>
+        </listOfReactants>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> ICPYR </ci>
+              <ci> poly_sinkPYR </ci>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <ci> ICPYR </ci>
+                  <ci> km_sinkPYR </ci>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_ADH" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICNADH" stoichiometry="1"/>
+          <speciesReference species="ICACE" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICNAD" stoichiometry="1"/>
+          <speciesReference species="ICETOH" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <cn type="integer"> -1 </cn>
+              <ci> p_ADH_ExprsCor </ci>
+              <ci> p_ADH_VmADH </ci>
+              <apply>
+                <power/>
+                <ci> p_ADH_KeqADH </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <ci> p_ADH_KiADHNAD </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <ci> p_ADH_KmADHETOH </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <cn type="integer"> 1 </cn>
+                  <apply>
+                    <times/>
+                    <ci> ICETOH </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_ADH_KmADHETOH </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> ICNAD </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_ADH_KiADHNAD </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> ICNADH </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_ADH_KiADHNADH </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> ICACE </ci>
+                    <ci> ICNADH </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_ADH_KiADHNADH </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                    <apply>
+                      <power/>
+                      <ci> p_ADH_KmADHACE </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> ICACE </ci>
+                    <ci> p_ADH_KmADHNADH </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_ADH_KiADHNAD </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                    <apply>
+                      <power/>
+                      <ci> p_ADH_KmADHACE </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> ICETOH </ci>
+                    <ci> ICNAD </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_ADH_KiADHNAD </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                    <apply>
+                      <power/>
+                      <ci> p_ADH_KmADHETOH </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> ICETOH </ci>
+                    <ci> ICNADH </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_ADH_KiADHNADH </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                    <apply>
+                      <power/>
+                      <ci> p_ADH_KmADHETOH </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> ICACE </ci>
+                    <ci> ICETOH </ci>
+                    <ci> ICNAD </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_ADH_KiADHACE </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                    <apply>
+                      <power/>
+                      <ci> p_ADH_KiADHNAD </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                    <apply>
+                      <power/>
+                      <ci> p_ADH_KmADHETOH </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> ICACE </ci>
+                    <ci> ICETOH </ci>
+                    <ci> ICNADH </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_ADH_KiADHNAD </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                    <apply>
+                      <power/>
+                      <ci> p_ADH_KiADHNADH </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                    <apply>
+                      <power/>
+                      <ci> p_ADH_KmADHETOH </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> ICACE </ci>
+                    <ci> ICNAD </ci>
+                    <ci> p_ADH_KmADHNADH </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_ADH_KiADHNAD </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                    <apply>
+                      <power/>
+                      <ci> p_ADH_KiADHNADH </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                    <apply>
+                      <power/>
+                      <ci> p_ADH_KmADHACE </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <plus/>
+                <apply>
+                  <times/>
+                  <ci> ICETOH </ci>
+                  <ci> ICNAD </ci>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn type="integer"> -1 </cn>
+                  <ci> ICACE </ci>
+                  <ci> ICNADH </ci>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_sinkACE" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICACE" stoichiometry="1"/>
+        </listOfReactants>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> ICACE </ci>
+              <ci> poly_sinkACE </ci>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <ci> ICACE </ci>
+                  <ci> km_sinkACE </ci>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_ETOHT_IC" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICETOH" stoichiometry="1"/>
+        </listOfReactants>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> p_kETOHtransport </ci>
+              <apply>
+                <plus/>
+                <ci> ICETOH </ci>
+                <apply>
+                  <times/>
+                  <cn type="integer"> -1 </cn>
+                  <ci> f_ETOH_e </ci>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_ETOHT_EC" reversible="false">
+        <listOfProducts>
+          <speciesReference species="ECETOH" stoichiometry="1"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference species="ICETOH"/>
+        </listOfModifiers>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <cn> 0.002 </cn>
+              <ci> ECbiomass </ci>
+              <ci> p_kETOHtransport </ci>
+              <apply>
+                <plus/>
+                <ci> ICETOH </ci>
+                <apply>
+                  <times/>
+                  <cn type="integer"> -1 </cn>
+                  <ci> f_ETOH_e </ci>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_ATPMITO" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICPHOS" stoichiometry="1"/>
+          <speciesReference species="ICADP" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICATP" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> ICADP </ci>
+              <ci> ICPHOS </ci>
+              <ci> p_mitoVmax </ci>
+              <apply>
+                <power/>
+                <ci> p_mitoADPKm </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <ci> p_mitoPiKm </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <cn type="integer"> 1 </cn>
+                  <apply>
+                    <times/>
+                    <ci> ICADP </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_mitoADPKm </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <cn type="integer"> 1 </cn>
+                  <apply>
+                    <times/>
+                    <ci> ICPHOS </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_mitoPiKm </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_ATPASE" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICATP" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICPHOS" stoichiometry="1"/>
+          <speciesReference species="ICADP" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> ICATP </ci>
+              <ci> p_ATPase_ratio </ci>
+              <apply>
+                <power/>
+                <ci> ICADP </ci>
+                <cn type="integer"> -1 </cn>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_ADK" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICADP" stoichiometry="2"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICATP" stoichiometry="1"/>
+          <speciesReference species="ICAMP" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> p_ADK1_k </ci>
+              <apply>
+                <plus/>
+                <apply>
+                  <power/>
+                  <ci> ICADP </ci>
+                  <cn type="integer"> 2 </cn>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn type="integer"> -1 </cn>
+                  <ci> ICAMP </ci>
+                  <ci> ICATP </ci>
+                  <apply>
+                    <power/>
+                    <ci> p_ADK1_Keq </ci>
+                    <cn type="integer"> -1 </cn>
+                  </apply>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_VACPI" reversible="false">
+        <listOfProducts>
+          <speciesReference species="ICPHOS" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> p_vacuolePi_k </ci>
+              <apply>
+                <plus/>
+                <ci> p_vacuolePi_steadyStatePi </ci>
+                <apply>
+                  <times/>
+                  <cn type="integer"> -1 </cn>
+                  <ci> ICPHOS </ci>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_AMD1" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICAMP" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICIMP" stoichiometry="1"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference species="ICATP"/>
+          <modifierSpeciesReference species="ICPHOS"/>
+        </listOfModifiers>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> ICAMP </ci>
+              <ci> p_Amd1_Vmax </ci>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <ci> ICAMP </ci>
+                  <apply>
+                    <times/>
+                    <ci> p_Amd1_K50 </ci>
+                    <ci> p_Amd1_Katp </ci>
+                    <apply>
+                      <power/>
+                      <ci> ICATP </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                    <apply>
+                      <plus/>
+                      <cn type="integer"> 1 </cn>
+                      <apply>
+                        <times/>
+                        <ci> ICPHOS </ci>
+                        <apply>
+                          <power/>
+                          <ci> p_Amd1_Kpi </ci>
+                          <cn type="integer"> -1 </cn>
+                        </apply>
+                      </apply>
+                    </apply>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_ADE1312" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICIMP" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICAMP" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> ICIMP </ci>
+              <ci> p_Ade13_Ade12_k </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_ISN1" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICIMP" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICPHOS" stoichiometry="1"/>
+          <speciesReference species="ICINO" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> ICIMP </ci>
+              <ci> p_Isn1_k </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_PNP1" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICINO" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICHYP" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> ICINO </ci>
+              <ci> p_Pnp1_k </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_HPT1" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICPHOS" stoichiometry="1"/>
+          <speciesReference species="ICHYP" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICIMP" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> ICHYP </ci>
+              <ci> p_Hpt1_k </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_PDC" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICPYR" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICACE" stoichiometry="1"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference species="ICPHOS"/>
+        </listOfModifiers>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> p_PDC1_Vmax </ci>
+              <apply>
+                <power/>
+                <apply>
+                  <times/>
+                  <ci> ICPYR </ci>
+                  <apply>
+                    <power/>
+                    <ci> p_PDC1_Kpyr </ci>
+                    <cn type="integer"> -1 </cn>
+                  </apply>
+                </apply>
+                <ci> p_PDC1_hill </ci>
+              </apply>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <cn type="integer"> 1 </cn>
+                  <apply>
+                    <power/>
+                    <apply>
+                      <times/>
+                      <ci> ICPYR </ci>
+                      <apply>
+                        <power/>
+                        <ci> p_PDC1_Kpyr </ci>
+                        <cn type="integer"> -1 </cn>
+                      </apply>
+                    </apply>
+                    <ci> p_PDC1_hill </ci>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> ICPHOS </ci>
+                    <apply>
+                      <power/>
+                      <ci> p_PDC1_Kpi </ci>
+                      <cn type="integer"> -1 </cn>
+                    </apply>
+                  </apply>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_MITONADH" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICNADH" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ICNAD" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> ICNADH </ci>
+              <ci> p_mitoNADHVmax </ci>
+              <apply>
+                <power/>
+                <apply>
+                  <plus/>
+                  <ci> ICNADH </ci>
+                  <ci> p_mitoNADHKm </ci>
+                </apply>
+                <cn type="integer"> -1 </cn>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_UGP" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ICG1P" stoichiometry="1"/>
+        </listOfReactants>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <ci> flux_ugp </ci>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="v_TRANSPORT" reversible="false">
+        <listOfReactants>
+          <speciesReference species="ECETOH" stoichiometry="1"/>
+          <speciesReference species="ECglyc" stoichiometry="1"/>
+        </listOfReactants>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <cn type="rational"> 1 <sep/> 3600 </cn>
+              <ci> D </ci>
+              <ci> ECETOH </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+    </listOfReactions>
+  </model>
+</sbml>

@@ -218,6 +218,7 @@ class SympyConverter(Converter):
         for (value, condition) in piecewise.args:
             result.addChild(self.sympy2libsbml(value))
             result.addChild(self.sympy2libsbml(condition))
+
         return result
 
 

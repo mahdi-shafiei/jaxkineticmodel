@@ -63,7 +63,7 @@ def export_sbml2(output_dir: str, model_name: str):
     reactions = [v1, v2, v3]
     compartment_values = {'c': 1}
     # initialize the kinetic model object, and then make it a simulation object through jkm.NeuralODE
-    kmodel = jkm.JaxKineticModel_Build(reactions, compartment_values)
+    kmodel = jkm.JaxKineticModelBuild(reactions, compartment_values)
     kmodel.add_boundary('m1', jkm.BoundaryCondition("0.5+0.3*sin(t)"))
 
     kmodel_sim = jkm.NeuralODEBuild(kmodel)
@@ -101,18 +101,18 @@ def import_new_sbml(filepath_export: str):
 # def test_export_NeuralODE():
 #     model_name = "Smallbone2013_SerineBiosynthesis"
 #     filepath = f"models/sbml_models/working_models/{model_name}.xml"
-#     output_dir = "models/manual_implementations/export_sbml_test"
+#     output_dir = "models/manual_implementations/sbml_export"
 #     os.makedirs(output_dir, exist_ok=True)
 #     assert export_sbml1(filepath, model_name, output_dir)
 
 
 # def test_export_sbml_NeuralODEBuild():
 #     model_name = "test"
-#     output_dir = "../models/manual_implementations/export_sbml_test"
+#     output_dir = "../models/manual_implementations/sbml_export"
 #     os.makedirs(output_dir, exist_ok=True)
 #     assert export_sbml2(output_dir, model_name)
 
 # def test_import_exported_SBML():
-#     input_file1 = "models/manual_implementations/export_sbml_test/test.xml"
-#     input_file2 = "models/manual_implementations/export_sbml_test/Smallbone2013_SerineBiosynthesis.xml"
+#     input_file1 = "models/manual_implementations/sbml_export/test.xml"
+#     input_file2 = "models/manual_implementations/sbml_export/Smallbone2013_SerineBiosynthesis.xml"
 #     assert import_new_sbml(input_file1)

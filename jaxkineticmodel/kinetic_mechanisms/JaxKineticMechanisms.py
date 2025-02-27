@@ -2,9 +2,12 @@ import inspect
 import sympy
 
 
+
 class Mechanism:
     param_names: dict[str, str]
     modifiers: list['Mechanism']
+    param_names_modifiers: dict[str, str]
+
 
     def __init__(self, **kwargs):
         # Initialize the parameter names
@@ -16,6 +19,7 @@ class Mechanism:
         self.param_names = kwargs
         self.modifiers = []
         self.param_names_modifiers = {}
+
 
     def symbolic(self):
         symbol_dict = {k: sympy.Symbol(v) for k, v in self.param_names.items()}
@@ -109,6 +113,12 @@ class Jax_MM_Irrev_Bi(Mechanism):
         denominator = (1 + (substrate1 / km_substrate1)) * (1 + (substrate2 / km_substrate2))
 
         return numerator / denominator
+
+class Jax_Constant_Flux(Mechanism):
+    @staticmethod
+    def compute(v):
+        return v
+
 
 
 class Jax_MM_Rev_UniBi(Mechanism):

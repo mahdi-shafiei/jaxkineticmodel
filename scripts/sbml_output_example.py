@@ -54,7 +54,7 @@ reactions = [v1, v2, v3]
 compartment_values = {'c': 1}
 
 # initialize the kinetic model object, and then make it a simulation object through jkm.NeuralODE
-kmodel = jkm.JaxKineticModel_Build(reactions, compartment_values)
+kmodel = jkm.JaxKineticModelBuild(reactions, compartment_values)
 
 
 kmodel.add_boundary('m1', jkm.BoundaryCondition("0.5+0.3*sin(t)"))

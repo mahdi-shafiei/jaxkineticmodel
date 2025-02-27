@@ -60,8 +60,8 @@ class Reaction:
 
     def _add_modifier_parameters(self):
         if self.mechanism.param_names_modifiers:
-            modifier_parameters=[x for x in self.mechanism.param_names_modifiers.values()
-                                 if x not in self.species]
+            modifier_parameters = [x for x in self.mechanism.param_names_modifiers.values()
+                                   if x not in self.species]
             parameters = [*self.parameters, *modifier_parameters]
         else:
             parameters = self.parameters
@@ -69,11 +69,7 @@ class Reaction:
         return parameters
 
 
-
-
-
-
-class JaxKineticModel_Build:
+class JaxKineticModelBuild:
     reactions: List[Reaction]
     compartments: dict[str, int]
     boundary_conditions: dict[str, BoundaryCondition]
@@ -102,8 +98,7 @@ class JaxKineticModel_Build:
         # retrieve parameter names
         self.parameter_names = self._flatten([reaction.parameters for reaction in self.reactions])
 
-        self.parameter_names= self._filter_parameters()
-
+        self.parameter_names = self._filter_parameters()
 
         self.boundary_conditions = {}
 
@@ -114,7 +109,6 @@ class JaxKineticModel_Build:
             if parameter not in self.species_names:
                 parameter_names.append(parameter)
         return parameter_names
-
 
     def _get_stoichiometry(self):
         """Build stoichiometric matrix from reactions"""
@@ -144,7 +138,6 @@ class JaxKineticModel_Build:
                             )
                         )
         return comp_dict
-
 
     def add_boundary(self, metabolite_name: str, boundary_condition: BoundaryCondition):
         """Add a metabolite boundary condition

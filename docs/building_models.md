@@ -69,7 +69,7 @@ The stoichiometric matrix is automatically constructed from the reactions.
 One can first jax.jit the model **[2]** and solve the ODEs using the diffrax package **[1]**, which contains many nice numerical solvers.
 
 ```python
-{!code/building_models.py!lines=55-74}
+{!code/building_models.py!lines=54-75}
 ```
 
 ![timeseries](images/timeseries_example.png)
@@ -85,7 +85,7 @@ Suppose for the system above, we want to make metabolite \\(m_1\\) a constant bo
 
 
 ```python
-{!code/building_models.py!lines=76-100}
+{!code/building_models.py!lines=74-100}
 ```
 
 

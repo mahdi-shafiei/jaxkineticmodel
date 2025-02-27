@@ -1,39 +1,33 @@
 ## Custom ODE models
-Not all kinetic model can be drafted only from stoichiometry. There are many empirical laws that might influence reactions in the system of ODEs. Below, we present a reimplemented version **[1]** of a glycolysis model in Jax with a manually set up of ODEs. 
+Not all kinetic model can be drafted only from stoichiometry. There are empirical laws that might influence 
+There are many empirical laws that might influence reactions in the system of ODEs. 
+Below, we present a reimplemented version **[1]** of a glycolysis model
+in Jax. We wil note down specific modeling choices that can be used to incorporate 
+non-stoichiometric modifications. This model is also available as a SBML model
+
 
 
 ### Glycolysis model
-The model consists of 29 metabolites (ODEs), 38 reactions, with in total 141 parameters. The model can also be found in [Github/models/manual_implementations](https://github.com/AbeelLab/jaxkineticmodel/tree/main/models/manual_implementations/glycolysis) and loaded from there.
+The model consists of 29 metabolites (ODEs), 38 reactions, with in total 142 parameters.
 
 #### Rate laws
-Start by loading the required kinetic mechanisms
+We start by importing relevant modules from `jaxkineticmodel`.
 
 ```python 
-from jaxkineticmodel.kinetic_mechanisms.JaxKineticMechanisms import  *
-from jaxkineticmodel.kinetic_mechanisms.JaxKineticMechanismsCustom import *
-from jaxkineticmodel.kinetic_mechanisms.JaxKineticModifiers import *
+{!code/glycolysis.py!lines=1-17}
 ```
-Now, we define all reactions in the model. Note that names in substrates and products should match actual species names in the initial conditions. First, lower glycolysis.
+We define all reactions that are in the glycolysis model by using the `Reaction` object.
+This requires setting a name, species that are in the stoichiometry, the stoichiometry itself, 
+and the mechanism used to compute. Note that metabolites (species) that only 'modify' a reaction,
+that is, they are involved in the reaction but not consumed or produced, should
+also be included in species list and stoichiometry as 0. 
+
 
 ```python
-#upper glycolysis (GLT, HXK, PGI, PFK,ALD,TPI)
-v_GLT=Jax_Facilitated_Diffusion(substrate_extracellular='ECglucose',product_intracellular='ICglucose',vmax="p_GLT_VmGLT",km_internal='p_GLT_KmGLTGLCi',km_external='p_GLT_KmGLTGLCo')
-
-v_HXK=Jax_MM_Rev_BiBi_w_Inhibition(substrate1='ICATP',substrate2="ICglucose",product1="ICADP",product2="ICATP",modifier="ICT6P",vmax="p_HXK_Vmax", k_equilibrium="p_HXK1_Keq", km_substrate1="p_HXK1_Katp", 
-                                           km_substrate2="p_HXK1_Kglc",
-                                           km_product1="p_HXK1_Kadp", km_product2="p_HXK1_Kg6p", ki_inhibitor="p_HXK1_Kt6p")
-v_PGI=Jax_MM_Rev_UniUni(substrate='ICG6P',product='ICF6P',vmax='p_PGI1_Vmax',k_equilibrium='p_PGI1_Keq',km_substrate='p_PGI1_Kg6p',km_product='p_PGI1_Kf6p')
-
-
-v_PFK=Jax_PFK(substrate1="ICF6P",substrate2="ICATP",product1="ICFBP",modifier="ICAMP",vmax="p_PFK_Vmax",kr_F6P="p_PFK_Kf6p", kr_ATP="p_PFK_Katp", gr="p_PFK_gR",c_ATP="p_PFK_Catp", ci_ATP="p_PFK_Ciatp", ci_AMP="p_PFK_Camp", 
-                           ci_F26BP="p_PFK_Cf26bp", ci_F16BP="p_PFK_Cf16bp", l="p_PFK_L", 
-                           kATP="p_PFK_Kiatp", kAMP="p_PFK_Kamp", F26BP ="p_PFK_F26BP",
-                           kF26BP = "p_PFK_Kf26bp", kF16BP = "p_PFK_Kf16bp")
-v_ALD=Jax_MM_Rev_UniBi(substrate='ICFBP',product1='ICGAP',product2='ICDHAP',vmax="p_FBA1_Vmax", k_equilibrium="p_FBA1_Keq", km_substrate="p_FBA1_Kf16bp",
-                                    km_product1="p_FBA1_Kglyceral3p", km_product2="p_FBA1_Kdhap" )
-v_TPI1=Jax_MM_Rev_UniUni(substrate="ICDHAP",product="ICGAP",vmax="p_TPI1_Vmax",k_equilibrium="p_TPI1_Keq", km_substrate="p_TPI1_Kdhap",
-                                km_product="p_TPI1_Kglyceral3p")
+{!code/glycolysis.py!lines=19-83}
 ```
+
+
 Trehalose cycle
 ```python
 #trehalose cycle (NTH1, PGM1, TPS2, TPS1)

@@ -1,8 +1,8 @@
-import diffrax
 
+#import
+import diffrax
 from jaxkineticmodel.kinetic_mechanisms import JaxKineticMechanisms as jm
 from jaxkineticmodel.building_models import JaxKineticModelBuild as jkm
-
 import jax.numpy as jnp
 import jax
 import equinox
@@ -46,7 +46,7 @@ reactions = [v1, v2, v3]
 compartment_values = {'c': 1}
 
 # initialize the kinetic model object, and then make it a simulation object through jkm.NeuralODE
-kmodel = jkm.JaxKineticModel_Build(reactions, compartment_values)
+kmodel = jkm.JaxKineticModelBuild(reactions, compartment_values)
 kmodel_sim = jkm.NeuralODEBuild(kmodel)
 print(kmodel.stoichiometric_matrix)
 
@@ -71,7 +71,9 @@ ax.set_ylabel("Concentration (in mM)")
 ax.legend()
 plt.show()
 
-kmodel = jkm.JaxKineticModel_Build(reactions, compartment_values)
+
+
+kmodel = jkm.JaxKineticModelBuild(reactions, compartment_values)
 kmodel.add_boundary('m1', jkm.BoundaryCondition('2'))
 print(kmodel.stoichiometric_matrix)
 
@@ -99,7 +101,7 @@ ax.legend()
 plt.show()
 
 # initialized the kinetic model object, and then make it a simulation object through jkm.NeuralODE
-kmodel = jkm.JaxKineticModel_Build(reactions, compartment_values)
+kmodel = jkm.JaxKineticModelBuild(reactions, compartment_values)
 kmodel.add_boundary('m1', jkm.BoundaryCondition('0.5+0.3*sin(t)'))
 print(kmodel.stoichiometric_matrix)
 

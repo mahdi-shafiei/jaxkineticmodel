@@ -47,7 +47,7 @@ class JaxKineticModel:
         self.boundary_conditions = boundary_conditions
 
     def __call__(self, t, y, args):
-        """I explicitly add params to call for gradient calculations. Find out whether this is actually necessary"""
+        """compute dMdt"""
         global_params, local_params = args
         y=dict(zip(self.species_names, y))
 

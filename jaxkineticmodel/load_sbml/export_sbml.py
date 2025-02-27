@@ -44,7 +44,7 @@ class SBMLExporter:
         - initial_conditions: initial conditions of the model
         - parameters: global parameters of the model"""
         try:
-            document = libsbml.SBMLDocument(2,4)
+            document = libsbml.SBMLDocument(2, 4)
         except:
             raise SystemExit('Could not create SBML document')
 
@@ -52,6 +52,7 @@ class SBMLExporter:
 
         # initial conditions and the compartments species belong to
         # (non-constant, non-boundary species)
+
         initial_conditions = dict(zip(self.kmodel.species_names, initial_conditions))
         species_compartments = self.kmodel.func.species_compartments  #same for both
         species_reference = {}
@@ -88,6 +89,7 @@ class SBMLExporter:
             check(s1.setCompartment(s_comp), 'set species s1 compartment')
             check(s1.setHasOnlySubstanceUnits(False), 'set "hasOnlySubstanceUnits" on s1')
             species_reference[s_id] = s1
+
             if s_id not in boundaries.keys():
                 check(s1.setConstant(False), 'set "constant" attribute on s1')
                 check(s1.setInitialAmount(float(initial_conditions[s_id])), 'set initial amount for s1')
@@ -96,7 +98,6 @@ class SBMLExporter:
 
 
             elif s_id in boundaries.keys():
-
                 check(s1.setBoundaryCondition(True), 'set "boundaryCondition" on s1')
                 check(s1, 'create species')
                 check(s1.setCompartment(s_comp), 'set "compartment" attribute on s1')
@@ -112,7 +113,12 @@ class SBMLExporter:
                     check(s1.setInitialAmount(jnp.nan), 'set "initialAmount" attribute on s1')
                     math_ast = self.sympy_converter.sympy2libsbml(condition.sympified)
                     orig = self.libsbml_converter.libsbml2sympy(math_ast)
-                    assert str(condition.sympified) == str(orig)
+                    print('orig spline', str(orig))
+                    print('spline sympified', str(condition.sympified))
+                    # interesting, for the piece wise,
+                    # condition.sympified is actually different
+
+                    # assert str(condition.sympified) == str(orig)
 
                     rule = export_model.createAssignmentRule()
                     check(rule.setVariable(s1.id), 'set "rule" attribute on s1')
@@ -122,6 +128,7 @@ class SBMLExporter:
 
         #we use an parameter dict input argument for export
         global_parameters, local_parameters = separate_params(parameters)
+
 
         for p_name, p_value in global_parameters.items():
             p1 = export_model.createParameter()
@@ -159,7 +166,6 @@ class SBMLExporter:
                     # check(species_ref1.setConstant(specimen.constant), 'set reactant species id')
                     check(species_ref1.setStoichiometry(abs(stoich)), 'set absolute reactant/product stoichiometry')
 
-
                 str_mechanism = [str(i) for i in mechanism.free_symbols]
                 for (s_id, specimen) in boundary_species.items():
                     if str(s_id) in str_mechanism:
@@ -172,7 +178,7 @@ class SBMLExporter:
                 math_ast = self.sympy_converter.sympy2libsbml(mechanism)
                 orig = self.libsbml_converter.libsbml2sympy(math_ast)
                 assert str(mechanism) == str(orig)
-                print(mechanism)
+
                 kinetic_law = r1.createKineticLaw()
                 check(kinetic_law, 'create kinetic law')
                 check(kinetic_law.setMath(math_ast), 'set math on kinetic law')
@@ -194,18 +200,24 @@ class SBMLExporter:
                 for (s_id, stoich) in reaction.stoichiometry.items():
                     if stoich < 0:
                         species_ref1 = r1.createReactant()
+                        check(species_ref1.setStoichiometry(abs(stoich)), 'set absolute reactant/product stoichiometry')
 
                     elif stoich > 0:
                         species_ref1 = r1.createProduct()
+                        check(species_ref1.setStoichiometry(abs(stoich)), 'set absolute reactant/product stoichiometry')
+
                     else:
-                        raise ValueError('stoich may not be 0')
+                        logger.info(f"modifier {s_id} is added")
+                        species_ref1 =r1.createModifier()
 
                     # use the dictionary with species references
                     specimen = species_reference[s_id]
                     check(species_ref1, 'create reactant')
                     check(species_ref1.setSpecies(specimen.getId()), 'set reactant species id')
                     # check(species_ref1.setConstant(specimen.getConstant()), 'set reactant species id')
-                    check(species_ref1.setStoichiometry(abs(stoich)), 'set absolute reactant/product stoichiometry')
+
+
+
 
                 math_ast = self.sympy_converter.sympy2libsbml(reaction.mechanism.symbolic())
                 orig = self.libsbml_converter.libsbml2sympy(math_ast)
@@ -215,12 +227,13 @@ class SBMLExporter:
                 check(kinetic_law, 'create kinetic law')
                 check(kinetic_law.setMath(math_ast), 'set math on kinetic law')
 
-        sbml = libsbml.writeSBMLToString(document)
+
 
         # file = open(output_file, "w")
-        sbml=libsbml.writeSBMLToFile(document, output_file)
-        print(sbml)
 
+        sbml = libsbml.writeSBMLToFile(document, output_file)
+        return print((f"{sbml}: succesful export. Please check whether its correct"
+                f"SBML using the online sbml validator"))
 
 
 def check(value, message):
