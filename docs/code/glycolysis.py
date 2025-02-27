@@ -99,6 +99,7 @@ v_tps1 = jkm.Reaction(
     compartments=['c', 'c', 'c', 'c', 'c'],
     mechanism=mech_tps1)
 
+
 v_tps2 = jkm.Reaction(
     name="v_TPS2",
     species=["ICT6P", "ICtreh", "ICPHOS"],
@@ -338,11 +339,14 @@ mech_etoht_ic = jm.Jax_Diffusion(substrate="ICETOH",
                                  enzyme="f_ETOH_e",
                                  transport_coef="p_kETOHtransport")
 
+
+
+
 #only outgoing
 v_etoht_ic = jkm.Reaction(
     name="v_ETOHT_IC",
     species=['ICETOH'],
-    stoichiometry=[-1],
+    stoichiometry=[-1, 0],
     compartments=['c'],
     mechanism=mech_etoht_ic)
 
@@ -351,12 +355,15 @@ mech_etoht_ec = jm.Jax_Diffusion(substrate="ICETOH",
                                  transport_coef="p_kETOHtransport")
 mech_etoht_ec.add_modifier(modifier.BiomassModifier(biomass='ECbiomass'))
 
+
 v_etoht_ec = jkm.Reaction(
     name="v_ETOHT_EC",
     species=['ICETOH', 'ECETOH'],
     stoichiometry=[0, 1],
     compartments=['c', 'e'],
     mechanism=mech_etoht_ec)
+
+
 
 v_atpmito = jkm.Reaction(
     name='v_ATPMITO',
@@ -476,6 +483,7 @@ v_transport_reactions = jkm.Reaction(
     mechanism=jcm.Jax_Transport_Flux_Correction(substrate="ECETOH", dilution_rate='D')
 )
 
+
 ## we can add modifications to mechanism through the JaxKineticModelBuild obejct
 compartments = {'c': 1, 'e': 1}
 reactions = [v_hxk, v_glt, v_nth1, v_pgi,
@@ -495,32 +503,36 @@ reactions = [v_hxk, v_glt, v_nth1, v_pgi,
 
 kmodel = jkm.JaxKineticModelBuild(reactions, compartments)
 
+
 # do an interpolation using sympy for EC glucose and add as a boundary condition
 data = pd.read_csv('datasets/VanHeerden_Glucose_Pulse/FF1_timeseries_format.csv', index_col=0)
 domain = [float(i) for i in data.loc['ECglucose'].dropna().index]
-range = data.loc['ECglucose'].dropna().values
+d_range = data.loc['ECglucose'].dropna().values
 
 t = sympy.Symbol('t')
-spline = sympy.interpolating_spline(3, t, domain, range)
+spline = sympy.interpolating_spline(3, t, domain, d_range)
 print('true spline', spline)
 spline = str(spline)
 kmodel.add_boundary('ECglucose', jkm.BoundaryCondition(spline))
+
+
+
+
 
 kmodel_sim = jkm.NeuralODEBuild(kmodel)
 
 S = kmodel.stoichiometric_matrix
 
-y0 = jnp.ones(len(kmodel.stoichiometric_matrix.index))
 
 lit_params = pd.read_csv(('parameter_initializations/'
                           'Glycolysis_model/'
-                          'parameter_initialization_glycolysis_literature_values.csv'), index_col=0).to_dict()['0']
+                          'parameter_initialization_glycolysis'
+                          '_literature_values.csv'), index_col=0).to_dict()['0']
 
-# this is a workaround for now, later look at how to pass assignment
-# rules to export and the simulator
 D = 0.1
 parameters = {}
-for name in kmodel.parameter_names:  #need to deal with the poly_sinks dependent on dilution rate
+for name in kmodel.parameter_names:
+    #need to deal with the poly_sinks dependent on dilution rate
     if name in lit_params.keys():
         parameters[name] = lit_params[name]
     else:
@@ -567,6 +579,8 @@ for meta in kmodel.species_names:
         print(meta)
         y0.append(1)
 y0 = jnp.array(y0)
+
+
 
 output_dir = "models/manual_implementations/sbml_export/"
 model_name = "glycolysis_feastfamine_pulse1"
