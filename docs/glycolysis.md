@@ -87,7 +87,7 @@ are initialized.
 ```
 
 ## Exporting the model
-The model can then be exported to sbml format
+The model can be exported to sbml format for parameter optimziation. 
 
 ```python
 {!code/glycolysis.py!lines=583-593}

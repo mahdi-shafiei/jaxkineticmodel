@@ -118,8 +118,6 @@ class SBMLExporter:
                     # interesting, for the piece wise,
                     # condition.sympified is actually different
 
-                    # assert str(condition.sympified) == str(orig)
-
                     rule = export_model.createAssignmentRule()
                     check(rule.setVariable(s1.id), 'set "rule" attribute on s1')
                     check(rule.setMath(math_ast), 'set "math" attribute on s1')
@@ -215,8 +213,6 @@ class SBMLExporter:
                     check(species_ref1, 'create reactant')
                     check(species_ref1.setSpecies(specimen.getId()), 'set reactant species id')
                     # check(species_ref1.setConstant(specimen.getConstant()), 'set reactant species id')
-
-
 
 
                 math_ast = self.sympy_converter.sympy2libsbml(reaction.mechanism.symbolic())

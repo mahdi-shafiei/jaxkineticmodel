@@ -8,25 +8,25 @@ The `Trainer` object requires a few inputs. First, it requires a `SBMLModel` or 
 First, we load the necessary functions 
 
 ```python
-{!code/training_models.py!lines=1-7}
+{!code/training_models.py!lines=1-8}
 ```
 
 Then, we load the model, data and initialize the trainer object. 
 
 ```python
-{!code/training_models.py!lines=7-18}
+{!code/training_models.py!lines=9-21}
 ```
 We next perform a latin hypercube sampling for a certain initial guess, with lower and upperbound defined with respect to these values. We want five initializations (normally this should be higher).
 
 ```python
-{!code/training_models.py!lines=17-25}
+{!code/training_models.py!lines=21-27}
 ```
 
 
 To initiate training, you simply call the function `Trainer.train()`
 
 ```python
-{!code/training_models.py!lines=25-36}
+{!code/training_models.py!lines=28-36}
 ```
 
 
@@ -38,7 +38,7 @@ Suppose the fit is not to your liking, or we first want to do a pre-optimization
 one can continue the optimization by re-running the `trainer` object with the set of optimized parameters.
 
 ```python
-{!code/training_models.py!lines=35-53}
+{!code/training_models.py!lines=37-52}
 ```
 
 ![loss_extended](images/loss_per_iter_extended.png)
@@ -54,14 +54,14 @@ When the loss function is not specified (see below), a mean squared error loss i
 
 
 ```python
-{!code/training_models.py!lines=53-55}
+{!code/training_models.py!lines=54-56}
 ```
 
 ### Optimizer choices
 Jaxkineticmodel is compatible with optimizers from [optax](https://optax.readthedocs.io/en/latest/). To use these, simply
 pass the optimizer to the `Trainer` object (with required arguments). 
 ```python
-{!code/training_models.py!lines=56-59}
+{!code/training_models.py!lines=57-59}
 ```
 
 ### Customize loss functions

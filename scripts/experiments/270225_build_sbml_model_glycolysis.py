@@ -9,6 +9,7 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import pandas as pd
 import sympy
+import diffrax
 
 from jaxkineticmodel.building_models import JaxKineticModelBuild as jkm
 from jaxkineticmodel.kinetic_mechanisms import JaxKineticMechanisms as jm
@@ -498,11 +499,10 @@ kmodel = jkm.JaxKineticModelBuild(reactions, compartments)
 # do an interpolation using sympy for EC glucose and add as a boundary condition
 data = pd.read_csv('datasets/VanHeerden_Glucose_Pulse/FF1_timeseries_format.csv', index_col=0)
 domain = [float(i) for i in data.loc['ECglucose'].dropna().index]
-range = data.loc['ECglucose'].dropna().values
+drange = data.loc['ECglucose'].dropna().values
 
 t = sympy.Symbol('t')
-spline = sympy.interpolating_spline(3, t, domain, range)
-print('true spline', spline)
+spline = sympy.interpolating_spline(3, t, domain, drange)
 spline = str(spline)
 kmodel.add_boundary('ECglucose', jkm.BoundaryCondition(spline))
 
@@ -578,49 +578,54 @@ sbml.export(initial_conditions=y0,
             output_file=f"{output_dir}/{model_name}.xml")
 
 # #
-ts = jnp.linspace(0, 300, 1000)
+ts = jnp.linspace(0, 350, 1000)
+kmodel_sim._change_solver(solver=diffrax.Kvaerno3(), rtol=1e-8, atol=1e-8, icoeff=0.1)
 kmodel_sim = jax.jit(kmodel_sim)
+
+
 ys = kmodel_sim(ts, y0, parameters)
 ys = pd.DataFrame(ys, columns=kmodel.species_names)
 
-names = ['ICATP', 'ICADP', 'ICAMP']
-for name in names:
-    plt.plot(ts, ys[name], label=name)
-plt.legend()
+plt.plot(ts,ys)
 plt.show()
-
-names = ['ICT6P', 'ICglucose', 'ICG6P', 'ICF6P']
-for name in names:
-    plt.plot(ts, ys[name], label=name)
-plt.legend()
-plt.show()
-
-names = ['ICNADH', 'ICNAD', "ICPHOS"]
-for name in names:
-    plt.plot(ts, ys[name], label=name)
-plt.legend()
-plt.show()
-
-names = ['ICT6P', 'ICtreh']
-for name in names:
-    plt.plot(ts, ys[name], label=name)
-plt.legend()
-plt.show()
-
-names = ['ICETOH', 'ICPYR', "IC3PG", 'ECETOH']
-for name in names:
-    plt.plot(ts, ys[name], label=name)
-plt.legend()
-plt.show()
-
-names = ["IC3PG", "IC2PG", "ICPYR"]
-for name in names:
-    plt.plot(ts, ys[name], label=name)
-plt.legend()
-plt.show()
-
-names = ["ICglyc", 'ECglyc']
-for name in names:
-    plt.plot(ts, ys[name], label=name)
-plt.legend()
-plt.show()
+# names = ['ICATP', 'ICADP', 'ICAMP']
+# for name in names:
+#     plt.plot(ts, ys[name], label=name)
+# plt.legend()
+# plt.show()
+#
+# names = ['ICT6P', 'ICglucose', 'ICG6P', 'ICF6P']
+# for name in names:
+#     plt.plot(ts, ys[name], label=name)
+# plt.legend()
+# plt.show()
+#
+# names = ['ICNADH', 'ICNAD', "ICPHOS"]
+# for name in names:
+#     plt.plot(ts, ys[name], label=name)
+# plt.legend()
+# plt.show()
+#
+# names = ['ICT6P', 'ICtreh']
+# for name in names:
+#     plt.plot(ts, ys[name], label=name)
+# plt.legend()
+# plt.show()
+#
+# names = ['ICETOH', 'ICPYR', "IC3PG", 'ECETOH']
+# for name in names:
+#     plt.plot(ts, ys[name], label=name)
+# plt.legend()
+# plt.show()
+#
+# names = ["IC3PG", "IC2PG", "ICPYR"]
+# for name in names:
+#     plt.plot(ts, ys[name], label=name)
+# plt.legend()
+# plt.show()
+#
+# names = ["ICglyc", 'ECglyc']
+# for name in names:
+#     plt.plot(ts, ys[name], label=name)
+# plt.legend()
+# plt.show()

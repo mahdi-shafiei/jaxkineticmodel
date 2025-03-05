@@ -199,6 +199,7 @@ class NeuralODEBuild:
         self.solver = diffrax.Kvaerno5()
         self.stepsize_controller = diffrax.PIDController(rtol=self.rtol, atol=self.atol, pcoeff=0.4, icoeff=0.3,
                                                          dcoeff=0)
+        self.adjoint = diffrax.RecursiveCheckpointAdjoint()
 
     def _change_solver(self, solver, **kwargs):
         """To change the ODE solver object to any solver class from diffrax
@@ -234,6 +235,7 @@ class NeuralODEBuild:
             stepsize_controller=self.stepsize_controller,
             saveat=diffrax.SaveAt(ts=ts),
             max_steps=self.max_steps,
+            adjoint = self.adjoint
         )
 
         return solution.ys

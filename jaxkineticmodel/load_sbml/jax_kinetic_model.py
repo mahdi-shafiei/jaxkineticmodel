@@ -1,14 +1,14 @@
-import time
+import re
+
 import diffrax
-import numpy as np
-import jax.numpy as jnp
 import jax
-from jaxkineticmodel.load_sbml.sbml_load_utils import construct_param_point_dictionary, separate_params
+import jax.numpy as jnp
+import numpy as np
+import pandas as pd
 import sympy
 import collections
-import re
+from jaxkineticmodel.load_sbml.sbml_load_utils import construct_param_point_dictionary, separate_params
 from jaxkineticmodel.utils import get_logger
-import pandas as pd
 
 
 jax.config.update("jax_enable_x64", True)
@@ -37,6 +37,7 @@ class JaxKineticModel:
         ##A pointer dictionary?
         """
         self.func = fluxes
+
         self.stoichiometry = stoichiometric_matrix
         # self.params=params
         self.flux_met_pointer = flux_met_pointer
@@ -46,22 +47,26 @@ class JaxKineticModel:
         self.species_compartments = species_compartments
         self.boundary_conditions = boundary_conditions
 
+
+
     def __call__(self, t, y, args):
         """compute dMdt"""
         global_params, local_params = args
-        y=dict(zip(self.species_names, y))
+        y = dict(zip(self.species_names, y))
 
         reaction_names = list(self.func.keys())
+
 
         # function evaluates the flux vi given y, parameter, local parameters, time dictionary
 
         def apply_func(func: dict,
                        y: jnp.ndarray,
                        global_params: dict,
-                       local_params: dict,):
-
+                       local_params: dict, ):
             eval_dict = {**y, **global_params, **local_params}
+
             eval_dict['t'] = t
+
             eval_dict = {i: eval_dict[i] for i in func.__code__.co_varnames}
             vi = func(**eval_dict)
             return vi
@@ -96,17 +101,17 @@ class NeuralODE:
             compartments: dict,
             compile: bool,
 
-
     ):
         self.compile_status = compile
         self.fluxes = fluxes
         self.reaction_names = list(stoichiometric_matrix.columns)
         self.species_names = list(stoichiometric_matrix.index)
+
         self.Stoichiometry = stoichiometric_matrix
 
         self.compartment_values = compartment_values
         self.species_compartments = species_compartments
-        self.lambda_functions= lambda_functions
+        self.lambda_functions = lambda_functions
         self.event_rules = event_rules
         self.compartments = compartments
         self.assignments_rules = assignments_rules
@@ -120,16 +125,16 @@ class NeuralODE:
         self.max_steps = 300000
         self.rtol = 1e-7
         self.atol = 1e-10
-        self.dt0 = 1e-10
+        self.dt0 = 1e-12
         self.solver = diffrax.Kvaerno5()
         self.stepsize_controller = diffrax.PIDController(rtol=self.rtol, atol=self.atol, pcoeff=0.4, icoeff=0.3)
+        self.adjoint = diffrax.RecursiveCheckpointAdjoint()
 
-        if self.compile_status == True:
+        if self.compile_status:
             self._compile()
 
         else:
             logger.info("Model is not compiled. Run ._compile() for simulation")
-
 
     def _compile(self
                  ):
@@ -155,12 +160,12 @@ class NeuralODE:
             # all symbols that should be mapped to the equation
             self.v_symbols[reaction_name] = filtered_dict
 
-        self.compile_status=True
+        self.compile_status = True
         self.flux_met_pointer = self._construct_flux_pointer_dictionary()
         self.func = JaxKineticModel(fluxes=self.fluxes,
                                     stoichiometric_matrix=jnp.array(self.Stoichiometry),
                                     flux_met_pointer=self.flux_met_pointer,
-                                    species_names=list(self.Stoichiometry.index),
+                                    species_names=self.Stoichiometry.index,
                                     reaction_names=self.Stoichiometry.columns,
                                     compartment_values=self.compartment_values,
                                     species_compartments=self.species_compartments,
@@ -169,13 +174,12 @@ class NeuralODE:
         # for each flux, metabolites are retrieved and mapped to the respective values in y0
         return logger.info("Compile complete")
 
-
     def _change_solver(self, solver, **kwargs):
         """To change the ODE solver object to any solver class from diffrax
         Does not support multiterm objects yet."""
 
         if isinstance(solver, diffrax.AbstractAdaptiveSolver):
-            # for what i recall, only the adaptive part is important to ensure
+            # for what I recall, only the adaptive part is important to ensure
             #it can be loaded properly
             self.solver = solver
             step_size_control_parameters = {'rtol': self.rtol, 'atol': self.atol,
@@ -222,6 +226,7 @@ class NeuralODE:
             stepsize_controller=self.stepsize_controller,
             saveat=diffrax.SaveAt(ts=ts),
             max_steps=self.max_steps,
+            adjoint=self.adjoint
         )
 
         return solution.ys

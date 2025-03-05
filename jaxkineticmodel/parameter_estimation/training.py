@@ -1,4 +1,5 @@
 import inspect
+import time
 
 import jax
 import optax
@@ -20,7 +21,7 @@ class Trainer:
     Input: a model that is a JaxKineticModel class to fit, and a dataset"""
 
     def __init__(self,
-                 model,
+                 model: [SBMLModel, jkm.NeuralODEBuild],
                  data: pd.DataFrame,
                  n_iter: int,
                  learning_rate=1e-3,
@@ -30,20 +31,30 @@ class Trainer:
                  clip=4,
                  ):
 
-
         if isinstance(model, SBMLModel):
-            self.model = jax.jit(model.get_kinetic_model())
+
+            # initial conditions need to be retrieved to ensure that the dataset matches in the loss function.
+            # this makes sure that we can evaluate, also for points where there is no data. Will
+            # be processed in the self._process_data()
+            self.initial_conditions = dict(zip(model.species_names,model.y0))
+
+            self.kin_model = jax.jit(model.get_kinetic_model())
+            self.species_names = self.kin_model.species_names
+
             self.parameters = list(model.parameters.keys())
         elif isinstance(model, jkm.NeuralODEBuild):
             logger.info("NeuralODEbuild object is not tested yet")
+            # To do: add initial conditions to object
+
+            self.species_names = model.species_names
             self.parameters = model.parameter_names
-            self.model = jax.jit(model)
+            self.kin_model = jax.jit(model)
         else:
             logger.error(f"{model} is not a JaxKineticModel class")
 
-        self.ts = jnp.array(list(data.index))
+        self.ts = jnp.array([float(i) for i in data.index])  #incase
         self.lr = learning_rate
-        self.optim_space=optim_space
+        self.optim_space = optim_space
 
         if optimizer is None:
             self.optimizer = self._add_optimizer(clip=clip)
@@ -54,40 +65,62 @@ class Trainer:
 
         # creates an update rule based on whether log space or
         if optim_space == "log":
-            self.update_rule=self._update_log
-            self.loss_func=self._create_loss_func(log_mean_centered_loss_func)
+            self.update_rule = self._update_log
+            self.loss_func = jax.jit(self._create_loss_func(log_mean_centered_loss_func))
         elif optim_space == "linear":
-            print('linear')
-            self.update_rule=self._update
-            self.loss_func=self._create_loss_func(loss_func)
 
-
+            self.update_rule = self._update
+            self.loss_func = jax.jit(self._create_loss_func(loss_func))
 
         self.loss_threshold = loss_threshold
         self.n_iter = n_iter
-
-
-
         self.dataset = data
+        self.dataset = self._process_data()
         self.parameter_sets = None
 
-    def _create_loss_func(self,loss_func,**kwargs):
+    def _create_loss_func(self, loss_func, **kwargs):
         """Function that helps to implement custom loss functions.
         It will be up to the user to ensure proper usage for log or linspace optimization"""
-        model = self.model
+        model = self.kin_model
         if not callable(loss_func):
             logger.error("loss_func is not callable")
 
-        arguments=inspect.signature(loss_func).parameters
-        required_args={'params','ts','ys'}
+        arguments = inspect.signature(loss_func).parameters
+        required_args = {'params', 'ts', 'ys'}
         if required_args.issubset(arguments.keys()):
-            def wrapped_loss(params,ts,ys):
-                return loss_func(params,ts,ys,model,**kwargs)
+            def wrapped_loss(params, ts, ys):
+                return loss_func(params, ts, ys, model, **kwargs)
         else:
             logger.error(f"required arguments {required_args} are not in loss_function")
 
-        self.loss_func =wrapped_loss
+        self.loss_func = wrapped_loss
         return wrapped_loss
+
+    def _process_data(self):
+        """Ensuring that dataset species that are not in model are not passed as part of the dataset"""
+        # we start by adding an empty dataset with the shape of [y0]*ts
+        processed_dataset = np.empty((len(self.ts), len(self.species_names)))
+        processed_dataset[:] = np.nan
+        processed_dataset = pd.DataFrame(processed_dataset, index=self.ts, columns=self.species_names)
+
+        # we map the processed data on the right column
+        for species_name in self.dataset.columns:
+            if species_name in self.species_names:
+                processed_dataset[species_name] = self.dataset[species_name].values
+
+            else:
+                logger.info(f"species {species_name} not in model, excluded from data for parameter estimation")
+
+        #initial conditions need to be in the data for the loss function to be calculated
+        inits_with_nans=processed_dataset.iloc[0,:].isna().to_dict()
+        for (name, initial_cond) in inits_with_nans.items():
+            if initial_cond:
+                processed_dataset.loc[0,name] = self.initial_conditions[name]
+
+        return processed_dataset
+
+
+
 
 
     def _generate_bounds(self, parameters_base: dict, lower_bound: float, upper_bound: float):
@@ -114,7 +147,8 @@ class Trainer:
 
     def latinhypercube_sampling(self, parameters_base, lower_bound, upper_bound, N):
         """Performs latin hypercube sampling"""
-        bounds = self._generate_bounds(parameters_base=parameters_base, lower_bound=lower_bound, upper_bound=upper_bound)
+        bounds = self._generate_bounds(parameters_base=parameters_base, lower_bound=lower_bound,
+                                       upper_bound=upper_bound)
 
         sampler = qmc.LatinHypercube(d=len(bounds.index))
         samples = sampler.random(N)
@@ -139,7 +173,7 @@ class Trainer:
         self.optimizer = optimizer
         return optimizer
 
-    # @jax.jit
+
     def _update_log(self, opt_state, params, ts, ys):
         """Update rule for the gradients for log-transformed parameters. Can only be applied
         to non-negative parameters"""
@@ -158,9 +192,9 @@ class Trainer:
     def _update(self, opt_state, params, ts, ys):
         """Update rule for the gradients for log-transformed parameters. Can only be applied
         to non-negative parameters"""
-        print(params)
+
         loss = self.loss_func(params, ts, ys)
-        print(loss)
+
         grads = jax.grad(self.loss_func, 0)(params, ts, ys)  # loss w.r.t. parameters
         updates, opt_state = self.optimizer.update(grads, opt_state)
 
@@ -168,9 +202,6 @@ class Trainer:
         params = optax.apply_updates(params, updates)
 
         return opt_state, params, loss, grads
-
-
-
 
     def train(self):
         """Train model given the initializations"""
@@ -185,11 +216,17 @@ class Trainer:
 
             loss_per_iter = []
             gradient_norms = []
+            time_per_step=[]
             try:
                 for step in range(self.n_iter):  # loop over number of iterations
+
+                    start = time.time()
                     opt_state, params_init, loss, grads = self.update_rule(
-                        opt_state, params_init, self.ts, jnp.array(self.dataset)
-                    )
+                        opt_state, params_init, self.ts, jnp.array(self.dataset))
+                    end = time.time()
+                    print(end-start,loss)
+
+                    time_per_step.append(end-start)
 
                     gradient_norms.append(global_norm(grads))
                     loss_per_iter.append(loss)
@@ -200,7 +237,7 @@ class Trainer:
                         optimized_parameters_dict[init] = params_init
                         break
 
-                    if step % 50 == 0:
+                    if step % 20 == 0:
                         print(f"Step {step}, Loss {loss}")
 
                     loss_per_iteration_dict[init] = loss_per_iter
@@ -211,6 +248,7 @@ class Trainer:
                 logger.error(f"init {init} could not be optimized")
                 loss_per_iteration_dict[init] = loss_per_iter
                 loss_per_iteration_dict[init].append(-1)
+
         return optimized_parameters_dict, loss_per_iteration_dict, global_norm_dict
 
 
@@ -231,7 +269,7 @@ def exponentiate_parameters(params):
 
 
 @equinox.filter_jit
-def log_mean_centered_loss_func(params, ts, ys,model):
+def log_mean_centered_loss_func(params, ts, ys, model):
     """A log mean centered loss function. Typically works well on systems biology models
     due to their exponential parameter distributions"""
     params = exponentiate_parameters(params)
@@ -254,8 +292,9 @@ def log_mean_centered_loss_func(params, ts, ys,model):
     loss = jnp.sum((y_pred - ys) ** 2) / non_nan_count
     return loss
 
+
 @equinox.filter_jit
-def loss_func(params, ts, ys,model):
+def loss_func(params, ts, ys, model):
     """A typical mean squared error loss function"""
     mask = ~jnp.isnan(jnp.array(ys))
     ys = jnp.atleast_2d(ys)
@@ -270,11 +309,10 @@ def loss_func(params, ts, ys,model):
     return loss
 
 
-
-
 @equinox.filter_jit
 def create_log_params_log_loss_func(model):
     """Loss function for log transformed parameters"""
+
     def loss_func(params, ts, ys):
         params = exponentiate_parameters(params)
         mask = ~jnp.isnan(jnp.array(ys))
@@ -294,6 +332,7 @@ def create_log_params_log_loss_func(model):
         return loss
 
     return loss_func
+
 
 @equinox.filter_jit
 def create_log_params_means_centered_loss_func(model):
@@ -323,6 +362,7 @@ def create_log_params_means_centered_loss_func(model):
 
     return log_mean_centered_loss_func
 
+
 @equinox.filter_jit
 def create_log_params_means_centered_loss_func2(model, to_include: list):
     """Loss function for log transformed parameters.
@@ -350,8 +390,8 @@ def create_log_params_means_centered_loss_func2(model, to_include: list):
         non_nan_count = jnp.sum(mask)
         loss = jnp.sum((y_pred - ys) ** 2) / non_nan_count
         return loss
-    return loss_func
 
+    return loss_func
 
 
 def global_norm(grads):
