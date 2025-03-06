@@ -46,7 +46,16 @@ class JaxKineticModel:
         self.compartment_values = jnp.array(compartment_values)
         self.species_compartments = species_compartments
         self.boundary_conditions = boundary_conditions
+        self.argument_names= self._get_co_varnames()
 
+    def _get_co_varnames(self):
+        """helper function to directly pass arguments to evaluate properly
+        """
+        argument_names={}
+        for name, mechanism in self.func.items():
+            argument_names[name]=mechanism.__code__.co_varnames
+            # self.func[name]=jax.jit(mechanism)
+        return argument_names
 
 
     def __call__(self, t, y, args):
@@ -60,6 +69,7 @@ class JaxKineticModel:
         # function evaluates the flux vi given y, parameter, local parameters, time dictionary
 
         def apply_func(func: dict,
+                       argument_names: dict,
                        y: jnp.ndarray,
                        global_params: dict,
                        local_params: dict, ):
@@ -67,13 +77,14 @@ class JaxKineticModel:
 
             eval_dict['t'] = t
 
-            eval_dict = {i: eval_dict[i] for i in func.__code__.co_varnames}
+            eval_dict = {i: eval_dict[i] for i in argument_names}
             vi = func(**eval_dict)
             return vi
 
         v = jnp.stack(
             [apply_func(func=self.func[i],
-                        y=y,
+                        argument_names=self.argument_names[i],
+                        y= y,
                         global_params=global_params[i],
                         local_params=local_params[i]
                         )

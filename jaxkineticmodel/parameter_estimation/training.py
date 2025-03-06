@@ -224,7 +224,7 @@ class Trainer:
                     opt_state, params_init, loss, grads = self.update_rule(
                         opt_state, params_init, self.ts, jnp.array(self.dataset))
                     end = time.time()
-                    print(end-start,loss)
+                    print(end-start, loss)
 
                     time_per_step.append(end-start)
 
@@ -268,7 +268,7 @@ def exponentiate_parameters(params):
     return params_dict
 
 
-@equinox.filter_jit
+
 def log_mean_centered_loss_func(params, ts, ys, model):
     """A log mean centered loss function. Typically works well on systems biology models
     due to their exponential parameter distributions"""
@@ -293,7 +293,7 @@ def log_mean_centered_loss_func(params, ts, ys, model):
     return loss
 
 
-@equinox.filter_jit
+
 def loss_func(params, ts, ys, model):
     """A typical mean squared error loss function"""
     mask = ~jnp.isnan(jnp.array(ys))
@@ -309,7 +309,7 @@ def loss_func(params, ts, ys, model):
     return loss
 
 
-@equinox.filter_jit
+
 def create_log_params_log_loss_func(model):
     """Loss function for log transformed parameters"""
 
@@ -334,7 +334,7 @@ def create_log_params_log_loss_func(model):
     return loss_func
 
 
-@equinox.filter_jit
+
 def create_log_params_means_centered_loss_func(model):
     """Loss function for log transformed parameters.
     We do a simple input scaling using the mean per state variable (we add 1 everywhere to prevent division by zero)"""
@@ -363,7 +363,6 @@ def create_log_params_means_centered_loss_func(model):
     return log_mean_centered_loss_func
 
 
-@equinox.filter_jit
 def create_log_params_means_centered_loss_func2(model, to_include: list):
     """Loss function for log transformed parameters.
     We do a simple input scaling using the mean per state variable (we add 1 everywhere to prevent division by zero).

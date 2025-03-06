@@ -10,7 +10,6 @@ from jaxkineticmodel.utils import get_logger
 
 logger = get_logger(__name__)
 
-
 import tellurium as te  # noqa: E402
 
 jax.config.update("jax_enable_x64", True)
@@ -29,7 +28,6 @@ for file in files:
     if file.endswith(".sbml"):
         sbml_files.append(file)
 
-
 working_models_counter = 0
 max_steps_reached_counter = 0
 failing_models_counter = 0
@@ -47,12 +45,11 @@ for sbml_file in sbml_files:
 
         # #parameters are not yet defined
 
-
         tellurium_model = te.loadSBMLModel(file_path)
-        tellurium_model.integrator.rtol=1e-7
-        tellurium_model.integrator.atol=1e-10
+        tellurium_model.integrator.rtol = 1e-7
+        tellurium_model.integrator.atol = 1e-10
         tellurium_model.integrator.initial_time_step = 1e-11
-        tellurium_model.integrator.max_steps=300000
+        tellurium_model.integrator.max_steps = 300000
 
         sol_tellurium = tellurium_model.simulate(0, 10, 200)
         ts = jnp.array(sol_tellurium["time"])
@@ -60,7 +57,7 @@ for sbml_file in sbml_files:
         ys = JaxKmodel(ts=ts, y0=model.y0, params=model.parameters)
         ys = pd.DataFrame(ys, columns=S.index)
 
-        ## we need to do another estimate for the error tolerance
+        # we need to do another estimate for the error tolerance
 
         # calculate the MSE between two timeseries because this should be a more stable error measure
         rtols = []

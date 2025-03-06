@@ -37,3 +37,6 @@ end = time.time()
 print((end - start) / 100)
 
 my_func.__call__(0, y=model.y0, args=(global_params, locals))  #65 us
+
+#0.05892658233642578
+#8.245229721069336e-05
