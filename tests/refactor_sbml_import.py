@@ -23,8 +23,8 @@ print(os.getcwd())
 
 
 
-model_name="Smallbone2013_SerineBiosynthesis"
-filepath = (f"models/sbml_models/working_models/{model_name}.xml")
+filepath= "models/manual_implementations/sbml_export/glycolysis_feastfamine_pulse1.xml"
+
 ##
 
 # # # load model from file_path
@@ -34,17 +34,13 @@ S=model._get_stoichiometric_matrix()
 #
 
 jaxkmodel = model.get_kinetic_model()
-# jaxkmodel._compile()
-#
-#
-#
-# # JaxKmodel._change_solver(solver=diffrax.Kvaerno3())
 
 
-ts = jnp.linspace(0,20,200)
+ts = jnp.linspace(0,100,200)
 #
 # # simulate given the initial conditions defined in the sbml
 #
+
 jaxkmodel=jax.jit(jaxkmodel)
 # #
 ys = jaxkmodel(ts=ts,
@@ -52,24 +48,48 @@ ys = jaxkmodel(ts=ts,
             params=model.parameters)
 #
 ys=pd.DataFrame(ys,columns=S.index)
-for i in ys.columns:
-    plt.plot(ts,ys[i],label=i)
-plt.title("jaxkmodel")
-plt.legend()
+
+plt.plot(ts,ys)
 plt.show()
-#
-# # print(model.parameters)
-# # #
+# #
+# # # print(model.parameters)
 # # # #
+# # # # #
+#
 start=time.time()
-for i in range(500):
-    print(i)
+for i in range(100):
+
     ys = jaxkmodel(ts=ts,
                 y0=model.y0,
                 params=model.parameters)
 end=time.time()
-jaxkmodel_timing=end-start
-print(jaxkmodel_timing)
+print((end-start)/100)
+#
+start=time.time()
+for i in range(100):
+    ys = jaxkmodel(ts=ts,
+                y0=model.y0,
+                params=model.parameters)
+end=time.time()
+print((end-start)/100)
+#
+start=time.time()
+for i in range(100):
+    ys = jaxkmodel(ts=ts,
+                y0=model.y0,
+                params=model.parameters)
+end=time.time()
+print((end-start)/100)
+
+
+start=time.time()
+for i in range(100):
+    ys = jaxkmodel(ts=ts,
+                y0=model.y0,
+                params=model.parameters)
+end=time.time()
+print((end-start)/100)
+
 # # # #
 # rr = roadrunner.RoadRunner(filepath)
 # rr.integrator.absolute_tolerance = 1e-10
