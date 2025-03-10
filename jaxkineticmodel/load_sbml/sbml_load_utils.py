@@ -11,9 +11,7 @@ def construct_param_point_dictionary(v_symbol_dictionaries, reaction_names, para
         for key, value in v_dict.items():
             if key in parameters.keys():
                 filtered_dict[key] = parameters[key]
-        # params_point_dict=[parameters.index(key) for key in v_dict.keys() if key in parameters]
-        # print(params_point_dict)
-        # filtered_dict=jnp.array(params_point_dict)
+
         flux_point_dict[reaction] = filtered_dict
     return flux_point_dict
 

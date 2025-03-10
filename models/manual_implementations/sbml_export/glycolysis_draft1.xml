@@ -6,11 +6,11 @@
       <compartment id="c" spatialDimensions="3" size="1" constant="true"/>
     </listOfCompartments>
     <listOfSpecies>
+
       <species id="ICATP" compartment="c" initialAmount="3.730584" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
       <species id="ICglucose" compartment="c" initialAmount="0.196003" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
       <species id="ICADP" compartment="c" initialAmount="1.376832" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
       <species id="ICG6P" compartment="c" initialAmount="0.716385" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
-      <species id="ECglucose" compartment="e" initialAmount="NaN" hasOnlySubstanceUnits="false" boundaryCondition="true" constant="false"/>
       <species id="ICtreh" compartment="c" initialAmount="63.31204" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
       <species id="ICF6P" compartment="c" initialAmount="0.202293" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
       <species id="ICG1P" compartment="c" initialAmount="0.064568" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
@@ -181,6 +181,7 @@
       <parameter id="p_mitoNADHKm" value="0.1" constant="true"/>
       <parameter id="flux_ugp" value="0.00031" constant="true"/>
       <parameter id="D" value="0.1" constant="true"/>
+      <parameter id="ECglucose" value="NaN" constant="false"/>
     </listOfParameters>
     <listOfRules>
       <assignmentRule variable="ECglucose">

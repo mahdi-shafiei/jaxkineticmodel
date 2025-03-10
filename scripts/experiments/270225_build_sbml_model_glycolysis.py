@@ -502,7 +502,7 @@ domain = [float(i) for i in data.loc['ECglucose'].dropna().index]
 drange = data.loc['ECglucose'].dropna().values
 
 t = sympy.Symbol('t')
-spline = sympy.interpolating_spline(3, t, domain, drange)
+spline = sympy.interpolating_spline(1, t, domain, drange)
 spline = str(spline)
 kmodel.add_boundary('ECglucose', jkm.BoundaryCondition(spline))
 

@@ -9,7 +9,8 @@ import sympy
 import collections
 from jaxkineticmodel.load_sbml.sbml_load_utils import construct_param_point_dictionary, separate_params
 from jaxkineticmodel.utils import get_logger
-
+from functools import partial
+import equinox
 
 jax.config.update("jax_enable_x64", True)
 
@@ -21,7 +22,6 @@ class JaxKineticModel:
             self,
             fluxes,
             stoichiometric_matrix,
-            flux_met_pointer,
             species_names,
             reaction_names,
             compartment_values,
@@ -37,10 +37,7 @@ class JaxKineticModel:
         ##A pointer dictionary?
         """
         self.func = fluxes
-
         self.stoichiometry = stoichiometric_matrix
-        # self.params=params
-        self.flux_met_pointer = flux_met_pointer
         self.species_names = np.array(species_names)
         self.reaction_names = np.array(reaction_names)
         self.compartment_values = jnp.array(compartment_values)
@@ -54,8 +51,8 @@ class JaxKineticModel:
         argument_names={}
         for name, mechanism in self.func.items():
             argument_names[name]=mechanism.__code__.co_varnames
-            # self.func[name]=jax.jit(mechanism)
         return argument_names
+
 
 
     def __call__(self, t, y, args):
@@ -67,27 +64,23 @@ class JaxKineticModel:
 
 
         # function evaluates the flux vi given y, parameter, local parameters, time dictionary
-
-        def apply_func(func: dict,
+        def apply_func(t,
+                       func: dict,
                        argument_names: dict,
                        y: jnp.ndarray,
                        global_params: dict,
                        local_params: dict, ):
+
             eval_dict = {**y, **global_params, **local_params}
-
             eval_dict['t'] = t
-
             eval_dict = {i: eval_dict[i] for i in argument_names}
             vi = func(**eval_dict)
             return vi
 
-        v = jnp.stack(
-            [apply_func(func=self.func[i],
-                        argument_names=self.argument_names[i],
-                        y= y,
-                        global_params=global_params[i],
-                        local_params=local_params[i]
-                        )
+
+        v = jnp.asarray(
+            [apply_func(t=t, func=self.func[i], argument_names=self.argument_names[i],
+                        y=y,global_params=global_params[i],local_params=local_params[i])
              for i in reaction_names]
         )  # perhaps there is a way to vectorize this in a better way
         dY = jnp.matmul(self.stoichiometry, v)  # dMdt=S*v(t)
@@ -118,7 +111,7 @@ class NeuralODE:
         self.reaction_names = list(stoichiometric_matrix.columns)
         self.species_names = list(stoichiometric_matrix.index)
 
-        self.Stoichiometry = stoichiometric_matrix
+        self.stoichiometry = stoichiometric_matrix
 
         self.compartment_values = compartment_values
         self.species_compartments = species_compartments
@@ -129,16 +122,17 @@ class NeuralODE:
         self.boundary_conditions = boundary_conditions
 
         #defined after compilation
-        self.flux_met_pointer = {}
+
         self.v_symbols = {}
 
         #hyperparameters for simulation
         self.max_steps = 300000
-        self.rtol = 1e-7
-        self.atol = 1e-10
+        self.rtol = 1e-9
+        self.atol = 1e-12
         self.dt0 = 1e-12
         self.solver = diffrax.Kvaerno5()
-        self.stepsize_controller = diffrax.PIDController(rtol=self.rtol, atol=self.atol, pcoeff=0.4, icoeff=0.3)
+        self.stepsize_controller = diffrax.PIDController(rtol=self.rtol, atol=self.atol,
+                                                         pcoeff=0.4, icoeff=0.3)
         self.adjoint = diffrax.RecursiveCheckpointAdjoint()
 
         if self.compile_status:
@@ -172,12 +166,11 @@ class NeuralODE:
             self.v_symbols[reaction_name] = filtered_dict
 
         self.compile_status = True
-        self.flux_met_pointer = self._construct_flux_pointer_dictionary()
+
         self.func = JaxKineticModel(fluxes=self.fluxes,
-                                    stoichiometric_matrix=jnp.array(self.Stoichiometry),
-                                    flux_met_pointer=self.flux_met_pointer,
-                                    species_names=self.Stoichiometry.index,
-                                    reaction_names=self.Stoichiometry.columns,
+                                    stoichiometric_matrix=jnp.array(self.stoichiometry),
+                                    species_names=self.stoichiometry.index,
+                                    reaction_names=self.stoichiometry.columns,
                                     compartment_values=self.compartment_values,
                                     species_compartments=self.species_compartments,
                                     boundary_conditions=self.boundary_conditions)
@@ -207,15 +200,6 @@ class NeuralODE:
 
         return logger.info(f"solver changed to {type(solver)}")
 
-    def _construct_flux_pointer_dictionary(self):
-        """In jax, the values that are used need to be pointed directly in y0."""
-        flux_point_dict = {}
-        for k, reaction in enumerate(self.reaction_names):
-            v_dict = self.v_symbols[reaction]
-            filtered_dict = [self.species_names.index(key) for key in v_dict.keys() if key in self.species_names]
-            filtered_dict = jnp.array(filtered_dict)
-            flux_point_dict[reaction] = filtered_dict
-        return flux_point_dict
 
     def __call__(self, ts, y0, params):
         """Forward simulation step"""
