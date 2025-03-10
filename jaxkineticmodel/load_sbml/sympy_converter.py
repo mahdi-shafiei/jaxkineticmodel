@@ -211,7 +211,7 @@ class SympyConverter(Converter):
         # first one that matches is applied.
         # However, for libsbml, no order is assumed, and the entire
         # expression is considered to be undefined if multiple conditions
-        # evaluate to true.
+        # evaluate to true (but values differ).
         # Fortunately, sympy offers functionality to rewrite a piecewise
         # expression to make the conditions mutually exclusive.
         piecewise = sympy.functions.piecewise_exclusive(expr)

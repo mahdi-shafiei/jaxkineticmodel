@@ -1,9 +1,7 @@
-
 import cProfile
 
 import diffrax
 import jax.numpy as jnp
-
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -29,7 +27,7 @@ filepath= "models/manual_implementations/sbml_export/glycolysis_feastfamine_puls
 
 # # # load model from file_path
 model = sbml_model.SBMLModel(filepath)
-S=model._get_stoichiometric_matrix()
+S = model._get_stoichiometric_matrix()
 
 #
 
@@ -40,12 +38,11 @@ ts = jnp.linspace(0,100,200)
 #
 # # simulate given the initial conditions defined in the sbml
 #
-
-jaxkmodel=jax.jit(jaxkmodel)
+jaxkmodel = jax.jit(jaxkmodel)
 # #
 ys = jaxkmodel(ts=ts,
-            y0=model.y0,
-            params=model.parameters)
+               y0=model.y0,
+               params=model.parameters)
 #
 ys=pd.DataFrame(ys,columns=S.index)
 

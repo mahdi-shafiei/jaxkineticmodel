@@ -73,6 +73,8 @@ class JaxKineticModelBuild:
     reactions: List[Reaction]
     compartments: dict[str, int]
     boundary_conditions: dict[str, BoundaryCondition]
+    stoichiometric_matrix: pd.DataFrame
+    species_names: list[str]
 
     def __init__(self, reactions: List[Reaction], compartments: dict[str, int]):
         """Kinetic model that is defined through it's reactions:
@@ -110,7 +112,7 @@ class JaxKineticModelBuild:
                 parameter_names.append(parameter)
         return parameter_names
 
-    def _get_stoichiometry(self):
+    def _get_stoichiometry(self) -> pd.DataFrame:
         """Build stoichiometric matrix from reactions"""
         build_dict = {}
         for reaction in self.reactions:

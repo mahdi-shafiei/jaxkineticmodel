@@ -10,7 +10,6 @@ import collections
 from jaxkineticmodel.load_sbml.sbml_load_utils import construct_param_point_dictionary, separate_params
 from jaxkineticmodel.utils import get_logger
 
-
 jax.config.update("jax_enable_x64", True)
 
 logger = get_logger(__name__)
