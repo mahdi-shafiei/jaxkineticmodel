@@ -1,7 +1,7 @@
 # Custom ODE models
 Not all kinetic model can be drafted only from stoichiometry. There are empirical laws that might influence 
 There are many empirical laws that might influence reactions in the system of ODEs. 
-Below, we present a reimplemented version **[1]** of a glycolysis model
+Below, we present a reimplemented version of a glycolysis model[^1]
 in Jax. We wil note down specific modeling choices that can be used to incorporate 
 non-stoichiometric modifications. This output of this script can be found
 [SBML model](https://github.com/AbeelLab/jaxkineticmodel/blob/main/models/manual_implementations/sbml_export/glycolysis_feastfamine_pulse1.xml)
@@ -94,5 +94,5 @@ The model can be exported to sbml format for parameter optimziation.
 ```
 
 ## References
-[1] Lao-Martil, D., Schmitz, J. P., Teusink, B., & van Riel, N. A. (2023). Elucidating yeast glycolytic dynamics at steady state growth and glucose pulses through kinetic metabolic modeling. Metabolic engineering, 77, 128-142.
+[^1]: Lao-Martil, D., Schmitz, J. P., Teusink, B., & van Riel, N. A. (2023). Elucidating yeast glycolytic dynamics at steady state growth and glucose pulses through kinetic metabolic modeling. Metabolic engineering, 77, 128-142.
 

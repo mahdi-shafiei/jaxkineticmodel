@@ -10,7 +10,7 @@ $$\frac{dm(t)}{dt}=S\cdot v(t,m(t),\theta)$$
 a metabolic system. The fluxes \\(v\\) are described by reaction mechanisms, typically of some form like Michaelis-Menten or Hill equations. These mechanisms are parameterized by \\(\theta\\). By providing the initial values of the metabolic states, the ODEs can be solved using a numerical solver:
 $$m(T)=m(0)+\int_0^T S\cdot v(t,m(t),\theta)dt$$
 
-We will describe below how you can build your own models that are compatible with Jax/Diffrax **[1]**. 
+We will describe below how you can build your own models that are compatible with Jax/Diffrax[^1].
 
 
 
@@ -66,7 +66,7 @@ The stoichiometric matrix is automatically constructed from the reactions.
     m3  0.0  1.0  0.0
     m4  0.0  0.0  1.0
 
-One can first jax.jit the model **[2]** and solve the ODEs using the diffrax package **[1]**, which contains many nice numerical solvers.
+One can first jax.jit the model[^2] and solve the ODEs using the diffrax package[^1], which contains many nice numerical solvers.
 
 ```python
 {!code/building_models.py!lines=54-75}
@@ -122,9 +122,6 @@ Coming up
 
 
 ## References
-[1] Kidger, P. (2022). On neural differential equations. arXiv preprint arXiv:2202.02435.
+[^1]: Kidger, P. (2022). On neural differential equations. arXiv preprint arXiv:2202.02435.
 
-[2] Bradbury, J., Frostig, R., Hawkins, P., Johnson, M. J., Leary, C., Maclaurin, D., ... & Zhang, Q. (2018). JAX: composable transformations of Python+ NumPy programs.
-
-
-
+[^2]: Bradbury, J., Frostig, R., Hawkins, P., Johnson, M. J., Leary, C., Maclaurin, D., ... & Zhang, Q. (2018). JAX: composable transformations of Python+ NumPy programs.

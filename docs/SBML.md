@@ -45,4 +45,4 @@ we hope to address all these edge-cases.
 ## References
 [1] Hass, H., Loos, C., Raimundez-Alvarez, E., Timmer, J., Hasenauer, J., & Kreutz, C. (2019). Benchmark problems for dynamic modeling of intracellular processes. Bioinformatics, 35(17), 3073-3082.
 
-[2]Somogyi, E. T., Bouteiller, J. M., Glazier, J. A., König, M., Medley, J. K., Swat, M. H., & Sauro, H. M. (2015). libRoadRunner: a high performance SBML simulation and analysis library. Bioinformatics, 31(20), 3315-3321.
+[2] Somogyi, E. T., Bouteiller, J. M., Glazier, J. A., König, M., Medley, J. K., Swat, M. H., & Sauro, H. M. (2015). libRoadRunner: a high performance SBML simulation and analysis library. Bioinformatics, 31(20), 3315-3321.

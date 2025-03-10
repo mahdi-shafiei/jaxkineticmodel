@@ -1,7 +1,7 @@
 # Simulated design-build-test-learn-cycles
 
 ## A simulation of metabolic engineering experiments
-DBTL cycles are widely used in the optimization of microorganisms for producing valuable compounds in a sustainable way. Despite the widespread use, many open questions exist when it comes to effectively using DBTL cycles. The reason for this is that due to the costly nature (in terms of time and money), effectively comparing design choices is never considered. It is for example highly unlikely that for the same optimization process, different sampling scenarios are compared, even though this might be valuable. An alternative cheap way to answer these types of questions is by simulating DBTL cycles **[1]**. Here, we show a reimplemented software of simulated-DBTL in Jax/Diffrax **[2]**. This allows users to test scenarios for their own lab settings. 
+DBTL cycles are widely used in the optimization of microorganisms for producing valuable compounds in a sustainable way. Despite the widespread use, many open questions exist when it comes to effectively using DBTL cycles. The reason for this is that due to the costly nature (in terms of time and money), effectively comparing design choices is never considered. It is for example highly unlikely that for the same optimization process, different sampling scenarios are compared, even though this might be valuable. An alternative cheap way to answer these types of questions is by simulating DBTL cycles[^1]. Here, we show a reimplemented software of simulated-DBTL in Jax/Diffrax[^2]. This allows users to test scenarios for their own lab settings. 
 
 ![sim-dbtl](images/dbtl_figure.png)
 
@@ -47,6 +47,6 @@ From here, the produced data can be used to compare whatever hyperparameter of t
 
 
 ## References
-[1] van Lent, P., Schmitz, J., & Abeel, T. (2023). Simulated design–build–test–learn cycles for consistent comparison of machine learning methods in metabolic engineering. ACS Synthetic Biology, 12(9), 2588-2599.
+[^1]: van Lent, P., Schmitz, J., & Abeel, T. (2023). Simulated design–build–test–learn cycles for consistent comparison of machine learning methods in metabolic engineering. ACS Synthetic Biology, 12(9), 2588-2599.
 
-[2] Kidger, P. (2022). On neural differential equations. arXiv preprint arXiv:2202.02435.
+[^2]: Kidger, P. (2022). On neural differential equations. arXiv preprint arXiv:2202.02435.
