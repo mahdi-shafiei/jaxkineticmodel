@@ -43,17 +43,15 @@ class JaxKineticModel:
         self.compartment_values = jnp.array(compartment_values)
         self.species_compartments = species_compartments
         self.boundary_conditions = boundary_conditions
-        self.argument_names= self._get_co_varnames()
+        self.argument_names = self._get_co_varnames()
 
     def _get_co_varnames(self):
         """helper function to directly pass arguments to evaluate properly
         """
-        argument_names={}
+        argument_names = {}
         for name, mechanism in self.func.items():
-            argument_names[name]=mechanism.__code__.co_varnames
+            argument_names[name] = mechanism.__code__.co_varnames
         return argument_names
-
-
 
     def __call__(self, t, y, args):
         """compute dMdt"""
@@ -62,7 +60,6 @@ class JaxKineticModel:
 
         reaction_names = list(self.func.keys())
 
-
         # function evaluates the flux vi given y, parameter, local parameters, time dictionary
         def apply_func(t,
                        func: dict,
@@ -70,17 +67,15 @@ class JaxKineticModel:
                        y: jnp.ndarray,
                        global_params: dict,
                        local_params: dict, ):
-
             eval_dict = {**y, **global_params, **local_params}
             eval_dict['t'] = t
             eval_dict = {i: eval_dict[i] for i in argument_names}
             vi = func(**eval_dict)
             return vi
 
-
         v = jnp.asarray(
             [apply_func(t=t, func=self.func[i], argument_names=self.argument_names[i],
-                        y=y,global_params=global_params[i],local_params=local_params[i])
+                        y=y, global_params=global_params[i], local_params=local_params[i])
              for i in reaction_names]
         )  # perhaps there is a way to vectorize this in a better way
         dY = jnp.matmul(self.stoichiometry, v)  # dMdt=S*v(t)
@@ -104,6 +99,7 @@ class NeuralODE:
             event_rules: dict,
             compartments: dict,
             compile: bool,
+            **kwargs
 
     ):
         self.compile_status = compile
@@ -121,6 +117,10 @@ class NeuralODE:
         self.assignments_rules = assignments_rules
         self.boundary_conditions = boundary_conditions
 
+        self.y0 = kwargs['y0'] #not used in training, but only to process the initial conditions in Trainer object
+        self.parameters = kwargs['parameters'] #not used in training,
+        # but only to process the initial conditions in Trainer object
+
         #defined after compilation
 
         self.v_symbols = {}
@@ -129,21 +129,26 @@ class NeuralODE:
         self.max_steps = 300000
         self.rtol = 1e-9
         self.atol = 1e-12
-        self.dt0 = 1e-12
+        self.dt0 = 1e-11
         self.solver = diffrax.Kvaerno5()
         self.stepsize_controller = diffrax.PIDController(rtol=self.rtol, atol=self.atol,
-                                                         pcoeff=0.4, icoeff=0.3)
+                                                         pcoeff = 0.4, icoeff = 0.3)
         self.adjoint = diffrax.RecursiveCheckpointAdjoint()
 
         if self.compile_status:
-            self._compile()
+            self._prepare_model()
 
         else:
-            logger.info("Model is not compiled. Run ._compile() for simulation")
+            logger.info("Assignment rules, boundary conditions, lambda functions,"
+                        "and compartment is not compiled. Run ._prepare_model() for simulation")
 
-    def _compile(self
-                 ):
-        """Substitutes assignment rules, boundary conditions,lambda functions, compartments."""
+    def _prepare_model(self,
+                       constant_parameters={},
+                       ):
+        """Substitutes assignment rules, boundary conditions,lambda functions, compartments.
+        constant_parameters: dictionary with parameters that need to be replaced
+        (e.g. they should not be considered during optimization)
+        """
         # arguments from the lambda expression are mapped to their respective symbols.
         for reaction_name, equation in self.fluxes.items():
             for func in equation.atoms(sympy.Function):
@@ -157,6 +162,9 @@ class NeuralODE:
             equation = equation.subs(self.compartments)
             equation = equation.subs(self.assignments_rules)
             equation = equation.subs(self.boundary_conditions)
+            if constant_parameters:
+                equation = equation.subs(constant_parameters)
+
             free_symbols = list(equation.free_symbols)
             equation = sympy.lambdify(free_symbols, equation, "jax")
             filtered_dict = dict(zip([str(i) for i in free_symbols], free_symbols))
@@ -174,6 +182,9 @@ class NeuralODE:
                                     compartment_values=self.compartment_values,
                                     species_compartments=self.species_compartments,
                                     boundary_conditions=self.boundary_conditions)
+
+        for key in constant_parameters.keys():
+            self.parameters.pop(key)
 
         # for each flux, metabolites are retrieved and mapped to the respective values in y0
         return logger.info("Compile complete")
@@ -199,7 +210,6 @@ class NeuralODE:
             logger.error(f"solver {type(solver)} not support yet")
 
         return logger.info(f"solver changed to {type(solver)}")
-
 
     def __call__(self, ts, y0, params):
         """Forward simulation step"""

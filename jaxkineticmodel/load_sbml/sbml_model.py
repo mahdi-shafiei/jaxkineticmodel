@@ -237,20 +237,20 @@ class SBMLModel:
 
 
 
-    def get_kinetic_model(self,compile=True):
+    def get_kinetic_model(self, compile=True):
         """returns a NeuralODE object with keywords arguments"""
         assert isinstance(compile, bool)
         kwargs = vars(self)
 
-        include = ['species_compartments',
+        include = ['y0', 'parameters', 'species_compartments',
                    'compartment_values', 'boundary_conditions',
-                   'lambda_functions', 'assignments_rules', 'event_rules','compartments']
+                   'lambda_functions', 'assignments_rules', 'event_rules', 'compartments']
         kwargs = {i: kwargs[i] for i in include}
 
         return NeuralODE(
             fluxes=self.v,
             stoichiometric_matrix=self.S,
-            compile=compile,
+            compile = compile,
             **kwargs)
 
 

@@ -15,6 +15,8 @@ import traceback
 import gc
 from functools import partial
 
+from jaxkineticmodel.load_sbml.jax_kinetic_model import NeuralODE
+
 jax.config.update("jax_enable_x64", True)
 logger = logging.getLogger(__name__)
 
@@ -24,7 +26,7 @@ class Trainer:
     Input: a model that is a JaxKineticModel class to fit, and a dataset"""
 
     def __init__(self,
-                 model: [SBMLModel, jkm.NeuralODEBuild],
+                 model: [NeuralODE, jkm.NeuralODEBuild],
                  data: pd.DataFrame,
                  n_iter: int,
                  learning_rate=1e-3,
@@ -34,14 +36,13 @@ class Trainer:
                  clip=4,
                  ):
 
-        if isinstance(model, SBMLModel):
-
+        if isinstance(model, NeuralODE):
             # initial conditions need to be retrieved to ensure that the dataset matches in the loss function.
             # this makes sure that we can evaluate, also for points where there is no data. Will
             # be processed in the self._process_data()
             self.initial_conditions = dict(zip(model.species_names, model.y0))
 
-            self.kin_model = model.get_kinetic_model()
+            self.kin_model = model
             self.species_names = self.kin_model.species_names
 
             self.parameters = list(model.parameters.keys())
@@ -76,7 +77,7 @@ class Trainer:
         #     self.loss_func = jax.jit(self._create_loss_func(loss_func))
 
         self.make_step, self.loss_func = self._choose_optimization_space()
-        self.make_step = jax.jit(self.make_step)
+
         self.loss_threshold = loss_threshold
         self.n_iter = n_iter
         self.dataset = data
@@ -88,8 +89,8 @@ class Trainer:
         in the case of logarithmic space exponentiates the parameters"""
         if self.optim_space == "log":
             loss_func = self._create_loss_func(log_mean_centered_loss_func)
-            self.loss_func = loss_func
-            update_rule = self.update_log_wrap
+            self.loss_func = jax.jit(loss_func)
+            update_rule = jax.jit(self.update_log_wrap)
 
         elif self.optim_space == "linear":
             loss_func = self._create_loss_func(mse_loss_func)
@@ -141,6 +142,7 @@ class Trainer:
                 logger.info(f"species {species_name} not in model, excluded from data for parameter estimation")
 
         #initial conditions need to be in the data for the loss function to be calculated
+        # thin
         inits_with_nans = processed_dataset.iloc[0, :].isna().to_dict()
         for (name, initial_cond) in inits_with_nans.items():
             if initial_cond:
@@ -288,9 +290,8 @@ def update_log(opt_state,
 
     log_params = jax.tree.map(lambda x: jnp.log2(x), params)
 
-    loss = loss_func(log_params, ts, ys)
+    loss, grads = jax.value_and_grad(loss_func, 0)(log_params, ts, ys)
 
-    grads = jax.grad(loss_func, 0)(log_params, ts, ys)  # loss w.r.t. parameters
     updates, opt_state = optimizer.update(grads, opt_state)
 
     # we perform updates in log space, but only return params in lin space
