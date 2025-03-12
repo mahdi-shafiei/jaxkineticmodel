@@ -62,7 +62,8 @@ for k, name in enumerate(metab_names):
 rdata = amici.runAmiciSimulation(model, solver, edata)
 
 
-# # we make some more adjustments to our model and the solver
+#
+# # # we make some more adjustments to our model and the solver
 model.requireSensitivitiesForAllParameters()
 #
 solver.setSensitivityMethod(amici.SensitivityMethod_adjoint)
@@ -78,7 +79,7 @@ problem= pypesto.Problem(objective=objective,
                          ub=np.array(model.getParameters())*100,
                          x_guesses=[np.array(model.getParameters())])
 
-optimizer_options = {"maxiter": 1e4, "fatol": 1e-12, "frtol": 1e-12}
+optimizer_options = {"maxiter": 0, "fatol": 1e-12, "frtol": 1e-12}
 optimizer = optimize.FidesOptimizer(
     options=optimizer_options, verbose=1
 )
@@ -97,6 +98,9 @@ result = optimize.minimize(
 end=time.time()
 print('run_time', end-start)
 print(result.summary())
+
+#%%
+print(result.optimize_result.get_for_key("fval"))
 
 #%%
 # display(Markdown(result.summary()))

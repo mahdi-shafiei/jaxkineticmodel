@@ -36,6 +36,15 @@ class BoundaryCondition:
         return self.lambdified(t)
 
 
+class BoundaryConditionDiffrax:
+    """Helper function to load diffrax intepolations to the NeuralODEBuild object. Is not compatible with SBML"""
+    def __init__(self, boundary_condition: diffrax.AbstractPath):
+        assert isinstance(boundary_condition, diffrax.AbstractPath)
+        self.boundary_condition = boundary_condition
+
+    def evaluate(self, t):
+        return self.boundary_condition.evaluate(t)
+
 class Reaction:
     """Base class that can be used for building kinetic models. The following things must be specified:
     species involved,
@@ -193,13 +202,22 @@ class NeuralODEBuild:
         self.boundary_conditions = func.boundary_conditions
 
         self.max_steps = 300000
-        self.rtol = 1e-7
-        self.atol = 1e-10
-        self.dt0 = 1e-11
+        self.rtol = 1e-9
+        self.atol = 1e-11
+        self.dt0 = 1e-12
         self.solver = diffrax.Kvaerno5()
         self.stepsize_controller = diffrax.PIDController(rtol=self.rtol, atol=self.atol, pcoeff=0.4, icoeff=0.3,
                                                          dcoeff=0)
         self.adjoint = diffrax.RecursiveCheckpointAdjoint()
+
+
+    def _get_co_varnames(self):
+        """helper function to directly pass arguments to evaluate properly
+        """
+        argument_names = {}
+        for name, mechanism in self.func.items():
+            argument_names[name] = mechanism.__code__.co_varnames
+        return argument_names
 
     def _change_solver(self, solver, **kwargs):
         """To change the ODE solver object to any solver class from diffrax
@@ -235,7 +253,7 @@ class NeuralODEBuild:
             stepsize_controller=self.stepsize_controller,
             saveat=diffrax.SaveAt(ts=ts),
             max_steps=self.max_steps,
-            adjoint = self.adjoint
+            adjoint=self.adjoint
         )
 
         return solution.ys

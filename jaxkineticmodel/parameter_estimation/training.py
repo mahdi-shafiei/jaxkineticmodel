@@ -29,6 +29,7 @@ class Trainer:
                  model: [NeuralODE, jkm.NeuralODEBuild],
                  data: pd.DataFrame,
                  n_iter: int,
+                 initial_conditions=None,
                  learning_rate=1e-3,
                  loss_threshold=1e-4,
                  optimizer=None,
@@ -47,9 +48,12 @@ class Trainer:
 
             self.parameters = list(model.parameters.keys())
         elif isinstance(model, jkm.NeuralODEBuild):
-            logger.info("NeuralODEbuild object is not tested yet")
+            logger.info("NeuralODEBuild object is not tested yet")
             # To do: add initial conditions to object
-
+            if initial_conditions is not None:
+                self.initial_conditions = dict(zip(model.species_names, initial_conditions))
+            else:
+                logger.error("NeuralODEBuild class requires y0 input in Trainer object.")
             self.species_names = model.species_names
             self.parameters = model.parameter_names
             self.kin_model = model
@@ -89,12 +93,12 @@ class Trainer:
         in the case of logarithmic space exponentiates the parameters"""
         if self.optim_space == "log":
             loss_func = self._create_loss_func(log_mean_centered_loss_func)
-            self.loss_func = jax.jit(loss_func)
+            self.loss_func = loss_func
             update_rule = jax.jit(self.update_log_wrap)
 
         elif self.optim_space == "linear":
             loss_func = self._create_loss_func(mse_loss_func)
-            self.loss_func=loss_func
+            self.loss_func = loss_func
             update_rule = self.update_lin_wrap
 
         return update_rule, loss_func
@@ -207,9 +211,8 @@ class Trainer:
         loss_per_iteration_dict = {}
         optimized_parameters_dict = {}
         global_norm_dict = {}
-
         dataset=jnp.array(self.dataset)
-        ts=self.ts
+        ts= self.ts
         # loop over parameter sets
         for init in range(np.shape(self.parameter_sets)[0]):
             params_init = self.parameter_sets.iloc[init, :].to_dict()

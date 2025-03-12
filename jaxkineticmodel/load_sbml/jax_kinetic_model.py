@@ -73,6 +73,8 @@ class JaxKineticModel:
             vi = func(**eval_dict)
             return vi
 
+
+
         v = jnp.asarray(
             [apply_func(t=t, func=self.func[i], argument_names=self.argument_names[i],
                         y=y, global_params=global_params[i], local_params=local_params[i])
