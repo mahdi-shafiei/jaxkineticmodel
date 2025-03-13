@@ -1,5 +1,6 @@
 from typing import List, Any
 
+import jax.lax
 import jax.numpy as jnp
 import diffrax
 import pandas as pd
@@ -89,7 +90,6 @@ class JaxKineticModelBuild:
         reactions: list of reaction objects
         compartments: list of compartments with corresponding value for evaluation
         """
-
         self.reactions = reactions
         self.stoichiometric_matrix = self._get_stoichiometry()
         self.S = jnp.array(self.stoichiometric_matrix)  # use for evaluation
@@ -97,19 +97,16 @@ class JaxKineticModelBuild:
         self.species_names = self.stoichiometric_matrix.index.to_list()
 
         self.species_compartments = self._get_compartments_species()
-
         self.compartments = compartments
         self.compartment_values = jnp.array([compartments[self.species_compartments[i]] for i in self.species_names])
-
         # only retrieve the mechanisms from each reaction
         self.v = [reaction.mechanism for reaction in self.reactions]
 
         # retrieve parameter names
         self.parameter_names = self._flatten([reaction.parameters for reaction in self.reactions])
-
         self.parameter_names = self._filter_parameters()
-
         self.boundary_conditions = {}
+
 
     def _filter_parameters(self):
         """Filters out species from parameter list when a function has modifiers"""
@@ -181,9 +178,9 @@ class JaxKineticModelBuild:
                 boundary_conditions[key] = value.evaluate(t)
 
         # we construct this dictionary, and then overwrite
-
         # Think about how to vectorize the evaluation of mechanism.call
         eval_dict = {**y, **params, **boundary_conditions}
+
         v = jnp.stack([self.v[i](eval_dict) for i in range(len(self.reaction_names))])
         dY = jnp.matmul(self.S, v)
         dY /= self.compartment_values
@@ -211,13 +208,6 @@ class NeuralODEBuild:
         self.adjoint = diffrax.RecursiveCheckpointAdjoint()
 
 
-    def _get_co_varnames(self):
-        """helper function to directly pass arguments to evaluate properly
-        """
-        argument_names = {}
-        for name, mechanism in self.func.items():
-            argument_names[name] = mechanism.__code__.co_varnames
-        return argument_names
 
     def _change_solver(self, solver, **kwargs):
         """To change the ODE solver object to any solver class from diffrax
