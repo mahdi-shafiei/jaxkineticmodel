@@ -195,7 +195,7 @@ class SBMLModel:
         #retrieve local parameters
         for reaction in self.model.reactions:
             r = reaction.getKineticLaw()
-            local_parameters = {"lp_" + str(reaction.id) + "_" + param.id: param.value for param in
+            local_parameters = {"lp_" + str(reaction.id) + "__" + param.id: param.value for param in
                                 r.getListOfParameters()}
             parameters.update(local_parameters)
         return parameters
