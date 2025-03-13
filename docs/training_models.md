@@ -1,8 +1,8 @@
 # Training metabolic kinetic models
-Here, we showcase an parameter optimization process with simulated data **[1]**.
+Here, we showcase an parameter optimization process with simulated data[^1].
 
 ## The `Trainer` object
-The `Trainer` object requires a few inputs. First, it requires a `SBMLModel` or a `NeuralODEBuild` object to be used. The second input is a datasets to fit on. Here, we show the fitting of a previously reported Serine Biosynthesis model **[1]** .
+The `Trainer` object requires a few inputs. First, it requires a `SBMLModel` or a `NeuralODEBuild` object to be used. The second input is a datasets to fit on. Here, we show the fitting of a previously reported Serine Biosynthesis model[^1].
 
 #### Setting up the trainer object + training
 First, we load the necessary functions 
@@ -48,7 +48,7 @@ gradient descent.</span>
 
 ## Trainer configurability
 ### Optimization in logarithmic or linear space
-Optimization in logarithmic space has shown to work well for systems biology models[2] and is implemented as the default. 
+Optimization in logarithmic space has shown to work well for systems biology models[^2] and is implemented as the default. 
 To change to using gradient descent in a linear parameter space, you can restart the `Trainer` object. 
 When the loss function is not specified (see below), a mean squared error loss is used.
 
@@ -84,6 +84,6 @@ We aim to further add configurability of the adjoint option from Diffrax.
 
 
 ## References
-[1] Smallbone, K., & Stanford, N. J. (2013). Kinetic modeling of metabolic pathways: Application to serine biosynthesis. Systems Metabolic Engineering: Methods and Protocols, 113-121.
+[^1]: Smallbone, K., & Stanford, N. J. (2013). Kinetic modeling of metabolic pathways: Application to serine biosynthesis. Systems Metabolic Engineering: Methods and Protocols, 113-121.
 
-[2] Villaverde, A. F., Fröhlich, F., Weindl, D., Hasenauer, J., & Banga, J. R. (2019). Benchmarking optimization methods for parameter estimation in large kinetic models. Bioinformatics, 35(5), 830-838.
+[^2]: Villaverde, A. F., Fröhlich, F., Weindl, D., Hasenauer, J., & Banga, J. R. (2019). Benchmarking optimization methods for parameter estimation in large kinetic models. Bioinformatics, 35(5), 830-838.
