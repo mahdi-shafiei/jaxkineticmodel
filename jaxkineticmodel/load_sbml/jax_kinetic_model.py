@@ -245,10 +245,10 @@ def separate_params(params):
     for key in params.keys():
         if re.match("lp_*_", key):
             fkey = key.removeprefix("lp_")
-            list = fkey.split("_")
+            splitted_list = fkey.split("__") #splits only on the first
             value = params[key]
-            newkey = list[1]
-            local_params[list[0]][newkey] = value
+            newkey = splitted_list[1]
+            local_params[splitted_list[0]][newkey] = value
         else:
             global_params[key] = params[key]
     return global_params, local_params
