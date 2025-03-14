@@ -12,8 +12,6 @@ import jax.numpy as jnp
 import equinox
 import pandas as pd
 import traceback
-import gc
-from functools import partial
 
 from jaxkineticmodel.load_sbml.jax_kinetic_model import NeuralODE
 

@@ -2,7 +2,7 @@ import jaxlib.xla_extension
 import jax.numpy as jnp
 import jax
 import numpy as np
-from jaxkineticmodel.load_sbml.sbml_load_utils import get_global_parameters
+import roadrunner
 from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
 import pandas as pd
 import os
@@ -45,14 +45,17 @@ for sbml_file in sbml_files:
 
         # #parameters are not yet defined
 
-        tellurium_model = te.loadSBMLModel(file_path)
-        tellurium_model.integrator.rtol = 1e-7
-        tellurium_model.integrator.atol = 1e-10
-        tellurium_model.integrator.initial_time_step = 1e-11
-        tellurium_model.integrator.max_steps = 300000
+        rr = roadrunner.RoadRunner(file_path)
 
-        sol_tellurium = tellurium_model.simulate(0, 10, 200)
-        ts = jnp.array(sol_tellurium["time"])
+        rr.integrator.absolute_tolerance = 1e-10
+        rr.integrator.relative_tolerance = 1e-7
+        rr.integrator.initial_time_step = 1e-11
+        rr.integrator.max_steps = 300000
+
+        rr.simulate(0, 10, 200)
+        sol_road_runner = rr.getSimulationData()
+        ts = jnp.array(sol_road_runner["time"])
+
 
         ys = JaxKmodel(ts=ts, y0=model.y0, params=model.parameters)
         ys = pd.DataFrame(ys, columns=S.index)
@@ -64,10 +67,10 @@ for sbml_file in sbml_files:
 
         for name in S.index:
             # mse=np.sum(sol_tellurium["["+name+"]"]-ys[name])**2
-            max_tell = np.max(sol_tellurium["[" + name + "]"])
+            max_tell = np.max(sol_road_runner["[" + name + "]"])
             max_ys = np.max(ys[name]) + 0.0001
             max_denominator = np.max([max_tell, max_ys])
-            rtol = np.abs(sol_tellurium["[" + name + "]"] - ys[name]) / max_denominator
+            rtol = np.abs(sol_road_runner["[" + name + "]"] - ys[name]) / max_denominator
             # cross_correlation=crosscorr(sol_tellurium["["+name+"]"],ys[name],lag=1)
 
             rtols.append(rtol)
@@ -77,12 +80,9 @@ for sbml_file in sbml_files:
         for i, k in enumerate(S.index):
             print(i, k)
             name = "[" + k + "]"
-        #     plt.plot(ts,sol_tellurium[name],label=name)
-        #     plt.plot(ts,ys[k],label=S.index[i],linewidth=2,linestyle="--")
-        # plt.legend()
-        # plt.show()
 
-        S_tellurium = tellurium_model.getFullStoichiometryMatrix()
+
+        S_tellurium = rr.getFullStoichiometryMatrix()
         if np.sum(np.abs(S_tellurium) - np.abs(np.array(S))) == 0:
             if mse < 0.001:
                 print("numerical solve is identical: mse=" + str(mse))

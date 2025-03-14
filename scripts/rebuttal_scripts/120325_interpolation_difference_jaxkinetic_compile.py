@@ -15,6 +15,7 @@ from jaxkineticmodel.kinetic_mechanisms import JaxKineticMechanismsCustom as jcm
 from jaxkineticmodel.kinetic_mechanisms import JaxKineticModifiers as modifier
 from jaxkineticmodel.load_sbml.export_sbml import SBMLExporter
 
+
 v_glt = jkm.Reaction(
     name="v_GLT",
     species=['ECglucose', 'ICglucose'],
@@ -577,8 +578,8 @@ y0 = jnp.array(y0)
 dataset = pd.read_csv("datasets/VanHeerden_Glucose_Pulse/FF1_timeseries_format.csv",
                       index_col=0)
 trainer = Trainer(model=kmodel_sim,
-                  data=dataset.iloc[:,:-1].T,
-                  n_iter=437,
+                  data=dataset.iloc[:,:-5].T,
+                  n_iter=100,
                   initial_conditions=y0,
                   optim_space="log")
 

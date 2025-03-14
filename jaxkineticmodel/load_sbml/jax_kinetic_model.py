@@ -53,7 +53,7 @@ class JaxKineticModel:
 
     def __call__(self, t, y, args):
         """compute dMdt"""
-        global_params, local_params = args
+        global_params, local_params, flux_array= args
         y = dict(zip(self.species_names, y))
 
         reaction_names = list(self.func.keys())
@@ -71,14 +71,19 @@ class JaxKineticModel:
             vi = func(**eval_dict)
             return vi
 
+        for k, i in enumerate(self.reaction_names):
 
+            v_i = apply_func(t=t, func=self.func[i], argument_names=self.argument_names[i],
+                       y=y, global_params=global_params[i], local_params=local_params[i])
+            flux_array= flux_array.at[k].set(v_i)
 
-        v = jnp.asarray(
-            [apply_func(t=t, func=self.func[i], argument_names=self.argument_names[i],
-                        y=y, global_params=global_params[i], local_params=local_params[i])
-             for i in reaction_names]
-        )  # perhaps there is a way to vectorize this in a better way
-        dY = jnp.matmul(self.stoichiometry, v)  # dMdt=S*v(t)
+        # v = jnp.asarray(
+        #     [apply_func(t=t, func=self.func[i], argument_names=self.argument_names[i],
+        #                 y=y, global_params=global_params[i], local_params=local_params[i])
+        #      for i in reaction_names]
+        # )  # perhaps there is a way to vectorize this in a better way
+        dY = jnp.matmul(self.stoichiometry, flux_array)  # dMdt=S*v(t)
+
         dY /= self.compartment_values
         return dY
 
@@ -220,6 +225,8 @@ class NeuralODE:
             self.v_symbols, self.reaction_names, global_params
         )  # this is required,
 
+        flux_array= jnp.zeros(len(self.reaction_names))
+
         solution = diffrax.diffeqsolve(
             terms=diffrax.ODETerm(self.func),
             solver=self.solver,
@@ -227,7 +234,7 @@ class NeuralODE:
             t1=ts[-1],
             dt0=self.dt0,
             y0=y0,
-            args=(global_params, local_params),
+            args=(global_params, local_params, flux_array),
             stepsize_controller=self.stepsize_controller,
             saveat=diffrax.SaveAt(ts=ts),
             max_steps=self.max_steps,

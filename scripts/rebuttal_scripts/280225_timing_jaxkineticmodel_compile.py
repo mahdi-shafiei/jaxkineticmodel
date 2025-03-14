@@ -9,6 +9,7 @@ import jax.numpy as jnp
 import jax
 import time
 
+
 jax.config.update("jax_enable_x64", True)
 
 #load model
@@ -22,7 +23,7 @@ kinetic_model = model.get_kinetic_model(compile=False)
 #
 constants={'D':0.1,'ECbiomass':3.7683659} #non-trainable parameters
 kinetic_model._prepare_model(constants)
-kinetic_model.max_steps = 20000
+
 ## right now
 
 dataset = pd.read_csv("datasets/VanHeerden_Glucose_Pulse/FF1_timeseries_format.csv",

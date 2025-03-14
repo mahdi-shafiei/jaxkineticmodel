@@ -27,7 +27,7 @@ filepath= "models/manual_implementations/sbml_export/glycolysis_feastfamine_puls
 
 ##
 
-n_runs = 5
+n_runs = 10
 
 
 timing_runs = []
