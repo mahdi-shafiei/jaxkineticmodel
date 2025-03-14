@@ -118,8 +118,10 @@ When building kinetic models, it is not uncommon that \\(\frac{dm(t)}{dt}\\) is 
 
 
 ## Saving models
-Coming up
-
+One a model is built, it can be exported to sbml.
+```python
+{!code/building_models.py!lines=132-139}
+```
 
 ## References
 [^1]: Kidger, P. (2022). On neural differential equations. arXiv preprint arXiv:2202.02435.

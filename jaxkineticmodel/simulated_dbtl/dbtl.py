@@ -1,6 +1,12 @@
+""""Simulated DBTL cycles"""
+from typing import Union, Optional
+
 import jax.numpy as jnp
 import jax
 import numpy as np
+
+from jaxkineticmodel.building_models.JaxKineticModelBuild import NeuralODEBuild
+from jaxkineticmodel.load_sbml.jax_kinetic_model import NeuralODE
 from jaxkineticmodel.utils import get_logger
 
 import matplotlib.pyplot as plt
@@ -8,6 +14,8 @@ import pandas as pd
 import scipy
 import sklearn
 import xgboost as xgb
+
+jax.config.update("jax_enable_x64", True)
 
 logger = get_logger(__name__)
 
@@ -21,20 +29,25 @@ class DesignBuildTestLearnCycle:
     2. Parameters: defined in a global way. This will represent the state of optimization process
     3. Initial conditions for the model
     4. Time evaluation scale of the process.
-
-
     """
 
-    def __init__(self, model, parameters: dict, initial_conditions: jnp.array, timespan: jnp.array, target: list):
+    def __init__(self,
+                 model: Union[NeuralODE, NeuralODEBuild],
+                 parameters: dict,
+                 initial_conditions: jnp.array,
+                 timespan: jnp.array,
+                 target: list):
         self.parameter_target_names = None
         self.ml_model = None
         self.species_names = model.species_names
         self.kinetic_model = jax.jit(model.get_kinetic_model())
+
         self.parameters = parameters
         self.initial_conditions = initial_conditions
         self.timespan = timespan
         self.cycle_status = 0
         self.library_units = None  # library defines the building blocks of actions when constructing ME scenarios
+        self.library = None
         self.designs_per_cycle = {}
         self.reference_production_value = None
         self.target = target
@@ -58,7 +71,8 @@ class DesignBuildTestLearnCycle:
 
         # If all parameters are valid, flatten the combinations
         flattened_combinations = [
-            (name, value) for name, values in zip(parameter_target_names, parameter_perturbation_values) for value in values
+            (name, value) for name, values in zip(parameter_target_names, parameter_perturbation_values) for value in
+            values
         ]
 
         # Create a DataFrame for the elementary actions
@@ -68,46 +82,77 @@ class DesignBuildTestLearnCycle:
         self.parameter_target_names = parameter_target_names
         return elementary_actions
 
-    def design_assign_probabilities(self, occurrence_list=None):
-        """This functions assigns a probability to each element in the action list.
-        Can be viewed as changing concentrations in a library design"""
-        rows, cols = np.shape(self.library_units)
-        if occurrence_list is not None:
-            if len(occurrence_list) == rows:
-                self.library_units["probability"] = np.array(occurrence_list) / np.sum(occurrence_list)
-                return_message = "manual probabilities"
-                pass
-            else:
-                return_message = "None"
-                logger.error("Length of list of occurrences of promoters is not matching ")
-        else:
-            return_message = "equal probabilities"
-            self.library_units["probability"] = np.ones(rows) / rows
-        return return_message
+    def design_assign_positions(self,
+                                n_positions: int,
+                                library_positions=None):
+        """This functions assigns the library units to a position in the library.
+         Input:
+         n_positions: number of positions to assign library elements
+         library_positions: a nested dictionary for which library units
+         should be in each position. If not set, will result in all library units being used per position"""
+        self.n_positions = n_positions
 
-    def design_generate_strains(self, elements, samples, replacement=False):
+        all_names = []
+        if library_positions is None:
+            for i in range(n_positions):
+                all_names.extend([(f"pos_{i}", sub) for sub in ["parameter_name", "promoter_value", "probability"]])
+
+            multi_index = pd.MultiIndex.from_tuples(all_names, names=["Position", "Attribute"])
+            library = pd.DataFrame(columns=multi_index)
+
+            for name, sub in library.columns:
+
+                if sub == "parameter_name":
+                    library[(name, sub)] = self.library_units['parameter_name']
+                if sub == "promoter_value":
+                    library[(name, sub)] = self.library_units['promoter_value']
+
+        if library_positions:
+            logger.error("not yet implemented")
+
+        self.library = library
+        return library
+
+    def design_assign_probabilities(self,
+                                    probabilities_per_position: Optional[dict[str, float]]):
+        """Assigns probabilities based on """
+        if probabilities_per_position is None:
+            rows, cols = np.shape(self.library)
+            probability = np.ones(rows) * (1 / rows)
+
+            for name, sub in self.library.columns:
+                if sub == "probability":
+                    self.library[(name, sub)] = probability
+
+        library = self.library
+
+        return library
+
+    def design_generate_strains(self,
+                                samples: int,
+                                replacement=False):
         """Sample designs given the elementary actions given
         Input: number of elements to choose from the library (typically 6), number of samples.
         Replacement means whether we allow duplicate genes in the designs."""
-        strains = []
+
         strain_promoters = []
-        for i in range(samples):
-            perturbed_parameters = self.parameters.copy()
-            sample = self.library_units.sample(n=elements, weights=self.library_units["probability"], replace=replacement)[
-                ["parameter_name", "promoter_value"]
-            ]
+        strains = []
+        library = self.library
+        for k in range(samples):
             strain = {}
+            perturbed_parameters = self.parameters.copy()
+            for name, sub in library.columns:
 
-            for param, value in zip(sample["parameter_name"].values, sample["promoter_value"]):
-                if param in strain:
-                    strain[param] += value  # Sum the values if the key exists
+                sample = (library[(name,)].sample(1, weights=library[(name,)]['probability'],replace=replacement))
+
+                if sample['parameter_name'].values[0] in strain:
+                    strain[sample['parameter_name'].values[0]] += sample['promoter_value'].values[0]
                 else:
-                    strain[param] = value  # Add the new key-value pair if it doesn't exist
+                    strain[sample['parameter_name'].values[0]] = sample['promoter_value'].values[0]
 
-            # overwrite reference parameters.
             strain_promoter = {}
             for key, values in strain.items():
-                perturbed_parameters[key] = perturbed_parameters[key] * strain[key]
+                perturbed_parameters[key] *= float(strain[key])
                 strain_promoter[key] = strain[key]
 
             strains.append(perturbed_parameters)
@@ -134,6 +179,7 @@ class DesignBuildTestLearnCycle:
         # Loop through the perturbed strains and simulate each one
         simulated_values = {str(i): [] for i in self.target}
         for strain_p in strains_perturbed:
+
             ys = self.kinetic_model(self.timespan, self.initial_conditions, strain_p)
             ys = pd.DataFrame(ys, columns=self.species_names)
             ys = ys[self.target]
@@ -156,10 +202,10 @@ class DesignBuildTestLearnCycle:
 
         return simulated_values
 
-        ### We now have simulated values that are strains. W
+        # We now have simulated values that are strains. W
         # We want to have synthetic data that can be used to learn features in the data of importance
 
-        ### we need to have a few functions:
+        # we need to have a few functions:
         # a function that formats the generated dataset given the reference parameter set as well as values (TEST)
         # a function that can add noise to the measurements (TEST add noise)
 
@@ -170,7 +216,7 @@ class DesignBuildTestLearnCycle:
         One then needs to model the noise w.r.t to its screening value"""
 
         noised_values = {}
-        if noisetype in ["homoscedastic","homoskedastic","homoschedastic"]:
+        if noisetype in ["homoscedastic", "homoskedastic", "homoschedastic"]:
             # look back whether this is actually the right way to do it
             for targ in self.target:
                 values_new = np.random.normal(values[targ], percentage)
@@ -178,7 +224,7 @@ class DesignBuildTestLearnCycle:
 
                 noised_values[targ] = values_new
 
-        if noisetype in ["heteroscedastic","heteroskedastic","heteroschedastic"]:
+        if noisetype in ["heteroscedastic", "heteroskedastic", "heteroschedastic"]:
             # We assume that the noise level is given by X_m=D*X_true +X_true, where D is the percentage of deviation.
             # We now model this as a simple gaussian, dependent on percentage*Xtrue
             for targ in self.target:
@@ -187,7 +233,6 @@ class DesignBuildTestLearnCycle:
                 noised_values[targ] = values_new
         else:
             logger.error("Noise model not found or not implemented")
-
 
         return noised_values
 
@@ -199,32 +244,32 @@ class DesignBuildTestLearnCycle:
 
         strain_names = [f"cycle{self.cycle_status}_strain{i}" for i in range(len(strain_designs))]
 
-        train_X = pd.DataFrame(strain_designs, index=strain_names) / reference_parameters
-        train_X = train_X[self.parameter_target_names]
+        train_x = pd.DataFrame(strain_designs, index=strain_names) / reference_parameters
+        train_x = train_x[self.parameter_target_names]
 
         for targ in self.target:
-            train_X[f"Y_{targ}"] = production_values[targ]  # /self.reference_production_value[targ]
+            train_x[f"Y_{targ}"] = production_values[targ]  # /self.reference_production_value[targ]
 
         # print(train_x[self.target)
-        return train_X
+        return train_x
 
-    ### Now the learning  and recommendation phase
-    ### We would like an elegant way to include ML methods from outside the function (e.g., sklearn, xgboost)
-    ### Or should we actually make an additional structure on top of Design-Build-Test-Learn-Cycle?
+    # Now the learning  and recommendation phase
+    # We would like an elegant way to include ML methods from outside the function (e.g., sklearn, xgboost)
+    # Or should we actually make an additional structure on top of Design-Build-Test-Learn-Cycle?
     #  The sort of Automated Lab structure
 
-    ### following extra function required
+    # following extra function required
 
-    ### LEARN_train_model()
-    ## Should perform cross-val
-    ## Should be able to be used modular, such that we can use any ML method we want
+    # LEARN_train_model()
+    # Should perform cross-val
+    # Should be able to be used modular, such that we can use any ML method we want
 
-    ### Learn_recommend_new_designs(): we should perhaps remain this open still
+    # Learn_recommend_new_designs(): we should perhaps remain this open still
 
-    ## LEARN_replace_reference_strain
-    ## This should update the previous reference strain to perform further library or DoE transformation
-    ### Also updates the DBTL cycle states
-    ###
+    # LEARN_replace_reference_strain
+    # This should update the previous reference strain to perform further library or DoE transformation
+    # Also updates the DBTL cycle states
+    #
     def learn_train_model(self, data, target, args, model_type="XGBoost", test_size=0.2, runs=10):
         """Trains a model for the target given the datapoints.
         Input: data , target (variable to predicted), test set size (default 80/20 split, # runs for the r2)"""
@@ -256,15 +301,20 @@ class DesignBuildTestLearnCycle:
                 )
                 preds = ml_model.predict(dtest)
                 true_value = dtest.get_label()
-                slope, intercept, r_value, p_value, std_err = scipy.stats.linregress(np.array(preds), np.array(true_value))
-                r2.append(r_value**2)
+
+                slope, intercept, r_value, p_value, std_err = scipy.stats.linregress(np.array(preds),
+                                                                                     np.array(true_value))
+                r2.append(r_value ** 2)
         self.ml_model = ml_model
         return ml_model, r2
 
-    def learn_validate_model(self, samples, elements, target, model_type="XGBoost", plotting=True):
+    def learn_validate_model(self,
+                             samples: int,
+                             target: str,
+                             model_type="XGBoost", plotting=True):
         """Validate the model with new data, generated from the same library distribution as before."""
 
-        validation_set = self.design_generate_strains(elements=elements, samples=samples, replacement=True)
+        validation_set = self.design_generate_strains(samples=samples, replacement=True)
         validation_values = self.build_simulate_strains(validation_set, plot=False)
 
         validation_data = self.test_format_dataset(
@@ -285,7 +335,7 @@ class DesignBuildTestLearnCycle:
                 ax.text(
                     0.05,
                     0.95,
-                    f"R² = {np.round(r_value**2, 3)}",
+                    f"R² = {np.round(r_value ** 2, 3)}",
                     transform=ax.transAxes,
                     ha="left",
                     va="top",
@@ -293,4 +343,4 @@ class DesignBuildTestLearnCycle:
                     color="black",
                 )
                 plt.show()
-        return r_value**2
+        return r_value ** 2

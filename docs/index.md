@@ -8,7 +8,7 @@ A package for building, simulating and training kinetic models using Jax/Diffrax
 <span style="font-size: 0.8em;"><b>Figure 1:</b> Overview of the training procedure of SBML models being parameterized using techniques from neural differential equations .</span>
 ## Installation
 
-Alternatively, the ``jaxkinetic`` model package can be installed using 
+Alternatively, the ``jaxkineticmodel`` package can be installed using 
 `pip` by cloning the repository and from the project folder doing:
 ```
 git clone https://github.com/AbeelLab/jaxkineticmodel.git
@@ -27,5 +27,6 @@ TO DO: archive package on pip to make it installable
 
 
 ## References
-[1] Arxiv
+[^1]: van Lent, P., Bunkova, O., Planken, L., Schmitz, J., & Abeel, T. (2024). Neural Ordinary Differential 
+Equations Inspired Parameterization of Kinetic Models. bioRxiv, 2024-12.
 

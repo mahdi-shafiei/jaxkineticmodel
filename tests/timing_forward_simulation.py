@@ -27,7 +27,7 @@ filepath= "models/manual_implementations/sbml_export/glycolysis_feastfamine_puls
 
 ##
 
-n_runs = 10
+n_runs = 5
 
 
 timing_runs = []
@@ -65,7 +65,7 @@ for i in range(n_runs*10):
                 params=model.parameters)
     ys.block_until_ready()
 end=time.time()
-print('after jit', (end-start)/(n_runs*10))
+print('after jit', (end-start)/(n_runs*100))
 #
 # start=time.time()
 # for i in range(100):

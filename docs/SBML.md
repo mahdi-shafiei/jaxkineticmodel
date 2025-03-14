@@ -13,11 +13,11 @@ SBML models can be loaded and simulated as follows.
 While `jaxkineticmodel` is compatible with SBML, not all .xml files are compatible/possible to simulate. This depends on the 
 SBML model level and version that it was written. We here report a comparison in number of passed models with a comparison
 to libroadrunner using the [sbml-test-suite](https://github.com/sbmlteam/sbml-test-suite/tree/release). 
-Libroadrunner is a high-performance simulation engine for systems biology. We compare the simulations to the gold-standard
+Libroadrunner is a high-performance simulation engine for systems biology[^1]. We compare the simulations to the gold-standard
 dataset that is provided in the sbml-test-suite. We selected 500 models from the test-suite and filtered out steady state models.
 
 Discrepancies are models where we compared the output from JaxKineticModel to the ground-truth data and observed
-differnces between the time-series. Overall,
+differences between the time-series. Overall,
 libroadrunner simulates more than jaxkineticmodel due to some event rules not yet being implemented. In the future 
 we hope to address all these edge-cases.
 
@@ -43,6 +43,5 @@ we hope to address all these edge-cases.
 
 
 ## References
-[1] Hass, H., Loos, C., Raimundez-Alvarez, E., Timmer, J., Hasenauer, J., & Kreutz, C. (2019). Benchmark problems for dynamic modeling of intracellular processes. Bioinformatics, 35(17), 3073-3082.
-
-[2] Somogyi, E. T., Bouteiller, J. M., Glazier, J. A., König, M., Medley, J. K., Swat, M. H., & Sauro, H. M. (2015). libRoadRunner: a high performance SBML simulation and analysis library. Bioinformatics, 31(20), 3315-3321.
+[^1]: Hass, H., Loos, C., Raimundez-Alvarez, E., Timmer, J., Hasenauer, J., & Kreutz, C. (2019). Benchmark problems for dynamic modeling of intracellular processes. Bioinformatics, 35(17), 3073-3082.
+[^2]: Somogyi, E. T., Bouteiller, J. M., Glazier, J. A., König, M., Medley, J. K., Swat, M. H., & Sauro, H. M. (2015). libRoadRunner: a high performance SBML simulation and analysis library. Bioinformatics, 31(20), 3315-3321.
