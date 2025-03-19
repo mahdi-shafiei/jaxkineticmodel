@@ -522,6 +522,9 @@ lit_params = pd.read_csv(('parameter_initializations/'
                           'Glycolysis_model/'
                           'parameter_initialization_glycolysis_literature_values.csv'), index_col=0).to_dict()['0']
 
+# lit_params = pd.read_csv(("results/"
+#                           "PyPESTO_optimized_params/"
+#                           "18032025_optimized_parameters.csv"), index_col=0).to_dict()['0']
 # this is a workaround for now, later look at how to pass assignment
 # rules to export and the simulator
 D = 0.1
@@ -577,16 +580,40 @@ y0 = jnp.array(y0)
 ## try training and see whether it improves
 dataset = pd.read_csv("datasets/VanHeerden_Glucose_Pulse/FF1_timeseries_format.csv",
                       index_col=0)
+
+#same metabolites as  in pypesto
+
+metab_names=['ICATP', 'ICglucose', 'ICADP', 'ICG6P', 'ICtreh', 'ICF6P', 'ICG1P',
+       'ICT6P', 'ICFBP', 'ICGAP', 'ICDHAP', 'ICG3P', 'IC3PG', 'ICglyc', 'IC2PG', 'ICPEP',
+       'ICPYR', 'ICAMP']
+
+dataset = dataset.filter(metab_names, axis=0)
+
+
+
 trainer = Trainer(model=kmodel_sim,
-                  data=dataset.iloc[:,:-5].T,
-                  n_iter=100,
+                  data=dataset.T,
+                  n_iter=500,
                   initial_conditions=y0,
                   optim_space="log")
+
+print(trainer.dataset)
 
 parameters_init = pd.DataFrame(pd.Series(parameters)).T
 trainer.parameter_sets = parameters_init
 
 start = time.time()
 optimized_parameters, loss_per_iteration = trainer.train()
+
+
+pd.DataFrame(optimized_parameters).to_csv("results/PyPESTO_optimized_params/18032025_optimized_parameters.csv")
+pd.DataFrame(loss_per_iteration).to_csv("results/PyPESTO_optimized_params/18032025_loss_per_iter.csv")
 end = time.time()
 print("time to optimize", end - start)
+
+#run 1 1663.7 seconds (500 runs)
+#run2 1512 seconds (500 runs)
+#run3 3061 (1000 runs)
+#run4 3303 (1000 runs)
+#run5 3328 (1000 runs)
+#run 6 1782 (500 runs)

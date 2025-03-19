@@ -79,7 +79,7 @@ problem= pypesto.Problem(objective=objective,
                          ub=np.array(model.getParameters())*100,
                          x_guesses=[np.array(model.getParameters())])
 
-optimizer_options = {"maxiter": 0, "fatol": 1e-12, "frtol": 1e-12}
+optimizer_options = {"maxiter": 100000, "fatol": 1e-12, "frtol": 1e-12}
 optimizer = optimize.FidesOptimizer(
     options=optimizer_options, verbose=1
 )

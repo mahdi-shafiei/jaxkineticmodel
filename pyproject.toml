@@ -39,8 +39,9 @@ build-backend = "setuptools.build_meta"
 addopts = ["--import-mode=importlib"]
 pythonpath = "."
 
-[tool.setuptools]
-packages = ["jaxkineticmodel"]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["jaxkineticmodel*"]
 
 [tool.my_project]
 project_root = "."
@@ -90,4 +91,4 @@ classifiers = [
 #Issues = "https://github.com/pypa/sampleproject/issues"
 
 [project.optional-dependencies]
-test = ["tellurium>=2.2.10"]
+test = ["libroadrunner>=2.7.0"]

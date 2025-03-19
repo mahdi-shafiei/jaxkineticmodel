@@ -132,9 +132,9 @@ class NeuralODE:
 
         #hyperparameters for simulation
         self.max_steps = 300000
-        self.rtol = 1e-9
+        self.rtol = 1e-10
         self.atol = 1e-12
-        self.dt0 = 1e-11
+        self.dt0 = 1e-12
         self.solver = diffrax.Kvaerno5()
         self.stepsize_controller = diffrax.PIDController(rtol=self.rtol, atol=self.atol,
                                                          pcoeff = 0.4, icoeff = 0.3)
