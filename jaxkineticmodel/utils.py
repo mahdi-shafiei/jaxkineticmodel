@@ -3,21 +3,25 @@ import logging.config
 import sys
 import os
 
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
-
 
 def get_logger(name):
-    package_root = os.path.dirname(os.path.dirname(__file__))  # Adjust as needed to reach package root
-    toml_path = os.path.join(package_root, "pyproject.toml")
-    if not getattr(get_logger, "configured", False):
-        with open(toml_path, "rb") as f:
-            config = tomllib.load(f).get("tool", {}).get("logging", {})
-        if not config:
-            raise KeyError("No logging configuration found")
+    config = None
 
+    if not getattr(get_logger, "configured", False):
+        setattr(get_logger, "configured", True)
+        package_root = os.path.dirname(os.path.dirname(__file__))  # Adjust as needed to reach package root
+        toml_path = os.path.join(package_root, "pyproject.toml")
+        try:
+            with open(toml_path, "rb") as f:
+                if sys.version_info >= (3, 11):
+                    import tomllib
+                else:
+                    import tomli as tomllib
+                config = tomllib.load(f).get("tool", {}).get("logging", {})
+        except FileNotFoundError:
+            pass
+
+    if config:
         # NOTE: due to a bug in the logging library (?), handlers and formatters can't reliably be set through
         # dictConfig(). We set them manually now.
 
@@ -31,6 +35,5 @@ def get_logger(name):
         logging.getLogger().addHandler(console_handler)
 
         logging.config.dictConfig(config)
-        setattr(get_logger, "configured", True)
 
     return logging.getLogger(name)
