@@ -1,6 +1,6 @@
 
 
-# Jax Kinetic Models
+# JaxKineticModel
 Python package to simulate, build, and train kinetic models.
 
 ### Installation
