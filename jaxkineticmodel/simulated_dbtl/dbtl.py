@@ -7,6 +7,7 @@ import numpy as np
 
 from jaxkineticmodel.building_models.JaxKineticModelBuild import NeuralODEBuild
 from jaxkineticmodel.load_sbml.jax_kinetic_model import NeuralODE
+from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
 from jaxkineticmodel.utils import get_logger
 
 import matplotlib.pyplot as plt
@@ -32,7 +33,7 @@ class DesignBuildTestLearnCycle:
     """
 
     def __init__(self,
-                 model: Union[NeuralODE, NeuralODEBuild],
+                 model: SBMLModel,
                  parameters: dict,
                  initial_conditions: jnp.array,
                  timespan: jnp.array,
@@ -40,6 +41,9 @@ class DesignBuildTestLearnCycle:
         self.parameter_target_names = None
         self.ml_model = None
         self.species_names = model.species_names
+
+
+        self.model = model
         self.kinetic_model = jax.jit(model.get_kinetic_model())
 
         self.parameters = parameters
@@ -48,21 +52,27 @@ class DesignBuildTestLearnCycle:
         self.cycle_status = 0
         self.library_units = None  # library defines the building blocks of actions when constructing ME scenarios
         self.library = None
-        self.designs_per_cycle = {}
         self.reference_production_value = None
         self.target = target
-        self.reference = None  #
 
-    def design_establish_library_elements(self, parameter_target_names, parameter_perturbation_values):
+        self.reference_strain = dict(zip(parameters.keys(), np.ones(len(parameters)))) # this is the initial one
+
+        self.strain_promoters_designs=None
+
+    def design_establish_library_elements(self,
+                                          parameter_perturbations: dict[str, list]):
         """
         The actions that can be taken when sampling scenarios during the Design-phase.
         From an experimental perspective, this can be viewed as the library design phase.
 
         Input:
-        - parameter_target_names: names of the parameters that we wish to perturb
-        - parameter_perturbation_values: the actual perturbation (promoter) values of the parameters.
+        parameter_perturbations: a dictionary with the parameter name as a key, and the values of possible perturbations
+
+
         These are defined RELATIVE to the reference state.
         """
+        parameter_target_names = parameter_perturbations.keys()
+        parameter_perturbation_values = parameter_perturbations.values()
         # Check that all parameter_target_names are valid
         for pt in parameter_target_names:
             if pt not in self.parameters.keys():
@@ -133,16 +143,19 @@ class DesignBuildTestLearnCycle:
                                 replacement=False):
         """Sample designs given the elementary actions given
         Input: number of elements to choose from the library (typically 6), number of samples.
-        Replacement means whether we allow duplicate genes in the designs."""
+        Replacement means whether we allow duplicate genes in the designs.
+
+        We assume that we add copies of promoters, """
 
         strain_promoters = []
         strains = []
         library = self.library
+        positions = library.columns.get_level_values('Position').unique()
+
         for k in range(samples):
             strain = {}
             perturbed_parameters = self.parameters.copy()
-            for name, sub in library.columns:
-
+            for name in positions:
                 sample = (library[(name,)].sample(1, weights=library[(name,)]['probability'],replace=replacement))
 
                 if sample['parameter_name'].values[0] in strain:
@@ -152,13 +165,16 @@ class DesignBuildTestLearnCycle:
 
             strain_promoter = {}
             for key, values in strain.items():
-                perturbed_parameters[key] *= float(strain[key])
+                promoter_value = float(self.reference_strain[key]) +  float(strain[key])
+                perturbed_parameters[key] *= promoter_value
                 strain_promoter[key] = strain[key]
 
             strains.append(perturbed_parameters)
             strain_promoters.append(strain_promoter)
 
-        self.designs_per_cycle[f"cycle_{self.cycle_status}_designs"] = strain_promoters
+
+        self.strain_promoters_designs = strain_promoters
+
         return strains
 
     def build_simulate_strains(self, strains_perturbed, plot=False):
@@ -178,8 +194,7 @@ class DesignBuildTestLearnCycle:
 
         # Loop through the perturbed strains and simulate each one
         simulated_values = {str(i): [] for i in self.target}
-        for strain_p in strains_perturbed:
-
+        for k, strain_p in enumerate(strains_perturbed):
             ys = self.kinetic_model(self.timespan, self.initial_conditions, strain_p)
             ys = pd.DataFrame(ys, columns=self.species_names)
             ys = ys[self.target]
@@ -190,12 +205,17 @@ class DesignBuildTestLearnCycle:
             for targ in self.target:
                 simulated_values[targ].append(ys_final[targ])
 
+            if k % 25 == 0:
+                logger.info(f"Strain {k}")
+
             if plot:
-                ax.plot(self.timespan, ys, label=f"Strain {strain_p}")  # Add a label for each strain if desired
+                ax.plot(self.timespan, ys, label=f"Strain {strain_p}",c="black")  # Add a label for each strain if desired
+
         if plot:
             ax.set_title("Perturbed Strains")
             ax.set_xlabel("Time")
             ax.set_ylabel(f"{self.target}/Ref")
+            fig.tight_layout()
             plt.show()
 
         self.reference_production_value = ys_ref_value
@@ -209,22 +229,23 @@ class DesignBuildTestLearnCycle:
         # a function that formats the generated dataset given the reference parameter set as well as values (TEST)
         # a function that can add noise to the measurements (TEST add noise)
 
-    def test_add_noise(self, values, percentage, noisetype="homoscedastic"):
+    def test_add_noise(self, values, percentage, noise_type="homoscedastic"):
         """add noise to the training set, to see the effect of noise models on performance.
         Includes homoscedastic or heteroscedastic noise for a certain percentage.
         Other experiment specific noise models could be added as well.
         One then needs to model the noise w.r.t to its screening value"""
 
         noised_values = {}
-        if noisetype in ["homoscedastic", "homoskedastic", "homoschedastic"]:
+        if noise_type in ["homoscedastic", "homoskedastic", "homoschedastic"]:
             # look back whether this is actually the right way to do it
             for targ in self.target:
+                print(targ)
                 values_new = np.random.normal(values[targ], percentage)
                 values_new[values_new < 0] = 0
 
                 noised_values[targ] = values_new
 
-        if noisetype in ["heteroscedastic", "heteroskedastic", "heteroschedastic"]:
+        if noise_type in ["heteroscedastic", "heteroskedastic", "heteroschedastic"]:
             # We assume that the noise level is given by X_m=D*X_true +X_true, where D is the percentage of deviation.
             # We now model this as a simple gaussian, dependent on percentage*Xtrue
             for targ in self.target:
@@ -244,14 +265,13 @@ class DesignBuildTestLearnCycle:
 
         strain_names = [f"cycle{self.cycle_status}_strain{i}" for i in range(len(strain_designs))]
 
-        train_x = pd.DataFrame(strain_designs, index=strain_names) / reference_parameters
-        train_x = train_x[self.parameter_target_names]
+        data = pd.DataFrame(strain_designs, index=strain_names) / reference_parameters
+        data = data[self.parameter_target_names]
 
         for targ in self.target:
-            train_x[f"Y_{targ}"] = production_values[targ]  # /self.reference_production_value[targ]
+            data[f"Y_{targ}"] = production_values[targ]  # /self.reference_production_value[targ]
 
-        # print(train_x[self.target)
-        return train_x
+        return data
 
     # Now the learning  and recommendation phase
     # We would like an elegant way to include ML methods from outside the function (e.g., sklearn, xgboost)

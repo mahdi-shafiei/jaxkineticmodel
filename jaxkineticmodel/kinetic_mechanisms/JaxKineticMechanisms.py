@@ -47,6 +47,9 @@ class Mechanism:
         raise NotImplementedError()
 
 
+
+
+
 class Jax_MM_Irrev_Uni(Mechanism):
     """Irreversible Michaelis-Menten kinetics (uni-substrate), adapted to JAX."""
 
@@ -80,12 +83,15 @@ class Jax_Facilitated_Diffusion(Mechanism):
 
 
 class Jax_MM_Rev_UniUni(Mechanism):
-    """Reversible Michaelis-Menten"""
+    """Reversible Michaelis-Menten.
+
+    Not sure about this particular equation. If there is a 0 substrate, you have division by zero. THats problematic
+    I add epsilon for now to substrate """
 
     @staticmethod
     def compute(substrate, product, vmax,
                 k_equilibrium, km_substrate, km_product):
-        numerator = vmax * (substrate / km_substrate) * (1 - (1 / k_equilibrium) * (product / substrate))
+        numerator = vmax * (substrate / km_substrate) * (1 - (1 / k_equilibrium) * (product / (substrate + 1e-8)))
         denominator = 1 + (substrate / km_substrate) + (product / km_product)
         return numerator / denominator
 
@@ -132,7 +138,11 @@ class Jax_MM_Rev_UniBi(Mechanism):
 
 
 class Jax_MM_Rev_BiBi(Mechanism):
-    """Reversible BiBi Michaelis-Menten Kinetics"""
+    """Reversible BiBi Michaelis-Menten Kinetics
+
+    Not sure about this particular equation. If there is a 0 substrate, you have division by zero. THats problematic
+    I add epsilon for now to substrate (1e-8)
+    """
 
     @staticmethod
     def compute(substrate1, substrate2, product1, product2, vmax, k_equilibrium, km_substrate1, km_substrate2,
@@ -146,7 +156,7 @@ class Jax_MM_Rev_BiBi(Mechanism):
         numerator = (
                 vmax
                 * (substrate1 * substrate2 / (km_substrate1 * km_substrate2))
-                * (1 - 1 / k_equilibrium * (product1 * product2 / (substrate1 * substrate2)))
+                * (1 - 1 / k_equilibrium * (product1 * product2 / ((substrate1 * substrate2) + 1e-8)))
         )
 
         # Rate equation

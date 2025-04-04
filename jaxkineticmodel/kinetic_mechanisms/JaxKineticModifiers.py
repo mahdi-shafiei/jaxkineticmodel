@@ -17,6 +17,19 @@ class SimpleInhibitor(Mechanism):
         return 1 / (1 + inhibitor / k_I)
 
 
+class BasicDivision(Mechanism):
+    """Modifier to apply division based on a parameter/metaoblite"""
+    @staticmethod
+    def compute(symbol, scaling=1):
+        return 1/(symbol * scaling)
+
+
+class BasicMultiplication(Mechanism):
+    """Modifier to apply multiplication based on a parameter/metaoblite"""
+    @staticmethod
+    def compute(symbol, scaling=1):
+        return symbol * scaling
+
 class BiomassModifier(Mechanism):
     """Modifies expression based on Biomass. Used in the
     glycolysis model described in

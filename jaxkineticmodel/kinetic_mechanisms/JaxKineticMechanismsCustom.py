@@ -336,3 +336,18 @@ class Jax_Transport_Flux_Correction(Mechanism):
     @staticmethod
     def compute(substrate, dilution_rate):
         return (substrate / 3600) * dilution_rate
+
+
+class Jax_Biomass_Rate(Mechanism):
+    """Biomass rate equation according to course: Microbiol physiology and fermentation technology"""
+    @staticmethod
+    def compute(substrate, vmax, km_substrate, ms, a):
+        qs = vmax * (substrate / (km_substrate + substrate))
+        return (qs-ms)/a
+
+
+class Jax_Maintenance(Mechanism):
+    """Maintenance rate equation according to course: Microbiol physiology and fermentation technology"""
+    @staticmethod
+    def compute(ms,a):
+        return ms / a

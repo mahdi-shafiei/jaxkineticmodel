@@ -40,7 +40,7 @@ If no assignment is set, this defaults to all library units being set for each p
 Then, we assign probabilities to each promoter-parameter values. If this function is empty, each promoter-parameter is equally probable. 
 Finally, we generate the designs, for 50 samples and 6 chosen pro-parameter elements. 
 ```python
-{!code/simulated-dbtl.py!lines=23-46}
+{!code/simulated-dbtl.py!lines=23-36}
 
 ```
 
@@ -48,13 +48,13 @@ Finally, we generate the designs, for 50 samples and 6 chosen pro-parameter elem
 In the build phase we simulate all the designs and add a noise model to the outcomes for the target. The first simulation will take quite long, but after that it is compiled. If you do not run the class `DesignBuildTestLearnCycle` again, the simulations remain fast. The values that are taken in the dataset is the average of the last 10 datapoints of the target state variable.
 
 ```python
-{!code/simulated-dbtl.py!lines=47-56}
+{!code/simulated-dbtl.py!lines=37-47}
 ```
 
 #### Learn phase
 From here, the produced data can be used to compare whatever hyperparameter of the DBTL cycle you are interested: the performance of ML models, DoE v.s. Random sampling, etc.. As an example, we train an XGBoost model on the set of generated datapoints, as well as a quick validation on newly generated strain designs.
 ```python
-{!code/simulated-dbtl.py!lines=57-70}
+{!code/simulated-dbtl.py!lines=48-70}
 ```
 
 ![plot_validate](images/validate.png)
@@ -65,5 +65,4 @@ From here, the produced data can be used to compare whatever hyperparameter of t
 
 ## References
 [^1]: van Lent, P., Schmitz, J., & Abeel, T. (2023). Simulated design–build–test–learn cycles for consistent comparison of machine learning methods in metabolic engineering. ACS Synthetic Biology, 12(9), 2588-2599.
-
 [^2]: Kidger, P. (2022). On neural differential equations. arXiv preprint arXiv:2202.02435.

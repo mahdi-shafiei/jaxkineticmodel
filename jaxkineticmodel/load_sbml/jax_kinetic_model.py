@@ -164,11 +164,14 @@ class NeuralODE:
                     expression = expression.subs(variable_substitution)
                     equation = equation.subs({func: expression})
 
-            equation = equation.subs(self.compartments)
+
+
             equation = equation.subs(self.assignments_rules)
             equation = equation.subs(self.boundary_conditions)
             if constant_parameters:
                 equation = equation.subs(constant_parameters)
+            equation = equation.subs(self.compartments)
+
 
             free_symbols = list(equation.free_symbols)
             equation = sympy.lambdify(free_symbols, equation, "jax")
@@ -179,7 +182,6 @@ class NeuralODE:
             self.v_symbols[reaction_name] = filtered_dict
 
         self.compile_status = True
-
         self.func = JaxKineticModel(fluxes=self.fluxes,
                                     stoichiometric_matrix=jnp.array(self.stoichiometry),
                                     species_names=self.stoichiometry.index,
@@ -187,7 +189,6 @@ class NeuralODE:
                                     compartment_values=self.compartment_values,
                                     species_compartments=self.species_compartments,
                                     boundary_conditions=self.boundary_conditions)
-
         for key in constant_parameters.keys():
             self.parameters.pop(key)
 

@@ -5,7 +5,6 @@ import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import pandas as pd
-import sympy
 import diffrax
 from jaxkineticmodel.parameter_estimation.training import Trainer
 
@@ -13,7 +12,7 @@ from jaxkineticmodel.building_models import JaxKineticModelBuild as jkm
 from jaxkineticmodel.kinetic_mechanisms import JaxKineticMechanisms as jm
 from jaxkineticmodel.kinetic_mechanisms import JaxKineticMechanismsCustom as jcm
 from jaxkineticmodel.kinetic_mechanisms import JaxKineticModifiers as modifier
-from jaxkineticmodel.load_sbml.export_sbml import SBMLExporter
+
 
 
 v_glt = jkm.Reaction(
