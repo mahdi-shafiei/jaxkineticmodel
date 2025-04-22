@@ -126,15 +126,34 @@ class DesignBuildTestLearnCycle:
     def design_assign_probabilities(self,
                                     probabilities_per_position: Optional[dict[str, float]]):
         """Assigns probabilities based on """
+
+        library = self.library.copy()
+
         if probabilities_per_position is None:
-            rows, cols = np.shape(self.library)
+            rows, cols = np.shape(library)
             probability = np.ones(rows) * (1 / rows)
 
-            for name, sub in self.library.columns:
+            for name, sub in library.columns:
                 if sub == "probability":
-                    self.library[(name, sub)] = probability
+                    library[(name, sub)] = probability
 
-        library = self.library
+
+        elif probabilities_per_position is not None:
+            probabilities_per_position = pd.DataFrame(probabilities_per_position)
+
+            for position in probabilities_per_position.columns:
+                pos_library = library[position].set_index(['parameter_name', 'promoter_value'])
+                prob_values = probabilities_per_position[position]
+                pos_library['probability'] = prob_values
+                pos_library = pos_library.reset_index()
+                # Perform inner merge to keep only rows with matching keys
+
+                library[position] = pos_library
+
+        self.library = library
+
+
+
 
         return library
 
@@ -325,7 +344,10 @@ class DesignBuildTestLearnCycle:
                 slope, intercept, r_value, p_value, std_err = scipy.stats.linregress(np.array(preds),
                                                                                      np.array(true_value))
                 r2.append(r_value ** 2)
-        self.ml_model = ml_model
+            self.ml_model = ml_model
+        else:
+            logger.error(f"Model type {model_type} is not supported.")
+
         return ml_model, r2
 
     def learn_validate_model(self,
@@ -363,4 +385,6 @@ class DesignBuildTestLearnCycle:
                     color="black",
                 )
                 plt.show()
+        else:
+            logger.error(f"Model type {model_type} is not supported.")
         return r_value ** 2
