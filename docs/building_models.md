@@ -1,7 +1,7 @@
 # Building models
 
 
-## Metabolic kinetic modelling
+## Metabolic kinetic modeling
 The time evolution of metabolic states are often described by a set of 
 Ordinary Differential Equations (ODEs):
 $$\frac{dm(t)}{dt}=S\cdot v(t,m(t),\theta)$$
@@ -22,7 +22,12 @@ Models can be built in a reaction-centric manner. Initializing a `Reaction` obje
 ```python
 {!code/building_models.py!lines=1-18}
 ```
-The `mechanism` is another class that describes the flux function, which depends on metabolite states and parameters. Parameters are pointed towards with unique symbols. The reaction object is implemented in a way that own-implemented flux functions can be used. We have also implemented a set of general flux functions that are often used in systems biology. 
+The `mechanism` is another class that describes the flux function, which depends on metabolite states and parameters. 
+Parameters are pointed towards with unique symbols. The reaction object is implemented in a way that own-implemented 
+flux functions can be used. 
+We have also implemented a set of general flux functions that are often used in systems biology. Users can also 
+implement their [own mechanisms](#implementing-custom-reaction-mechanisms) using the abstract `Mechanism` class.
+
 
 ##### Table of implemented mechanisms
 | **Type of Reaction**             | **Name (in JAX class)**                         | **Number of Parameters**  |
@@ -46,6 +51,39 @@ The `mechanism` is another class that describes the flux function, which depends
 | A + B → C + D                    | Jax_ADH                                        | 15                        |
 | A → B + C                        | Jax_Hill_Bi_Irreversible_Activation             | 7                         |
 | A → B + C                        | Jax_Hill_Irreversible_Inhibition                | 7                         |
+
+
+#### Modifying reaction mechanisms for regulation
+Reaction mechanisms might have regulatory interactions, or may need to be scaled by state variables (e.g., when using
+q-rates in bioprocesses). While some mechanisms already include activation/inhibition in the table above, 
+for modeling purposes it can be nice to add modifiers later using `add_modifier`. This modifies the symbolic
+equation in sympy.
+
+```python
+{!code/custom_reactions.py!lines=3-19}
+```
+Several `modifier` classes are implemented that modify the kinetic equation, and custom modifiers are easily implemented.
+
+| **Modifier name**   | **Type**                                  | **Modification formula**         |
+|---------------------|-------------------------------------------|----------------------------------|
+| SimpleActivator     | Activation by state variable or parameter | $$1 +\frac{activator}{k_A}$$     |
+| SimpleInhibitor     | Inhibition by state variable or parameter | $$1/(1 +\frac{inhibitor}{k_I})$$ |
+| BasicDivision       | Division of reaction                      | $$\frac{1}{(S * scaling})$$      |
+| BasicMultiplication | Multiplication of reaction                | $$ S * scaling$$                 |
+
+NOTE: When using modifiers, that species that are included in the modifier 
+mechanisms are passed to the stoichiometry (0 when they do not change the 
+mass balance) and species argument of the `Reaction`. Otherwise, when simulating the kinetic model built 
+using `NeuralODEBuild` will not recognize these when evaluating the equations.
+
+
+
+#### Implementing custom reaction mechanisms
+It may be the case that the table of mechanisms + modifiers is not sufficiently expressive for the modeling task.
+Users can implement custom mechanisms using the `Mechanism` base class.
+```python
+{!code/custom_reactions.py!lines=21-37}
+```
 
 ## Building simple models
 

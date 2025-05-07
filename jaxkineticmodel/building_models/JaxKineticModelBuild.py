@@ -38,7 +38,7 @@ class BoundaryCondition:
 
 
 class BoundaryConditionDiffrax:
-    """Helper function to load diffrax intepolations to the NeuralODEBuild object. Is not compatible with SBML"""
+    """Helper function to load diffrax intepolations to the NeuralODEBuild object. It iss not compatible with SBML"""
     def __init__(self, boundary_condition: diffrax.AbstractPath):
         assert isinstance(boundary_condition, diffrax.AbstractPath)
         self.boundary_condition = boundary_condition
@@ -108,6 +108,8 @@ class JaxKineticModelBuild:
         self.parameter_names = self._flatten([reaction.parameters for reaction in self.reactions])
         self.parameter_names = self._filter_parameters()
         self.boundary_conditions = {}
+
+        self.assignment_rules = {}
 
 
     def _filter_parameters(self):

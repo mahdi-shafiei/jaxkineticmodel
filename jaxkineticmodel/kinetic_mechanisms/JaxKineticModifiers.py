@@ -21,7 +21,7 @@ class BasicDivision(Mechanism):
     """Modifier to apply division based on a parameter/metaoblite"""
     @staticmethod
     def compute(symbol, scaling=1):
-        return 1/(symbol * scaling)
+        return 1 / (symbol * scaling)
 
 
 class BasicMultiplication(Mechanism):
