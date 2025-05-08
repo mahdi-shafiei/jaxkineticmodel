@@ -18,3 +18,7 @@ def check_imports(package_name):
 
 def test_imports():
     assert check_imports("jaxkineticmodel")
+
+def test_example_script_runs_without_error():
+    import runpy
+    runpy.run_path("../docs/code/building_models.py")
