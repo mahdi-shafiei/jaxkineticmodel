@@ -15,7 +15,7 @@ git clone https://github.com/AbeelLab/jaxkineticmodel.git
 python -m pip install .
 ```
 
-TO DO: archive package on pip to make it installable
+We will make the package `pip`-installable before publication.
 
 ## Minimal simulation example
 ```python 

@@ -17,7 +17,7 @@ class BoundaryCondition:
     perfectly fine. For now, we only will consider boundary conditions that are dependent on t.
 
     input:
-    String expression of the boundary condition (which can be e.g., str(2)))
+    String expression of the boundary condition (which can be e.g., str(2))
     Boolean of whether expression is a constant boundary condition.
     This is required for consistency with exporting to sbml
 
@@ -37,21 +37,42 @@ class BoundaryCondition:
         return self.lambdified(t)
 
 
+class AssignmentRule:
+    """
+    Class to evaluate assignment rules in the NeuralODEBuild object.
+    Input: string expression of the assignment rule
+    """
+
+    def __init__(self,
+                 rule: str):
+        self.rule = rule
+        self.equation = sp.sympify(rule)
+        self.free_symbols = list(self.equation.free_symbols)
+        self.lambdified = sp.lambdify(self.free_symbols, self.rule)
+
+    def __call__(self, eval_dict):
+        eval_symbols = {str(k): eval_dict[str(k)] for k in self.free_symbols}
+        return self.lambdified(**eval_symbols)
+
+
 class BoundaryConditionDiffrax:
     """Helper function to load diffrax intepolations to the NeuralODEBuild object. It iss not compatible with SBML"""
+
     def __init__(self, boundary_condition: diffrax.AbstractPath):
         assert isinstance(boundary_condition, diffrax.AbstractPath)
         self.boundary_condition = boundary_condition
 
-    def evaluate(self, t):
+    def __call__(self, t):
         return self.boundary_condition.evaluate(t)
+
 
 class Reaction:
     """Base class that can be used for building kinetic models. The following things must be specified:
-    species involved,
-    name of reaction
-    stoichiometry of the specific reaction,
-    mechanism + named parameters, and compartment"""
+    - species involved,
+    - name of reaction
+    - stoichiometry of the specific reaction,
+    - mechanism + named parameters,
+    - compartments"""
 
     def __init__(self, name: str, species: list, stoichiometry: list,
                  compartments: list, mechanism: Mechanism):
@@ -87,9 +108,9 @@ class JaxKineticModelBuild:
     species_names: list[str]
 
     def __init__(self, reactions: List[Reaction], compartments: dict[str, int]):
-        """Kinetic model that is defined through it's reactions:
+        """A kinetic model that is defined through a list  Reactions:
         Input:
-        reactions: list of reaction objects
+        reactions: list of reaction objects,
         compartments: list of compartments with corresponding value for evaluation
         """
         self.reactions = reactions
@@ -107,10 +128,10 @@ class JaxKineticModelBuild:
         # retrieve parameter names
         self.parameter_names = self._flatten([reaction.parameters for reaction in self.reactions])
         self.parameter_names = self._filter_parameters()
+
         self.boundary_conditions = {}
 
         self.assignment_rules = {}
-
 
     def _filter_parameters(self):
         """Filters out species from parameter list when a function has modifiers"""
@@ -153,15 +174,15 @@ class JaxKineticModelBuild:
         """Add a metabolite boundary condition
         input: metabolite name, boundary condition object or diffrax interpolation object"""
 
-        #updates the list of boundary conditions
+        # updates the list of boundary conditions
         self.boundary_conditions.update({metabolite_name: boundary_condition})
         index = self.species_names.index(metabolite_name)
 
-        #since it is now a boundary condition, it will be removed
+        # since it is now a boundary condition, it will be removed
         # from species list
         self.species_names.remove(metabolite_name)
 
-        #boundary conditions will not be evaluated in S*v(t)
+        # boundary conditions will not be evaluated in S*v(t)
         self.S = jnp.delete(self.S, index, axis=0)
 
         # remove it from the species_compartments list.
@@ -173,17 +194,61 @@ class JaxKineticModelBuild:
         self.stoichiometric_matrix = self.stoichiometric_matrix.drop(labels=metabolite_name, axis=0)
         self.compartment_values = jnp.delete(self.compartment_values, index)
 
+    def add_parameter_assignment_rule(self,
+                                      variable: str,
+                                      rule: AssignmentRule):
+        """For a given parameter, create a rule that describes the value in symbolic terms.
+        This is similar to add_boundary, but then for parameters.
+
+        - Variable: can be a species, parameter or even a compartment (?)
+        - Rule: string expression of the assignment rule
+
+
+        NOTE: we need to handle the export and NeuralODEBuild simulation slightly differently.
+        In the export: we want to include the rules in the sbml file, while for when
+        you directly want to simulate the model, NeuralODEBuild has directly replaced the rules."""
+
+        if variable in self.species_names:
+            logger.warning(f"variable {variable} is a state variable, has not been properly tested yet")
+        free_symbols = rule.free_symbols
+
+        # check whether free_symbols in the assignment rule are actually defined in the model
+
+        if variable not in self.parameter_names and variable not in self.species_names:
+            logger.error(f"variable {variable} is not a valid assignment rule variable")
+            raise AssertionError(f"variable: {variable} is not a valid assignment rule variable")
+
+        # check whether all symbols are included in parameter_
+        symbols_list = [i for i in free_symbols if str(i) in self.parameter_names or str(i) in self.species_names]
+
+
+        if len(symbols_list) != len(free_symbols):
+            missing = set(free_symbols) - set(symbols_list)
+            logger.error(f"Invalid symbols: {missing}")
+            raise AssertionError(f"Invalid symbols: {missing}")
+
+        self.assignment_rules.update({variable: rule})
+        return logger.info(f"added assignment rule {rule} for variable {variable}")
+
     def __call__(self, t, y, args):
-        params, boundary_conditions = args
+        params, boundary_conditions, assignment_rules = args
 
         y = dict(zip(self.species_names, y))
         if boundary_conditions:
-            for key, value in boundary_conditions.items():
-                boundary_conditions[key] = value.evaluate(t)
+            for key, expression in boundary_conditions.items():
+                boundary_conditions[key] = expression.evaluate(t)
 
         # we construct this dictionary, and then overwrite
         # Think about how to vectorize the evaluation of mechanism.call
         eval_dict = {**y, **params, **boundary_conditions}
+
+        # while in principle one can do assignmnet rules
+        if assignment_rules:
+            for key, expression in assignment_rules.items():
+                if key in y.keys():
+                    eval_dict[key] = expression(eval_dict)
+                elif key in params.keys():
+                    eval_dict[key] = expression(eval_dict)
 
         v = jnp.stack([self.v[i](eval_dict) for i in range(len(self.reaction_names))])
         dY = jnp.matmul(self.S, v)
@@ -193,7 +258,9 @@ class JaxKineticModelBuild:
 
 
 class NeuralODEBuild:
-    def __init__(self, func):
+    """Class that wraps jaxkineticmodelbuild and can be used for parameterization"""
+    def __init__(self,
+                 func: JaxKineticModelBuild):
         self.func = func
         self.parameter_names = func.parameter_names
         self.stoichiometric_matrix = func.stoichiometric_matrix
@@ -201,6 +268,7 @@ class NeuralODEBuild:
         self.species_names = list(func.stoichiometric_matrix.index)
         self.Stoichiometry = func.S
         self.boundary_conditions = func.boundary_conditions
+        self.assignment_rules = func.assignment_rules
 
         self.max_steps = 300000
         self.rtol = 1e-9
@@ -211,15 +279,13 @@ class NeuralODEBuild:
                                                          dcoeff=0)
         self.adjoint = diffrax.RecursiveCheckpointAdjoint()
 
-
-
     def _change_solver(self, solver, **kwargs):
         """To change the ODE solver object to any solver class from diffrax
         Does not support multiterm objects yet."""
 
         if isinstance(solver, diffrax.AbstractAdaptiveSolver):
             # for what i recall, only the adaptive part is important to ensure
-            #it can be loaded properly
+            # it can be loaded properly
             self.solver = solver
             step_size_control_parameters = {'rtol': self.rtol, 'atol': self.atol,
                                             "pcoeff": 0.4, "icoeff": 0.3, "dcoeff": 0}
@@ -236,6 +302,7 @@ class NeuralODEBuild:
         return logger.info(f"solver changed to {type(solver)}")
 
     def __call__(self, ts, y0, params):
+
         solution = diffrax.diffeqsolve(
             terms=diffrax.ODETerm(self.func),
             solver=diffrax.Kvaerno5(),
@@ -243,7 +310,7 @@ class NeuralODEBuild:
             t1=ts[-1],
             dt0=self.dt0,
             y0=y0,
-            args=(params, self.boundary_conditions),
+            args=(params, self.boundary_conditions, self.assignment_rules),
             stepsize_controller=self.stepsize_controller,
             saveat=diffrax.SaveAt(ts=ts),
             max_steps=self.max_steps,

@@ -42,7 +42,6 @@ class DesignBuildTestLearnCycle:
         self.ml_model = None
         self.species_names = model.species_names
 
-
         self.model = model
         self.kinetic_model = jax.jit(model.get_kinetic_model())
 
@@ -152,9 +151,6 @@ class DesignBuildTestLearnCycle:
 
         self.library = library
 
-
-
-
         return library
 
     def design_generate_strains(self,
@@ -175,7 +171,7 @@ class DesignBuildTestLearnCycle:
             strain = {}
             perturbed_parameters = self.parameters.copy()
             for name in positions:
-                sample = (library[(name,)].sample(1, weights=library[(name,)]['probability'],replace=replacement))
+                sample = (library[(name,)].sample(1, weights=library[(name,)]['probability'], replace=replacement))
 
                 if sample['parameter_name'].values[0] in strain:
                     strain[sample['parameter_name'].values[0]] += sample['promoter_value'].values[0]
@@ -184,13 +180,12 @@ class DesignBuildTestLearnCycle:
 
             strain_promoter = {}
             for key, values in strain.items():
-                promoter_value = float(self.reference_strain[key]) +  float(strain[key])
+                promoter_value = float(self.reference_strain[key]) + float(strain[key])
                 perturbed_parameters[key] *= promoter_value
                 strain_promoter[key] = strain[key]
 
             strains.append(perturbed_parameters)
             strain_promoters.append(strain_promoter)
-
 
         self.strain_promoters_designs = strain_promoters
 
@@ -224,11 +219,13 @@ class DesignBuildTestLearnCycle:
             for targ in self.target:
                 simulated_values[targ].append(ys_final[targ])
 
-            if k % 25 == 0:
+            if k % 20 == 0:
+                print(f"Strain {k}")
                 logger.info(f"Strain {k}")
 
             if plot:
-                ax.plot(self.timespan, ys, label=f"Strain {strain_p}",c="black")  # Add a label for each strain if desired
+                ax.plot(self.timespan, ys, label=f"Strain {strain_p}",
+                        c="black")  # Add a label for each strain if desired
 
         if plot:
             ax.set_title("Perturbed Strains")
@@ -256,15 +253,15 @@ class DesignBuildTestLearnCycle:
 
         noised_values = {}
         if noise_type in ["homoscedastic", "homoskedastic", "homoschedastic"]:
+
             # look back whether this is actually the right way to do it
             for targ in self.target:
-                print(targ)
                 values_new = np.random.normal(values[targ], percentage)
                 values_new[values_new < 0] = 0
 
                 noised_values[targ] = values_new
 
-        if noise_type in ["heteroscedastic", "heteroskedastic", "heteroschedastic"]:
+        elif noise_type in ["heteroscedastic", "heteroskedastic", "heteroschedastic"]:
             # We assume that the noise level is given by X_m=D*X_true +X_true, where D is the percentage of deviation.
             # We now model this as a simple gaussian, dependent on percentage*Xtrue
             for targ in self.target:

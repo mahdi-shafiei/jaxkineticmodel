@@ -4,6 +4,9 @@ import sympy
 
 
 class Mechanism:
+    """
+    Abstract base class for a reaction mechansism
+    """
     param_names: dict[str, str]
     modifiers: list['Mechanism']
     param_names_modifiers: dict[str, str]

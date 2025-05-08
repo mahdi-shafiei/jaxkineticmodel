@@ -131,7 +131,10 @@ class SBMLExporter:
         for p_name, p_value in global_parameters.items():
             p1 = export_model.createParameter()
             check(p1.setId(str(p_name)), 'set parameter name')
-            check(p1.setConstant(True), 'set parameter name')
+            if p_name in self.kmodel.assignment_rules.keys():
+                check(p1.setConstant(False), 'set "constant" attribute on s1 for assignment rule')
+            else:
+                check(p1.setConstant(True), 'set parameter name')
             check(p1.setValue(float(p_value)), 'set parameter value')
 
         # reactions and boundaries are dealt with slightly different right now between two objects.
@@ -222,6 +225,19 @@ class SBMLExporter:
                 kinetic_law = r1.createKineticLaw()
                 check(kinetic_law, 'create kinetic law')
                 check(kinetic_law.setMath(math_ast), 'set math on kinetic law')
+
+            if self.kmodel.assignment_rules:
+                assignment_rules = self.kmodel.assignment_rules
+                for key, assignment_rule in assignment_rules.items():
+                    math_ast = self.sympy_converter.sympy2libsbml(assignment_rule.equation)
+                    orig = self.libsbml_converter.libsbml2sympy(math_ast)
+                    assert str(assignment_rule.equation) == str(orig)
+                    rule = export_model.createAssignmentRule()
+                    check(rule.setVariable(key), 'set variable name')
+                    check(rule.setMath(math_ast), "set math on kinetic law")
+
+
+
 
 
 
