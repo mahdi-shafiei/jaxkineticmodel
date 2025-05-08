@@ -21,4 +21,4 @@ def test_imports():
 
 def test_example_script_runs_without_error():
     import runpy
-    runpy.run_path("../docs/code/building_models.py")
+    runpy.run_path("docs/code/building_models.py")
