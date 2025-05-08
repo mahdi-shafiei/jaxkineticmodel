@@ -192,8 +192,26 @@
                 <cn> 0.0943666793891201 </cn>
                 <apply>
                   <times/>
-                  <cn> 0.0224468367114322 </cn>
+                  <cn> 0.00254520415702144 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 2 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> 0.0136112090281313 </cn>
                   <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> -0.000155615724072252 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 3 </cn>
+                  </apply>
                 </apply>
               </apply>
               <apply>
@@ -201,7 +219,7 @@
                 <apply>
                   <leq/>
                   <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
-                  <cn> 5 </cn>
+                  <cn> 10 </cn>
                 </apply>
                 <apply>
                   <geq/>
@@ -213,48 +231,29 @@
             <piece>
               <apply>
                 <plus/>
-                <cn> 0.083818264592237 </cn>
+                <cn> -0.279324201801845 </cn>
                 <apply>
                   <times/>
-                  <cn> 0.0245565196708088 </cn>
-                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
-                </apply>
-              </apply>
-              <apply>
-                <and/>
-                <apply>
-                  <geq/>
-                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
-                  <cn> 5 </cn>
-                </apply>
-                <apply>
-                  <leq/>
-                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
-                  <cn> 10 </cn>
-                </apply>
-                <apply>
-                  <or/>
+                  <cn> 0.000218075157118714 </cn>
                   <apply>
-                    <gt/>
+                    <power/>
                     <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
-                    <cn> 5 </cn>
-                  </apply>
-                  <apply>
-                    <lt/>
-                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
-                    <cn type="integer"> 0 </cn>
+                    <cn type="integer"> 3 </cn>
                   </apply>
                 </apply>
-              </apply>
-            </piece>
-            <piece>
-              <apply>
-                <plus/>
-                <cn> 0.202722300809107 </cn>
                 <apply>
                   <times/>
-                  <cn> 0.0126661160491218 </cn>
+                  <cn> 0.125718473385421 </cn>
                   <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> -0.00866552227870752 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 2 </cn>
+                  </apply>
                 </apply>
               </apply>
               <apply>
@@ -287,11 +286,29 @@
             <piece>
               <apply>
                 <plus/>
-                <cn> 0.189846821434465 </cn>
+                <cn> 1.154407202533 </cn>
                 <apply>
                   <times/>
-                  <cn> 0.0135244813407646 </cn>
+                  <cn> 0.0104508964457571 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 2 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> -0.161027807481549 </cn>
                   <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> -0.00020673414786939 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 3 </cn>
+                  </apply>
                 </apply>
               </apply>
               <apply>
@@ -324,11 +341,29 @@
             <piece>
               <apply>
                 <plus/>
-                <cn> 0.519980030948095 </cn>
+                <cn> -1.10924775831631 </cn>
                 <apply>
                   <times/>
-                  <cn> -0.00298217913491691 </cn>
+                  <cn type="e-notation"> 7 <sep/> -5 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 3 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> 0.178520436645848 </cn>
                   <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> -0.00652651576061272 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 2 </cn>
+                  </apply>
                 </apply>
               </apply>
               <apply>
@@ -361,10 +396,28 @@
             <piece>
               <apply>
                 <plus/>
-                <cn> 0.480854972534006 </cn>
+                <cn> 1.08120760578857 </cn>
                 <apply>
                   <times/>
-                  <cn> -0.00167801052111393 </cn>
+                  <cn> 0.000775002119736891 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 2 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn type="e-notation"> -4 <sep/> -6 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 3 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> -0.0405250997646403 </cn>
                   <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
                 </apply>
               </apply>
@@ -398,11 +451,29 @@
             <piece>
               <apply>
                 <plus/>
-                <cn> 0.517698389221534 </cn>
+                <cn> -0.325807119599717 </cn>
                 <apply>
                   <times/>
-                  <cn> -0.00229206746590607 </cn>
+                  <cn type="e-notation"> 1 <sep/> -6 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 3 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> 0.0298256365047742 </cn>
                   <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> -0.000397510151420017 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 2 </cn>
+                  </apply>
                 </apply>
               </apply>
               <apply>
@@ -435,11 +506,29 @@
             <piece>
               <apply>
                 <plus/>
-                <cn> 0.439079455349487 </cn>
+                <cn> 1.04826060427461 </cn>
                 <apply>
                   <times/>
-                  <cn> -0.00141852375621665 </cn>
+                  <cn> 0.000111403820385288 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 2 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> -0.0159766209577032 </cn>
                   <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn type="e-notation"> -2 <sep/> -7 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 3 </cn>
+                  </apply>
                 </apply>
               </apply>
               <apply>
@@ -472,11 +561,29 @@
             <piece>
               <apply>
                 <plus/>
-                <cn> 0.427316935803754 </cn>
+                <cn> -0.793219153920358 </cn>
                 <apply>
                   <times/>
-                  <cn> -0.0013401069592451 </cn>
+                  <cn type="e-notation"> 2 <sep/> -7 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 3 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> 0.0208529742061961 </cn>
                   <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> -0.000134126814040708 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 2 </cn>
+                  </apply>
                 </apply>
               </apply>
               <apply>
@@ -509,10 +616,28 @@
             <piece>
               <apply>
                 <plus/>
-                <cn> 0.359713612144044 </cn>
+                <cn> 1.42934119713794 </cn>
                 <apply>
                   <times/>
-                  <cn> -0.000964532938913375 </cn>
+                  <cn type="e-notation"> 7 <sep/> -5 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 2 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn type="e-notation"> -1 <sep/> -7 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 3 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> -0.0161896983114423 </cn>
                   <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
                 </apply>
               </apply>
@@ -546,11 +671,29 @@
             <piece>
               <apply>
                 <plus/>
-                <cn> 0.324147151765803 </cn>
+                <cn> -1.22753280418462 </cn>
                 <apply>
                   <times/>
-                  <cn> -0.00080286720992137 </cn>
+                  <cn type="e-notation"> 1 <sep/> -7 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 3 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> 0.0200404017065926 </cn>
                   <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn type="e-notation"> -9 <sep/> -5 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 2 </cn>
+                  </apply>
                 </apply>
               </apply>
               <apply>
@@ -583,11 +726,29 @@
             <piece>
               <apply>
                 <plus/>
-                <cn> 0.199113775738294 </cn>
+                <cn> 2.2226106060572 </cn>
                 <apply>
                   <times/>
-                  <cn> -0.000302733705811338 </cn>
+                  <cn type="e-notation"> 7 <sep/> -5 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 2 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn> -0.0213613192163091 </cn>
                   <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn type="e-notation"> -8 <sep/> -8 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 3 </cn>
+                  </apply>
                 </apply>
               </apply>
               <apply>
@@ -620,11 +781,29 @@
             <piece>
               <apply>
                 <plus/>
-                <cn> 0.178548479063095 </cn>
+                <cn> -0.726213841978437 </cn>
                 <apply>
                   <times/>
-                  <cn> -0.000234182716894006 </cn>
+                  <cn> 0.00812692526404723 </cn>
                   <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn type="e-notation"> 2 <sep/> -8 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 3 </cn>
+                  </apply>
+                </apply>
+                <apply>
+                  <times/>
+                  <cn type="e-notation"> -2 <sep/> -5 </cn>
+                  <apply>
+                    <power/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <cn type="integer"> 2 </cn>
+                  </apply>
                 </apply>
               </apply>
               <apply>
@@ -637,43 +816,6 @@
                 <apply>
                   <leq/>
                   <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
-                  <cn> 350 </cn>
-                </apply>
-                <apply>
-                  <or/>
-                  <apply>
-                    <gt/>
-                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
-                    <cn> 300 </cn>
-                  </apply>
-                  <apply>
-                    <lt/>
-                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
-                    <cn type="integer"> 0 </cn>
-                  </apply>
-                </apply>
-              </apply>
-            </piece>
-            <piece>
-              <apply>
-                <plus/>
-                <cn> 0.112109469477701 </cn>
-                <apply>
-                  <times/>
-                  <cn type="e-notation"> -4.43569752214517 <sep/> -5 </cn>
-                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
-                </apply>
-              </apply>
-              <apply>
-                <and/>
-                <apply>
-                  <geq/>
-                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
-                  <cn> 350 </cn>
-                </apply>
-                <apply>
-                  <leq/>
-                  <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
                   <cn> 400 </cn>
                 </apply>
                 <apply>
@@ -681,7 +823,7 @@
                   <apply>
                     <gt/>
                     <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
-                    <cn> 350 </cn>
+                    <cn> 300 </cn>
                   </apply>
                   <apply>
                     <lt/>
@@ -989,12 +1131,16 @@
                   <ci> ICF6P </ci>
                   <apply>
                     <power/>
-                    <ci> ICG6P </ci>
+                    <ci> p_PGI1_Keq </ci>
                     <cn type="integer"> -1 </cn>
                   </apply>
                   <apply>
                     <power/>
-                    <ci> p_PGI1_Keq </ci>
+                    <apply>
+                      <plus/>
+                      <cn type="e-notation"> 1 <sep/> -8 </cn>
+                      <ci> ICG6P </ci>
+                    </apply>
                     <cn type="integer"> -1 </cn>
                   </apply>
                 </apply>
@@ -1108,12 +1254,16 @@
                   <ci> ICG6P </ci>
                   <apply>
                     <power/>
-                    <ci> ICG1P </ci>
+                    <ci> p_PGM1_Keq </ci>
                     <cn type="integer"> -1 </cn>
                   </apply>
                   <apply>
                     <power/>
-                    <ci> p_PGM1_Keq </ci>
+                    <apply>
+                      <plus/>
+                      <cn type="e-notation"> 1 <sep/> -8 </cn>
+                      <ci> ICG1P </ci>
+                    </apply>
                     <cn type="integer"> -1 </cn>
                   </apply>
                 </apply>
@@ -1614,12 +1764,16 @@
                   <ci> ICGAP </ci>
                   <apply>
                     <power/>
-                    <ci> ICDHAP </ci>
+                    <ci> p_TPI1_Keq </ci>
                     <cn type="integer"> -1 </cn>
                   </apply>
                   <apply>
                     <power/>
-                    <ci> p_TPI1_Keq </ci>
+                    <apply>
+                      <plus/>
+                      <cn type="e-notation"> 1 <sep/> -8 </cn>
+                      <ci> ICDHAP </ci>
+                    </apply>
                     <cn type="integer"> -1 </cn>
                   </apply>
                 </apply>
@@ -2014,17 +2168,20 @@
                   <ci> ICATP </ci>
                   <apply>
                     <power/>
-                    <ci> ICADP </ci>
-                    <cn type="integer"> -1 </cn>
-                  </apply>
-                  <apply>
-                    <power/>
-                    <ci> ICBPG </ci>
-                    <cn type="integer"> -1 </cn>
-                  </apply>
-                  <apply>
-                    <power/>
                     <ci> p_PGK_KeqPGK </ci>
+                    <cn type="integer"> -1 </cn>
+                  </apply>
+                  <apply>
+                    <power/>
+                    <apply>
+                      <plus/>
+                      <cn type="e-notation"> 1 <sep/> -8 </cn>
+                      <apply>
+                        <times/>
+                        <ci> ICADP </ci>
+                        <ci> ICBPG </ci>
+                      </apply>
+                    </apply>
                     <cn type="integer"> -1 </cn>
                   </apply>
                 </apply>
@@ -2218,12 +2375,16 @@
                   <ci> IC2PG </ci>
                   <apply>
                     <power/>
-                    <ci> IC3PG </ci>
+                    <ci> p_PGM_Keq </ci>
                     <cn type="integer"> -1 </cn>
                   </apply>
                   <apply>
                     <power/>
-                    <ci> p_PGM_Keq </ci>
+                    <apply>
+                      <plus/>
+                      <cn type="e-notation"> 1 <sep/> -8 </cn>
+                      <ci> IC3PG </ci>
+                    </apply>
                     <cn type="integer"> -1 </cn>
                   </apply>
                 </apply>
@@ -2285,12 +2446,16 @@
                   <ci> ICPEP </ci>
                   <apply>
                     <power/>
-                    <ci> IC2PG </ci>
+                    <ci> p_ENO1_Keq </ci>
                     <cn type="integer"> -1 </cn>
                   </apply>
                   <apply>
                     <power/>
-                    <ci> p_ENO1_Keq </ci>
+                    <apply>
+                      <plus/>
+                      <cn type="e-notation"> 1 <sep/> -8 </cn>
+                      <ci> IC2PG </ci>
+                    </apply>
                     <cn type="integer"> -1 </cn>
                   </apply>
                 </apply>
