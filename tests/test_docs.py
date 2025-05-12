@@ -1,6 +1,7 @@
 import importlib
 import pkgutil
-
+import runpy
+import os
 # Tests whether for package the imports work
 
 
@@ -19,6 +20,20 @@ def check_imports(package_name):
 def test_imports():
     assert check_imports("jaxkineticmodel")
 
-def test_example_script_runs_without_error():
-    import runpy
+def test_building_models():
     runpy.run_path("docs/code/building_models.py")
+
+def test_custom_reactions():
+    runpy.run_path("docs/code/custom_reactions.py")
+
+def test_minimal_example():
+    runpy.run_path("docs/code/minimal_example.py")
+
+def test_sbml():
+    runpy.run_path("docs/code/sbml.py")
+
+def training_models():
+    runpy.run_path("docs/code/training_models.py")
+
+def training_models():
+    runpy.run_path("docs/code/glycolysis.py")
