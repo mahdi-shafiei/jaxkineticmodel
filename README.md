@@ -4,7 +4,11 @@
 Python package to simulate, build, and train kinetic models.
 
 ### Installation
-
+Install the package using
+```
+pip install jaxkineticmodel
+```
+Or the latest version using
 ```
 git clone https://github.com/AbeelLab/jaxkineticmodel.git
 python -m pip install .
