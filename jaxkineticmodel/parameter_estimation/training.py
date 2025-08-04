@@ -222,30 +222,26 @@ class Trainer:
             try:
                 for step in range(self.n_iter):  # loop over number of iterations
 
-                    a = time.time()
-
                     opt_state, params_init, loss, grads = self.make_step(opt_state=opt_state,
                                                                            params=params_init,
                                                                            ts= ts,
                                                                            ys=dataset)
+                    loss_per_iter.append(loss)
 
                     if loss < self.loss_threshold:
                         logger.info("loss threshold reached")
-                        loss_per_iteration_dict[init] = loss_per_iter
+
                         # global_norm_dict[init] = gradient_norms
-                        optimized_parameters_dict[init] = params_init
+
                         break
 
                     if step % 20 == 0:
                         print(f"Step {step}, Loss {loss}")
-                        loss_per_iter.append(loss)
 
-                    loss_per_iteration_dict[init] = loss_per_iter
-                    optimized_parameters_dict[init] = params_init
-                    global_norm_dict[init] = gradient_norms
-                    b = time.time()
+                loss_per_iteration_dict[init] = loss_per_iter
+                optimized_parameters_dict[init] = params_init
+                global_norm_dict[init] = gradient_norms
 
-                    print(b-a)
 
 
             except Exception as e:
