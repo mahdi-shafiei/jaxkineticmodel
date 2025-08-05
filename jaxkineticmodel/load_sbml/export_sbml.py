@@ -142,7 +142,7 @@ class SBMLExporter:
         # they are implemented through the Mechanism/Reaction objects.
         # We therefore deal with them (for now) separately
         if isinstance(self.kmodel, NeuralODE):
-            for (reaction, mechanism) in self.kmodel.fluxes.items():
+            for (reaction, mechanism) in self.kmodel.fluxes_symbolic.items():
 
                 r1 = export_model.createReaction()
                 check(r1, 'create reaction')
@@ -150,7 +150,7 @@ class SBMLExporter:
                 check(r1.setReversible(False), 'set reversible')  # required
 
                 # include species reference based on stoichiometry
-                stoichiometry = self.kmodel.Stoichiometry[reaction].to_dict()
+                stoichiometry = self.kmodel.stoichiometry[reaction].to_dict()
                 for (s_id, stoich) in stoichiometry.items():
                     if stoich < 0:
                         species_ref1 = r1.createReactant()

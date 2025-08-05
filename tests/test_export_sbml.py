@@ -98,21 +98,17 @@ def import_new_sbml(filepath_export: str):
 
 
 
-# def test_export_NeuralODE():
-#     model_name = "Smallbone2013_SerineBiosynthesis"
-#     filepath = f"models/sbml_models/working_models/{model_name}.xml"
-#     output_dir = "models/manual_implementations/sbml_export"
-#     os.makedirs(output_dir, exist_ok=True)
-#     assert export_sbml1(filepath, model_name, output_dir)
+def test_export_NeuralODE():
+    model_name = "Smallbone2013_SerineBiosynthesis"
+    filepath = f"models/sbml_models/working_models/{model_name}.xml"
+    output_dir = "models/manual_implementations/sbml_export"
+    os.makedirs(output_dir, exist_ok=True)
+    assert export_sbml1(filepath, model_name, output_dir)
 
 
-# def test_export_sbml_NeuralODEBuild():
-#     model_name = "test"
-#     output_dir = "../models/manual_implementations/sbml_export"
-#     os.makedirs(output_dir, exist_ok=True)
-#     assert export_sbml2(output_dir, model_name)
+def test_export_sbml_NeuralODEBuild():
+    model_name = "test"
+    output_dir = "../models/manual_implementations/sbml_export"
+    os.makedirs(output_dir, exist_ok=True)
+    assert export_sbml2(output_dir, model_name)
 
-# def test_import_exported_SBML():
-#     input_file1 = "models/manual_implementations/sbml_export/test.xml"
-#     input_file2 = "models/manual_implementations/sbml_export/Smallbone2013_SerineBiosynthesis.xml"
-#     assert import_new_sbml(input_file1)

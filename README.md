@@ -30,5 +30,6 @@ All data, source code, scripts, and results can be found in the [4tu-repository]
 ### Reference
 If you use this package in your work, please reference:
 
-[1] Lent, P. V., Bunkova, O., Planken, L., Schmitz, J., & Abeel, T. (2024). 
-Neural Ordinary Differential Equations Inspired Parameterization of Kinetic Models. bioRxiv, 2024-12.
+[1] van Lent, P., Bunkova, O., Magyar, B., Planken, L., Schmitz, J., & Abeel, T. (2025). 
+Jaxkineticmodel: Neural ordinary differential equations inspired parameterization of kinetic models. 
+PLOS Computational Biology, 21(7), e1012733.

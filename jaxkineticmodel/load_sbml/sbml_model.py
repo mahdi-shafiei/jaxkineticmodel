@@ -16,6 +16,7 @@ logger = get_logger(__name__)
 
 
 class SBMLModel:
+    """Loads SBML models for simulation purposes using jax/diffrax"""
     S: Union[pd.DataFrame, None]
 
     def __init__(self, file_path):
@@ -43,7 +44,7 @@ class SBMLModel:
         self.species_compartments = {**self.species_compartments, **boundary_compartments}
 
         self.lambda_functions = get_lambda_function_dictionary(self.model)
-        self.assignments_rules = get_assignment_rules_dictionary(self.model)
+        self.assignment_rules = get_assignment_rules_dictionary(self.model)
         self.event_rules = get_events_dictionary(self.model)
 
 
@@ -244,7 +245,7 @@ class SBMLModel:
 
         include = ['y0', 'parameters', 'species_compartments',
                    'compartment_values', 'boundary_conditions',
-                   'lambda_functions', 'assignments_rules', 'event_rules', 'compartments']
+                   'lambda_functions', 'assignment_rules', 'event_rules', 'compartments']
         kwargs = {i: kwargs[i] for i in include}
 
         return NeuralODE(

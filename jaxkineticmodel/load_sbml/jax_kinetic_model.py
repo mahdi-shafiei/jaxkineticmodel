@@ -99,7 +99,7 @@ class NeuralODE:
             compartment_values: list,
             species_compartments: list,
             boundary_conditions: dict,
-            assignments_rules: dict,
+            assignment_rules: dict,
             lambda_functions: dict,
             event_rules: dict,
             compartments: dict,
@@ -109,6 +109,8 @@ class NeuralODE:
     ):
         self.compile_status = compile
         self.fluxes = fluxes
+        self.fluxes_symbolic = fluxes.copy() #for exporting the model to sbml
+
         self.reaction_names = list(stoichiometric_matrix.columns)
         self.species_names = list(stoichiometric_matrix.index)
 
@@ -119,7 +121,7 @@ class NeuralODE:
         self.lambda_functions = lambda_functions
         self.event_rules = event_rules
         self.compartments = compartments
-        self.assignments_rules = assignments_rules
+        self.assignment_rules = assignment_rules
         self.boundary_conditions = boundary_conditions
 
         self.y0 = kwargs['y0'] #not used in training, but only to process the initial conditions in Trainer object
@@ -166,7 +168,7 @@ class NeuralODE:
 
 
 
-            equation = equation.subs(self.assignments_rules)
+            equation = equation.subs(self.assignment_rules)
             equation = equation.subs(self.boundary_conditions)
             if constant_parameters:
                 equation = equation.subs(constant_parameters)
