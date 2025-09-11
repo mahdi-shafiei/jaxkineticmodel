@@ -209,7 +209,13 @@ class DesignBuildTestLearnCycle:
         # Loop through the perturbed strains and simulate each one
         simulated_values = {str(i): [] for i in self.target}
         for k, strain_p in enumerate(strains_perturbed):
-            ys = self.kinetic_model(self.timespan, self.initial_conditions, strain_p)
+            try:
+                ys = self.kinetic_model(self.timespan, self.initial_conditions, strain_p)
+
+            except Exception as e:
+                logger.error(e)
+                ys = jnp.full((len(self.timespan),len(self.initial_conditions)), np.nan)
+
             ys = pd.DataFrame(ys, columns=self.species_names)
             ys = ys[self.target]
             ys = ys / ys_ref
