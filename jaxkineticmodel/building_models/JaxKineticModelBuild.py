@@ -76,6 +76,9 @@ class Reaction:
 
     def __init__(self, name: str, species: list, stoichiometry: list,
                  compartments: list, mechanism: Mechanism):
+        assert len(stoichiometry) == len(species), "length stoichiometry should match number of species"
+        assert len(stoichiometry) == len(compartments), "length stoichiometry should match number of compartments"
+
         self.name = name
         self.species = species
         self.stoichiometry = dict(zip(species, stoichiometry))
@@ -90,6 +93,8 @@ class Reaction:
                                      if x in species]
 
     def _add_modifier_parameters(self):
+        """Adds parameter if a flux mechanism is modified (e.g., inhibitors,
+        activators)"""
         if self.mechanism.param_names_modifiers:
             modifier_parameters = [x for x in self.mechanism.param_names_modifiers.values()
                                    if x not in self.species]
