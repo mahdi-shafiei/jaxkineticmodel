@@ -32,7 +32,7 @@ def test_minimal_example():
 def test_sbml():
     runpy.run_path("docs/code/sbml.py")
 
-def training_models():
+def test_training_models():
     runpy.run_path("docs/code/training_models.py")
 
 def training_models():

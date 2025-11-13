@@ -5,28 +5,29 @@ Here, we showcase an parameter optimization process with simulated data[^1].
 The `Trainer` object requires a few inputs. First, it requires a `SBMLModel` or a `NeuralODEBuild` object to be used. The second input is a datasets to fit on. Here, we show the fitting of a previously reported Serine Biosynthesis model[^1].
 
 #### Setting up the trainer object + training
-First, we load the necessary functions 
+First, we import necessary functions 
 
 ```python
 {!code/training_models.py!lines=1-8}
 ```
 
-Then, we load the model, data and initialize the trainer object. 
+Next, we load the model, data and initialize the trainer object. 
 
 ```python
-{!code/training_models.py!lines=9-21}
+{!code/training_models.py!lines=9-25}
 ```
-We next perform a latin hypercube sampling for a certain initial guess, with lower and upperbound defined with respect to these values. We want five initializations (normally this should be higher).
+Latin hypercube sampling can be used for an initial guess, with lower and upperbound defined with respect to these values. We want five initializations (for this tutorial 5 will do, but
+for larger systems, 100-1000 initializations would be preferred.).
 
 ```python
-{!code/training_models.py!lines=21-27}
+{!code/training_models.py!lines=25-35}
 ```
 
 
 To initiate training, you simply call the function `Trainer.train()`
 
 ```python
-{!code/training_models.py!lines=28-36}
+{!code/training_models.py!lines=35-44}
 ```
 
 
@@ -38,7 +39,7 @@ Suppose the fit is not to your liking, or we first want to do a pre-optimization
 one can continue the optimization by re-running the `trainer` object with the set of optimized parameters.
 
 ```python
-{!code/training_models.py!lines=37-52}
+{!code/training_models.py!lines=46-59}
 ```
 
 ![loss_extended](images/loss_per_iter_extended.png)
@@ -54,14 +55,14 @@ When the loss function is not specified (see below), a mean squared error loss i
 
 
 ```python
-{!code/training_models.py!lines=54-56}
+{!code/training_models.py!lines=62-64}
 ```
 
 ### Optimizer choices
 Jaxkineticmodel is compatible with optimizers from [optax](https://optax.readthedocs.io/en/latest/). To use these, simply
 pass the optimizer to the `Trainer` object (with required arguments). 
 ```python
-{!code/training_models.py!lines=57-59}
+{!code/training_models.py!lines=65-67}
 ```
 
 ### Customize loss functions
@@ -69,7 +70,7 @@ Jaxkinetic model uses as a default a log-transformed parameter space and a mean 
 may want to present their own custom loss. 
 
 ```python
-{!code/training_models.py!lines=60-89}
+{!code/training_models.py!lines=69-97}
 ```
 The loss function has mandatory arguments `params`,`ts`,`ys`. All other required arguments (e.g., `to_include`) are 
 passed to `trainer._create_loss_func()`
