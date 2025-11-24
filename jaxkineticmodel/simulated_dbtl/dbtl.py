@@ -1,12 +1,9 @@
 """"Simulated DBTL cycles"""
-from typing import Union, Optional
+from typing import Union, Optional, Tuple
 
 import jax.numpy as jnp
 import jax
 import numpy as np
-
-from jaxkineticmodel.building_models.JaxKineticModelBuild import NeuralODEBuild
-from jaxkineticmodel.load_sbml.jax_kinetic_model import NeuralODE
 from jaxkineticmodel.load_sbml.sbml_model import SBMLModel
 from jaxkineticmodel.utils import get_logger
 
@@ -54,9 +51,9 @@ class DesignBuildTestLearnCycle:
         self.reference_production_value = None
         self.target = target
 
-        self.reference_strain = dict(zip(parameters.keys(), np.ones(len(parameters)))) # this is the initial one
+        self.reference_strain = dict(zip(parameters.keys(), np.ones(len(parameters))))  # this is the initial one
 
-        self.strain_promoters_designs=None
+        self.strain_promoters_designs = None
 
     def design_establish_library_elements(self,
                                           parameter_perturbations: dict[str, list]):
@@ -214,7 +211,7 @@ class DesignBuildTestLearnCycle:
 
             except Exception as e:
                 logger.error(e)
-                ys = jnp.full((len(self.timespan),len(self.initial_conditions)), np.nan)
+                ys = jnp.full((len(self.timespan), len(self.initial_conditions)), np.nan)
 
             ys = pd.DataFrame(ys, columns=self.species_names)
             ys = ys[self.target]
@@ -312,10 +309,19 @@ class DesignBuildTestLearnCycle:
     # This should update the previous reference strain to perform further library or DoE transformation
     # Also updates the DBTL cycle states
     #
-    def learn_train_model(self, data, target, args, model_type="XGBoost", test_size=0.2, runs=10):
+    def learn_train_model(self,
+                          data: pd.DataFrame,
+                          target: str,
+                          args: Tuple,
+                          model_type: str = "XGBoost",
+                          test_size=0.2,
+                          runs=10):
         """Trains a model for the target given the datapoints.
         Input: data , target (variable to predicted), test set size (default 80/20 split, # runs for the r2)"""
 
+        assert isinstance(data, pd.DataFrame), ("Data should be a pandas dataframe "
+                                                "with last column being target variable")
+        data = data.astype(float)
         # train_test_val
         if target not in self.target:
             logger.error(f"Predictive variable {target} not in dataset")
@@ -356,7 +362,8 @@ class DesignBuildTestLearnCycle:
     def learn_validate_model(self,
                              samples: int,
                              target: str,
-                             model_type="XGBoost", plotting=True):
+                             model_type="XGBoost",
+                             plotting=True):
         """Validate the model with new data, generated from the same library distribution as before."""
 
         validation_set = self.design_generate_strains(samples=samples, replacement=True)
@@ -366,9 +373,9 @@ class DesignBuildTestLearnCycle:
             strain_designs=validation_set, production_values=validation_values, reference_parameters=self.parameters
         )
         if model_type == "XGBoost":
+            validation_data = validation_data.astype(float)
             validation_set = xgb.DMatrix(validation_data[self.parameter_target_names])
             y_predicted = self.ml_model.predict(validation_set)
-
             _, _, r_value, _, _ = scipy.stats.linregress(np.array(y_predicted), np.array(validation_values[target]))
             if plotting is True:
                 fig, ax = plt.subplots(figsize=(3, 3))

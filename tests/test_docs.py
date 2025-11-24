@@ -29,6 +29,9 @@ def test_custom_reactions():
 def test_minimal_example():
     runpy.run_path("docs/code/minimal_example.py")
 
+def test_dbtl():
+    runpy.run_path("docs/code/simulated-dbtl.py")
+
 def test_sbml():
     runpy.run_path("docs/code/sbml.py")
 
